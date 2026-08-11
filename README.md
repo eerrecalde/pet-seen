@@ -17,6 +17,19 @@ npm install
 npm run dev
 ```
 
+### Local Supabase stack
+
+The repository includes a versioned local Supabase configuration for database, Auth, Storage and Studio. Install a Docker-compatible runtime (for example Docker Desktop, OrbStack, Colima or Podman) before starting it.
+
+```sh
+npm run supabase:start
+npm run supabase:status
+```
+
+The local API is available at `http://127.0.0.1:54321`, Studio at `http://127.0.0.1:54323`, and intercepted authentication emails at `http://127.0.0.1:54324`. The CLI prints the local anon key after the stack starts; application environment variables will be added with authentication in PS-101.
+
+Stop the stack with `npm run supabase:stop`. To rebuild it from the tracked migrations and seed data, run `npm run supabase:db:reset`. Do not use `--linked` for local commands unless you intentionally mean to operate on a remote project.
+
 Useful checks:
 
 ```sh

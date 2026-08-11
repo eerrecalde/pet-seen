@@ -1,0 +1,1 @@
+-- Intentionally empty. Deterministic local data will be introduced with the first schema migration.
