@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Practical Copy"
+  short_description: "Write clear and practical copy without filler"
+  default_prompt: "Use $write-practical-copy to make this copy concise, concrete, and practical."

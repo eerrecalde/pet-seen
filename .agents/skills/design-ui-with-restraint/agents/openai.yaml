@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Clear Interfaces"
+  short_description: "Improve layouts, charts, visuals, and spacing"
+  default_prompt: "Use $design-ui-with-restraint to improve this interface and keep it clear, practical, and visually consistent."
