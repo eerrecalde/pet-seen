@@ -10,6 +10,8 @@ Release 0 is in progress. The initial application shell, visual foundation, and 
 
 See [the delivery breakdown](docs/PROJECT_BREAKDOWN.md) and the product plan for the roadmap.
 
+The controlled-beta operating rules are documented in the [safety, privacy, retention and moderation policy](docs/BETA_SAFETY_PRIVACY_POLICY.md).
+
 ## Development
 
 ```sh

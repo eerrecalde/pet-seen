@@ -27,7 +27,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-002 | Scaffold Vite, React, TypeScript, React Router and Tailwind | Done |
 | PS-003 | Establish visual tokens from the approved moodboard | Done |
 | PS-004 | Add Supabase local development configuration | Done |
-| PS-005 | Define beta safety, privacy, retention and moderation policies | Not started |
+| PS-005 | Define beta safety, privacy, retention and moderation policies | Done |
 | PS-006 | Produce mobile-first designs for home, missing case, public case and sighting | Not started |
 
 ## Release 1 — Missing-pet case alpha
