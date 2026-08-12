@@ -9,7 +9,7 @@ export const resources = {
         nearbyPets: 'Nearby pets',
         signIn: 'Sign in', account: 'My account',
         continue: 'Continue',
-        submitSighting: 'Submit sighting',
+        submitSighting: 'Submit sighting', yes: 'Yes', no: 'No',
         goHome: 'Go home',
         dog: 'Dog', cat: 'Cat', young: 'Young', adult: 'Adult', senior: 'Senior',
       },
@@ -67,7 +67,7 @@ export const resources = {
     translation: {
       language: { label: 'Idioma', english: 'Inglés', spanish: 'Español (LatAm)' },
       common: {
-        petSeenHome: 'Inicio de Pet Seen', backToHome: 'Volver al inicio', backToCases: 'Todos los casos de Pet Seen', nearbyPets: 'Mascotas cerca', signIn: 'Iniciar sesión', account: 'Mi cuenta', continue: 'Continuar', submitSighting: 'Enviar avistamiento', goHome: 'Ir al inicio', dog: 'Perro', cat: 'Gato', young: 'Joven', adult: 'Adulto', senior: 'Mayor',
+        petSeenHome: 'Inicio de Pet Seen', backToHome: 'Volver al inicio', backToCases: 'Todos los casos de Pet Seen', nearbyPets: 'Mascotas cerca', signIn: 'Iniciar sesión', account: 'Mi cuenta', continue: 'Continuar', submitSighting: 'Enviar avistamiento', yes: 'Sí', no: 'No', goHome: 'Ir al inicio', dog: 'Perro', cat: 'Gato', young: 'Joven', adult: 'Adulto', senior: 'Mayor',
       },
       home: {
         eyebrow: 'Ayudamos a que las mascotas vuelvan a casa', title: '¿Qué pasó?', intro: 'Elige la opción que mejor describa la situación. Puedes reportar un avistamiento sin crear una cuenta.',
