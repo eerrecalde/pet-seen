@@ -16,3 +16,4 @@
 
 .language-picker { align-items: center; color: #725e50; display: inline-flex; gap: 5px; }.language-picker select { appearance: none; background: transparent; border: 0; color: inherit; cursor: pointer; font-size: .86rem; font-weight: 800; max-width: 142px; padding: 4px 18px 4px 0; }.language-picker i { font-size: 1rem; }.sr-only { clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; position: absolute; width: 1px; }
 @media (max-width: 720px) { .site-header nav { gap: 10px; }.language-picker select { max-width: 115px; } }
+.form-submit:disabled { cursor: wait; opacity: .7; }.sign-in-required h2, .saved-pet h2 { font-size: 1.7rem; }.sign-in-required > p { line-height: 1.55; margin: 14px 0 24px; }.saved-pet { align-items: flex-start; display: flex; gap: 14px; }.saved-pet > i { color: #47724a; font-size: 1.45rem; }.saved-pet p { line-height: 1.55; margin: 12px 0 22px; }
