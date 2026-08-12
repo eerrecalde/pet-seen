@@ -28,7 +28,8 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-003 | Establish visual tokens from the approved moodboard | Done |
 | PS-004 | Add Supabase local development configuration | Done |
 | PS-005 | Define beta safety, privacy, retention and moderation policies | Done |
-| PS-006 | Produce mobile-first designs for home, missing case, public case and sighting | Not started |
+| PS-006 | Produce mobile-first designs for home, missing case, public case and sighting | Done |
+| PS-007 | Add i18next translation foundation: UK English resources, typed keys, locale-aware formatting and a documented path for future locales | Done |
 
 ## Release 1 — Missing-pet case alpha
 

@@ -1,146 +1,38 @@
-import { Link, Route, Routes } from 'react-router'
+import type { ComponentProps } from 'react'
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link as RouterLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router'
+import { defaultLocale, localeFromUrlSegment, localeUrlPrefix } from '../i18n'
+import type { AppLocale } from '../i18n/resources'
 
-const actions = [
-  {
-    description: 'Create a secure public case and get the word out quickly.',
-    icon: 'search-eye',
-    label: 'I lost a pet',
-    to: '/lost/new',
-    tone: 'lost',
-  },
-  {
-    description: 'A quick photo, place and time could make all the difference.',
-    icon: 'eye',
-    label: 'I saw a pet',
-    to: '/sighting/new',
-    tone: 'sighting',
-  },
-  {
-    description: 'Tell the community that a pet is safe and needs its family.',
-    icon: 'home-heart',
-    label: 'I found a pet',
-    to: '/found/new',
-    tone: 'found',
-  },
-] as const
+const petName = 'Milo'
 
-export function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/auth" element={<AuthPlaceholder />} />
-      <Route path="/:reportType/new" element={<ReportPlaceholder />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  )
-}
+export function App() { return <Routes><Route path="/:locale?" element={<LocaleLayout />}><Route index element={<HomePage />} /><Route path="lost/new" element={<MissingCasePage />} /><Route path="sighting/new" element={<SightingPage />} /><Route path="find/:slug" element={<PublicCasePage />} /><Route path="auth" element={<AuthPlaceholder />} /><Route path="found/new" element={<ReportPlaceholder />} /><Route path="*" element={<NotFound />} /></Route></Routes> }
+
+function LocaleLayout() { const { locale } = useParams(); const { i18n } = useTranslation(); useEffect(() => { void i18n.changeLanguage(localeFromUrlSegment(locale) ?? defaultLocale) }, [i18n, locale]); return <Outlet /> }
+
+function localisedPath(path: string, locale: string | undefined) { return `${localeUrlPrefix((locale ?? defaultLocale) as AppLocale)}${path}` }
+function Link({ to, ...props }: ComponentProps<typeof RouterLink>) { const { i18n } = useTranslation(); return <RouterLink {...props} to={localisedPath(to.toString(), i18n.resolvedLanguage)} /> }
 
 function HomePage() {
-  return (
-    <div className="page-shell">
-      <header className="site-header">
-        <Link className="wordmark" to="/" aria-label="Pet Seen home">
-          <PetSeenMark />
-          Pet Seen
-        </Link>
-        <nav aria-label="Main navigation">
-          <a className="nearby-link" href="#nearby"><Icon name="map-pin-2" />Nearby pets</a>
-          <Link className="sign-in" to="/auth"><Icon name="user-3" />Sign in</Link>
-        </nav>
-      </header>
-
-      <main>
-        <section className="action-section" aria-labelledby="actions-heading">
-          <div className="section-heading">
-            <p className="eyebrow">Pet Seen</p>
-            <h1 id="actions-heading">What happened?</h1>
-          </div>
-          <div className="action-grid">
-            {actions.map((action) => (
-              <Link className={`action-card ${action.tone}`} key={action.to} to={action.to}>
-                <span className="action-icon" aria-hidden="true"><Icon name={action.icon} /></span>
-                <span className="action-title">{action.label}</span>
-                <span className="action-copy">{action.description}</span>
-                <span className="action-arrow" aria-hidden="true"><Icon name="arrow-right" /></span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="about-section" aria-labelledby="about-heading">
-          <div>
-            <p className="eyebrow">How Pet Seen helps</p>
-            <h2 id="about-heading">Quick reports, shared locally.</h2>
-          </div>
-          <div className="about-points">
-            <p><Icon name="time" /><span><strong>Report quickly.</strong> Share the pet, place and time while the information is fresh.</span></p>
-            <p><Icon name="shield-check" /><span><strong>Protect privacy.</strong> Public maps show an approximate area; exact locations stay private.</span></p>
-            <p><Icon name="community" /><span><strong>Help neighbours act.</strong> A shared case gives people one clear way to report a sighting.</span></p>
-          </div>
-        </section>
-
-        <section className="nearby-section" id="nearby" aria-labelledby="nearby-heading">
-          <div>
-            <p className="eyebrow">Coming in the controlled beta</p>
-            <h2 id="nearby-heading">Missing pets near you</h2>
-            <p>Choose a town or postcode to see active cases near you.</p>
-          </div>
-          <button type="button" className="secondary-button"><Icon name="map-pin" />Choose an area</button>
-        </section>
-      </main>
-
-      <footer>
-        <span>Pet Seen</span>
-        <span>Bringing pets home, together.</span>
-      </footer>
-    </div>
-  )
+  const { t } = useTranslation()
+  const actions = [{ description: t('home.missingDescription'), icon: 'search-eye', label: t('home.missingLabel'), to: '/lost/new', tone: 'lost' }, { description: t('home.sightingDescription'), icon: 'eye', label: t('home.sightingLabel'), to: '/sighting/new', tone: 'sighting' }, { description: t('home.foundDescription'), icon: 'home-heart', label: t('home.foundLabel'), to: '/found/new', tone: 'found' }] as const
+  return <div className="page-shell"><SiteHeader /><main><section className="home-intro" aria-labelledby="actions-heading"><div className="section-heading"><p className="eyebrow">{t('home.eyebrow')}</p><h1 id="actions-heading">{t('home.title')}</h1><p className="intro-copy">{t('home.intro')}</p></div><div className="action-grid">{actions.map((action) => <Link className={`action-card ${action.tone}`} key={action.to} to={action.to}><span className="action-icon"><Icon name={action.icon} /></span><span className="action-title">{action.label}</span><span className="action-copy">{action.description}</span><span className="action-arrow"><Icon name="arrow-right" /></span></Link>)}</div></section><section className="about-section" aria-labelledby="about-heading"><div><p className="eyebrow">{t('home.howItWorks')}</p><h2 id="about-heading">{t('home.howItWorksTitle')}</h2></div><div className="about-points"><p><Icon name="time" /><span><strong>{t('home.essentialsTitle')}</strong> {t('home.essentialsBody')}</span></p><p><Icon name="shield-check" /><span><strong>{t('home.privacyTitle')}</strong> {t('home.privacyBody')}</span></p><p><Icon name="community" /><span><strong>{t('home.neighboursTitle')}</strong> {t('home.neighboursBody')}</span></p></div></section></main><SiteFooter /></div>
 }
 
-function PetSeenMark() {
-  return (
-    <svg className="wordmark-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-      <ellipse cx="7.5" cy="20.4" rx="5.2" ry="7" transform="rotate(-31 7.5 20.4)" />
-      <ellipse cx="16.8" cy="9.7" rx="5.6" ry="7.3" transform="rotate(-7 16.8 9.7)" />
-      <ellipse cx="31.2" cy="9.7" rx="5.6" ry="7.3" transform="rotate(7 31.2 9.7)" />
-      <ellipse cx="40.5" cy="20.4" rx="5.2" ry="7" transform="rotate(31 40.5 20.4)" />
-      <path d="M24 25.8c-5.1 0-8.4 4-11.4 7.8-2.8 3.4-6 5.2-6 8.8 0 3.7 3.5 6 7.8 6 3.7 0 5.7-1.6 9.6-1.6s5.9 1.6 9.6 1.6c4.3 0 7.8-2.3 7.8-6 0-3.6-3.2-5.4-6-8.8-3-3.8-6.3-7.8-11.4-7.8Z" />
-    </svg>
-  )
-}
+function MissingCasePage() { const { t } = useTranslation(); return <div className="form-shell"><SimpleHeader /><main className="flow-layout"><Progress label={t('missingCase.progress')} total={3} /><section className="form-intro"><p className="eyebrow">{t('missingCase.eyebrow')}</p><h1>{t('missingCase.title')}</h1><p>{t('missingCase.intro')}</p></section><form className="case-form"><fieldset><legend>{t('missingCase.details')}</legend><div className="choice-row"><button type="button" className="choice selected"><Icon name="bear-smile" />{t('common.dog')}</button><button type="button" className="choice"><Icon name="cat" />{t('common.cat')}</button></div><label>{t('missingCase.petName')}<input defaultValue={petName} /></label><div className="two-columns"><label>{t('missingCase.markings')}<input placeholder={t('missingCase.markingsHint')} /></label><label>{t('missingCase.age')}<select defaultValue=""><option value="" disabled>{t('missingCase.selectAge')}</option><option>{t('common.young')}</option><option>{t('common.adult')}</option><option>{t('common.senior')}</option></select></label></div></fieldset><fieldset><legend>{t('missingCase.photo')}</legend><label className="upload-field"><Icon name="image-add" /><span><strong>{t('missingCase.addPhoto')}</strong><small>{t('missingCase.photoHint')}</small></span><input type="file" accept="image/png,image/jpeg" /></label></fieldset><fieldset><legend>{t('missingCase.lastSeenQuestion', { petName })}</legend><label>{t('missingCase.lastSeen')}<input defaultValue={t('publicCase.lastSeenValue')} /></label><label>{t('missingCase.location')}<input defaultValue="Victoria Park, Hackney" /><small>{t('missingCase.exactLocationNote')}</small></label></fieldset><Link className="primary-cta form-submit" to="/find/milo-victoria-park"><span>{t('common.continue')}</span><Icon name="arrow-right" /></Link></form></main></div> }
 
-function Icon({ name }: { name: string }) {
-  return <i className={`ri-${name}-line`} aria-hidden="true" />
-}
+function PublicCasePage() { const { t } = useTranslation(); return <div className="public-shell"><SiteHeader /><main className="public-case"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToCases')}</Link><div className="case-grid"><div className="pet-photo photo-milo" role="img" aria-label={t('publicCase.imageDescription', { petName })} /><section className="case-summary"><p className="status-badge"><span />{t('publicCase.status')}</p><h1>{t('publicCase.title', { petName })}</h1><p className="case-lead">{t('publicCase.lead')}</p><dl className="case-facts"><div><dt>{t('publicCase.lastSeen')}</dt><dd>{t('publicCase.lastSeenValue')}</dd></div><div><dt>{t('publicCase.area')}</dt><dd><Icon name="map-pin-2" />{t('publicCase.areaValue')}</dd></div></dl><Link className="primary-cta report-cta" to="/sighting/new"><Icon name="eye" />{t('publicCase.action', { petName })}</Link><p className="privacy-note"><Icon name="shield-check" />{t('publicCase.privacy', { petName })}</p></section></div><section className="case-details"><div><p className="eyebrow">{t('publicCase.about', { petName })}</p><h2>{t('publicCase.descriptionTitle')}</h2><p>{t('publicCase.description', { petName })}</p></div><div className="map-card"><div className="map-pattern"><span className="map-circle" /><span className="map-pin"><Icon name="map-pin-fill" /></span></div><p><Icon name="information" />{t('publicCase.mapNote', { petName })}</p></div></section></main><SiteFooter /></div> }
 
-function ReportPlaceholder() {
-  return (
-    <main className="placeholder-page">
-      <Link className="back-link" to="/"><Icon name="arrow-left" />Back to Pet Seen</Link>
-      <p className="eyebrow">Release 1</p>
-      <h1>This report flow is next.</h1>
-      <p>We are laying the foundation for safe, fast pet reports first.</p>
-    </main>
-  )
-}
+function SightingPage() { const { t } = useTranslation(); return <div className="form-shell"><SimpleHeader /><main className="flow-layout"><Progress label={t('sighting.progress')} total={2} /><section className="form-intro"><p className="eyebrow">{t('sighting.eyebrow')}</p><h1>{t('sighting.title')}</h1><p>{t('sighting.intro')}</p></section><form className="case-form sighting-form"><fieldset><legend>{t('sighting.petQuestion')}</legend><label>{t('sighting.petOrCase')}<select defaultValue="milo"><option value="milo">{t('sighting.knownPet')}</option><option value="">{t('sighting.unknownPet')}</option></select><small>{t('sighting.petHelp')}</small></label></fieldset><fieldset><legend>{t('sighting.whenWhere')}</legend><label>{t('sighting.where')}<input placeholder={t('sighting.whereHint')} /></label><label>{t('sighting.when')}<input placeholder={t('sighting.whenHint')} /></label></fieldset><fieldset><legend>{t('sighting.detailsQuestion')}</legend><label>{t('sighting.details')}<textarea placeholder={t('sighting.detailsHint')} rows={4} /></label><label className="upload-field compact"><Icon name="camera" /><span><strong>{t('sighting.addPhoto')}</strong><small>{t('sighting.photoHint')}</small></span><input type="file" accept="image/png,image/jpeg" /></label></fieldset><button className="primary-cta form-submit" type="button">{t('common.submitSighting')} <Icon name="arrow-right" /></button><p className="form-privacy"><Icon name="shield-check" />{t('sighting.privacy')}</p></form></main></div> }
 
-function AuthPlaceholder() {
-  return (
-    <main className="placeholder-page">
-      <Link className="back-link" to="/"><Icon name="arrow-left" />Back to Pet Seen</Link>
-      <p className="eyebrow">Account access</p>
-      <h1>Sign in will use a secure email link.</h1>
-      <p>You will not need a password. This is being built with the missing-pet case flow.</p>
-    </main>
-  )
-}
-
-function NotFound() {
-  return (
-    <main className="placeholder-page">
-      <p className="eyebrow">Not found</p>
-      <h1>This page is not here yet.</h1>
-      <Link className="primary-cta" to="/">Go home</Link>
-    </main>
-  )
-}
+function Progress({ label, total }: { label: string, total: number }) { const { t } = useTranslation(); const step = t('missingCase.step', { current: 1, total }); return <div className="progress" aria-label={step}><span className="progress-label">{label}</span><span>{step}</span><div className={`progress-track ${total === 2 ? 'half' : ''}`}><span /></div></div> }
+function SiteHeader() { const { t } = useTranslation(); return <header className="site-header"><Link className="wordmark" to="/" aria-label={t('common.petSeenHome')}><PetSeenMark />Pet Seen</Link><nav aria-label={t('common.petSeenHome')}><Link className="nearby-link" to="/#nearby"><Icon name="map-pin-2" />{t('common.nearbyPets')}</Link><LanguagePicker /><Link className="sign-in" to="/auth"><Icon name="user-3" />{t('common.signIn')}</Link></nav></header> }
+function LanguagePicker() { const { i18n, t } = useTranslation(); const location = useLocation(); const navigate = useNavigate(); return <label className="language-picker"><span className="sr-only">{t('language.label')}</span><Icon name="global" /><select aria-label={t('language.label')} value={i18n.resolvedLanguage} onChange={(event) => { const locale = event.target.value as AppLocale; const path = location.pathname.replace(/^\/es(?=\/|$)/, '') || '/'; navigate(`${localisedPath(path, locale)}${location.search}${location.hash}`); }}><option value="en-GB">{t('language.english')}</option><option value="es-419">{t('language.spanish')}</option></select></label> }
+function SimpleHeader() { const { t } = useTranslation(); return <header className="simple-header"><Link className="wordmark" to="/" aria-label={t('common.petSeenHome')}><PetSeenMark />Pet Seen</Link><LanguagePicker /><Link className="back-link small-back" to="/"><Icon name="arrow-left" />{t('common.backToHome')}</Link></header> }
+function SiteFooter() { const { t } = useTranslation(); return <footer><span>Pet Seen</span><span>{t('footer')}</span></footer> }
+function PetSeenMark() { return <svg className="wordmark-mark" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="7.5" cy="20.4" rx="5.2" ry="7" transform="rotate(-31 7.5 20.4)" /><ellipse cx="16.8" cy="9.7" rx="5.6" ry="7.3" transform="rotate(-7 16.8 9.7)" /><ellipse cx="31.2" cy="9.7" rx="5.6" ry="7.3" transform="rotate(7 31.2 9.7)" /><ellipse cx="40.5" cy="20.4" rx="5.2" ry="7" transform="rotate(31 40.5 20.4)" /><path d="M24 25.8c-5.1 0-8.4 4-11.4 7.8-2.8 3.4-6 5.2-6 8.8 0 3.7 3.5 6 7.8 6 3.7 0 5.7-1.6 9.6-1.6s5.9 1.6 9.6 1.6c4.3 0 7.8-2.3 7.8-6 0-3.6-3.2-5.4-6-8.8-3-3.8-6.3-7.8-11.4-7.8Z" /></svg> }
+function Icon({ name }: { name: string }) { return <i className={`ri-${name}-line`} aria-hidden="true" /> }
+function ReportPlaceholder() { const { t } = useTranslation(); return <main className="placeholder-page"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToHome')}</Link><p className="eyebrow">{t('placeholders.laterRelease')}</p><h1>{t('placeholders.foundTitle')}</h1><p>{t('placeholders.foundBody')}</p></main> }
+function AuthPlaceholder() { const { t } = useTranslation(); return <main className="placeholder-page"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToHome')}</Link><p className="eyebrow">{t('placeholders.accountAccess')}</p><h1>{t('placeholders.authTitle')}</h1><p>{t('placeholders.authBody')}</p></main> }
+function NotFound() { const { t } = useTranslation(); return <main className="placeholder-page"><p className="eyebrow">{t('placeholders.notFound')}</p><h1>{t('placeholders.notFoundTitle')}</h1><Link className="primary-cta" to="/">{t('common.goHome')}</Link></main> }
