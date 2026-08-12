@@ -56,7 +56,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-204 | Send owner email notifications for linked sightings | Done |
 | PS-205 | Add report states: pending, confirmed and dismissed | Done |
 | PS-206 | Add reunion reason and self-reported Pet Seen attribution | Done |
-| PS-207 | Add rate limits, failure/retry states and offline sighting drafts | Not started |
+| PS-207 | Add rate limits, failure/retry states and offline sighting drafts | Done |
 | PS-208 | Test missing → sighting → reunion with Playwright | Not started |
 
 ## Release 3 — Distribution
