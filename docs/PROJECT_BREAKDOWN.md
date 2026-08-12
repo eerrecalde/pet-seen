@@ -68,6 +68,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 ## Later releases
 
+- PS-401 — Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable
 - Found-pet flow and custody status
 - Deterministic report-to-case matching
 - Optional reporter magic-link follow-up and private messaging
