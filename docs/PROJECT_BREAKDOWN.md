@@ -42,7 +42,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-105 | Build missing-case draft, publication and location-picker flow with GPS, movable-pin confirmation and manual fallback | Not started |
 | PS-106 | Generate non-sequential public URLs under `petseen.org/find/:slug` | Done |
 | PS-107 | Build public case page with a server-provided approximate location map; never return exact coordinates publicly | Done |
-| PS-108 | Build owner dashboard: edit, close and mark reunited | Not started |
+| PS-108 | Build owner dashboard: edit, close and mark reunited | Done |
 | PS-109 | Add basic report-content action and protected moderation view | Not started |
 | PS-110 | Validate MapLibre with one hosted tile and geocoding provider using representative UK locations, production terms and cost controls | Not started |
 
