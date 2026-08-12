@@ -15,6 +15,7 @@
     "supabase:db:reset": "supabase db reset"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "i18next": "^26.3.6",

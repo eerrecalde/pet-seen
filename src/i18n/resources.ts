@@ -7,7 +7,7 @@ export const resources = {
         backToHome: 'Back to home',
         backToCases: 'All Pet Seen cases',
         nearbyPets: 'Nearby pets',
-        signIn: 'Sign in',
+        signIn: 'Sign in', account: 'My account',
         continue: 'Continue',
         submitSighting: 'Submit sighting',
         goHome: 'Go home',
@@ -47,6 +47,9 @@ export const resources = {
         detailsQuestion: 'What did you notice?', details: 'Details', detailsHint: 'Colour, collar, direction of travel or anything else that may help.',
         addPhoto: 'Add a photo', photoHint: 'Optional, but helpful if it is safe to take one.', privacy: 'Your exact location is not shown on the public case page.',
       },
+      auth: {
+        eyebrow: 'Account access', title: 'Sign in with your email.', accountTitle: 'Your account', intro: 'We’ll email you a secure link. No password is needed.', emailLabel: 'Email address', emailHint: 'you@example.com', sendLink: 'Email me a sign-in link', sentTitle: 'Check your email.', sentBody: 'We sent a secure sign-in link to {{email}}.', toast: 'You’re signed in.', privacy: 'We use your email only to secure your account and contact you about your cases.', setupNote: 'Authentication needs local environment settings before you can send a sign-in link.', notConfigured: 'Authentication is not configured in this environment.', loading: 'Checking your sign-in status…', signedInTitle: 'You’re signed in.', signedInBody: 'Your account is using {{email}}.', signOut: 'Sign out',
+      },
       placeholders: {
         laterRelease: 'Later release', foundTitle: 'Found-pet reports are coming next.', foundBody: 'For now, please use a sighting report to share where you saw a pet.',
         accountAccess: 'Account access', authTitle: 'Sign in will use a secure email link.', authBody: 'You will not need a password. This is being built with the missing-pet case flow.',
@@ -59,7 +62,7 @@ export const resources = {
     translation: {
       language: { label: 'Idioma', english: 'Inglés', spanish: 'Español (LatAm)' },
       common: {
-        petSeenHome: 'Inicio de Pet Seen', backToHome: 'Volver al inicio', backToCases: 'Todos los casos de Pet Seen', nearbyPets: 'Mascotas cerca', signIn: 'Iniciar sesión', continue: 'Continuar', submitSighting: 'Enviar avistamiento', goHome: 'Ir al inicio', dog: 'Perro', cat: 'Gato', young: 'Joven', adult: 'Adulto', senior: 'Mayor',
+        petSeenHome: 'Inicio de Pet Seen', backToHome: 'Volver al inicio', backToCases: 'Todos los casos de Pet Seen', nearbyPets: 'Mascotas cerca', signIn: 'Iniciar sesión', account: 'Mi cuenta', continue: 'Continuar', submitSighting: 'Enviar avistamiento', goHome: 'Ir al inicio', dog: 'Perro', cat: 'Gato', young: 'Joven', adult: 'Adulto', senior: 'Mayor',
       },
       home: {
         eyebrow: 'Ayudamos a que las mascotas vuelvan a casa', title: '¿Qué pasó?', intro: 'Elige la opción que mejor describa la situación. Puedes reportar un avistamiento sin crear una cuenta.',
@@ -81,6 +84,9 @@ export const resources = {
       },
       sighting: {
         progress: 'Reportar un avistamiento', eyebrow: 'No necesitas una cuenta', title: 'Cuéntanos qué viste.', intro: 'Un reporte claro le da a la persona dueña información útil sin mostrar públicamente tus datos de contacto.', petQuestion: '¿Sabes qué mascota podría ser?', petOrCase: 'Mascota o caso', knownPet: 'Milo — zona de Victoria Park', unknownPet: 'No estoy seguro/a / es otra mascota', petHelp: 'Puedes enviar un avistamiento aunque no sepas qué mascota es.', whenWhere: '¿Dónde y cuándo?', where: '¿Dónde viste a la mascota?', whereHint: 'Calle, parque o punto de referencia', when: '¿Cuándo la viste?', whenHint: 'Por ejemplo, hoy a las 5:15 p. m.', detailsQuestion: '¿Qué notaste?', details: 'Detalles', detailsHint: 'Color, collar, dirección en la que iba o cualquier otro dato que pueda ayudar.', addPhoto: 'Agrega una foto', photoHint: 'Es opcional, pero ayuda si puedes tomarla sin riesgo.', privacy: 'Tu ubicación exacta no aparece en la página pública del caso.',
+      },
+      auth: {
+        eyebrow: 'Acceso a la cuenta', title: 'Inicia sesión con tu correo electrónico.', accountTitle: 'Tu cuenta', intro: 'Te enviaremos un enlace seguro. No necesitas contraseña.', emailLabel: 'Correo electrónico', emailHint: 'tu@ejemplo.com', sendLink: 'Enviarme un enlace para iniciar sesión', sentTitle: 'Revisa tu correo electrónico.', sentBody: 'Enviamos un enlace seguro a {{email}}.', toast: 'Has iniciado sesión.', privacy: 'Usamos tu correo electrónico solo para proteger tu cuenta y contactarte sobre tus casos.', setupNote: 'La autenticación necesita ajustes del entorno local antes de que puedas enviar un enlace.', notConfigured: 'La autenticación no está configurada en este entorno.', loading: 'Revisando tu estado de inicio de sesión…', signedInTitle: 'Has iniciado sesión.', signedInBody: 'Tu cuenta usa {{email}}.', signOut: 'Cerrar sesión',
       },
       placeholders: {
         laterRelease: 'Próxima versión', foundTitle: 'Los reportes de mascotas encontradas llegarán pronto.', foundBody: 'Por ahora, usa un reporte de avistamiento para compartir dónde viste a una mascota.', accountAccess: 'Acceso a la cuenta', authTitle: 'El inicio de sesión usará un enlace seguro por correo electrónico.', authBody: 'No necesitarás una contraseña. Estamos creando esta función junto con el flujo de mascotas perdidas.', notFound: 'No encontrado', notFoundTitle: 'Esta página todavía no existe.',

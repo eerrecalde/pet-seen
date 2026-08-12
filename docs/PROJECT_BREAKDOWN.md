@@ -35,7 +35,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 | ID | Task | Status |
 | --- | --- | --- |
-| PS-101 | Configure magic-link authentication and lightweight profiles | Not started |
+| PS-101 | Configure magic-link authentication and lightweight profiles | Done |
 | PS-102 | Create PostGIS schema, migrations, Storage buckets and RLS policies | Not started |
 | PS-103 | Build pet details and photo-upload flow for dogs and cats | Not started |
 | PS-104 | Process uploads automatically: validate, strip EXIF and generate display images | Not started |
