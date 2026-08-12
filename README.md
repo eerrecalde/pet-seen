@@ -6,7 +6,7 @@ The initial beta serves the United Kingdom and will concentrate promotion in one
 
 ## Status
 
-Release 0 is in progress. The initial application shell, visual foundation, and delivery breakdown are now in place.
+Release 1 is in progress. The initial application shell, visual foundation, authentication, and protected spatial data model are now in place.
 
 See [the delivery breakdown](docs/PROJECT_BREAKDOWN.md) for the roadmap and [the map strategy](docs/MAP_STRATEGY.md) for location and mapping decisions.
 
