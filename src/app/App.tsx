@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router'
 import { defaultLocale, localeFromUrlSegment, localeUrlPrefix } from '../i18n'
 import type { AppLocale } from '../i18n/resources'
+import { formatDateTime } from '../i18n/format'
 import { useAuth } from '../auth/useAuth'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { PetPhotoError, preparePetPhoto } from '../lib/prepare-pet-photo'
 import { LocationPicker } from './LocationPicker'
-
-const petName = 'Milo'
+import { PublicLocationMap } from './PublicLocationMap'
 
 export function App() { return <Routes><Route path="/:locale?" element={<LocaleLayout />}><Route index element={<HomePage />} /><Route path="lost/new" element={<MissingCasePage />} /><Route path="sighting/new" element={<SightingPage />} /><Route path="find/:slug" element={<PublicCasePage />} /><Route path="auth" element={<AuthPlaceholder />} /><Route path="found/new" element={<ReportPlaceholder />} /><Route path="*" element={<NotFound />} /></Route></Routes> }
 
@@ -96,7 +96,56 @@ function MissingCasePage() {
   </main></div>
 }
 
-function PublicCasePage() { const { t } = useTranslation(); return <div className="public-shell"><SiteHeader /><main className="public-case"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToCases')}</Link><div className="case-grid"><div className="pet-photo photo-milo" role="img" aria-label={t('publicCase.imageDescription', { petName })} /><section className="case-summary"><p className="status-badge"><span />{t('publicCase.status')}</p><h1>{t('publicCase.title', { petName })}</h1><p className="case-lead">{t('publicCase.lead')}</p><dl className="case-facts"><div><dt>{t('publicCase.lastSeen')}</dt><dd>{t('publicCase.lastSeenValue')}</dd></div><div><dt>{t('publicCase.area')}</dt><dd><Icon name="map-pin-2" />{t('publicCase.areaValue')}</dd></div></dl><Link className="primary-cta report-cta" to="/sighting/new"><Icon name="eye" />{t('publicCase.action', { petName })}</Link><p className="privacy-note"><Icon name="shield-check" />{t('publicCase.privacy', { petName })}</p></section></div><section className="case-details"><div><p className="eyebrow">{t('publicCase.about', { petName })}</p><h2>{t('publicCase.descriptionTitle')}</h2><p>{t('publicCase.description', { petName })}</p></div><div className="map-card"><div className="map-pattern"><span className="map-circle" /><span className="map-pin"><Icon name="map-pin-fill" /></span></div><p><Icon name="information" />{t('publicCase.mapNote', { petName })}</p></div></section></main><SiteFooter /></div> }
+type PublicCase = {
+  public_slug: string
+  title: string | null
+  last_seen_at: string | null
+  last_seen_description: string | null
+  pet_name: string
+  species: 'dog' | 'cat'
+  breed: string | null
+  colour: string | null
+  pet_description: string | null
+  public_latitude: number
+  public_longitude: number
+}
+
+function PublicCasePage() {
+  const { t, i18n } = useTranslation()
+  const { slug } = useParams()
+  const [caseData, setCaseData] = useState<PublicCase | null>(null)
+  const [state, setState] = useState<'loading' | 'ready' | 'not-found' | 'error'>(isSupabaseConfigured ? 'loading' : 'error')
+
+  useEffect(() => {
+    if (!supabase || !slug) return
+    let active = true
+    void supabase.from('public_missing_cases').select('public_slug,title,last_seen_at,last_seen_description,pet_name,species,breed,colour,pet_description,public_latitude,public_longitude').eq('public_slug', slug).maybeSingle().then(({ data, error }) => {
+      if (!active) return
+      if (error) { setState('error'); return }
+      if (!data) { setState('not-found'); return }
+      setCaseData(data as PublicCase); setState('ready')
+    })
+    return () => { active = false }
+  }, [slug])
+
+  const content = state === 'loading' ? <PublicCaseNotice title={t('publicCase.loadingTitle')} body={t('publicCase.loadingBody')} />
+    : state === 'not-found' ? <PublicCaseNotice title={t('publicCase.notFoundTitle')} body={t('publicCase.notFoundBody')} />
+      : state === 'error' ? <PublicCaseNotice title={t('publicCase.unavailableTitle')} body={t('publicCase.unavailableBody')} />
+        : caseData ? <PublicCaseContent caseData={caseData} locale={i18n.resolvedLanguage as AppLocale} /> : null
+
+  return <div className="public-shell"><SiteHeader /><main className="public-case"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToCases')}</Link>{content}</main><SiteFooter /></div>
+}
+
+function PublicCaseNotice({ title, body }: { title: string, body: string }) { return <section className="public-case-notice"><h1>{title}</h1><p>{body}</p></section> }
+
+function PublicCaseContent({ caseData, locale }: { caseData: PublicCase, locale: AppLocale }) {
+  const { t } = useTranslation()
+  const heading = caseData.title || t('publicCase.title', { petName: caseData.pet_name })
+  const descriptionTitle = [caseData.colour, caseData.breed].filter(Boolean).join(' · ') || t('publicCase.descriptionTitle')
+  const lastSeen = caseData.last_seen_at ? formatDateTime(caseData.last_seen_at, locale) : t('publicCase.lastSeenUnknown')
+  const area = caseData.last_seen_description || t('publicCase.approximateArea')
+  return <><div className="case-grid"><div className={`pet-photo photo-${caseData.species}`} role="img" aria-label={t('publicCase.imageDescription', { petName: caseData.pet_name })} /><section className="case-summary"><p className="status-badge"><span />{t('publicCase.status')}</p><h1>{heading}</h1><p className="case-lead">{t('publicCase.leadForPet', { petName: caseData.pet_name })}</p><dl className="case-facts"><div><dt>{t('publicCase.lastSeen')}</dt><dd>{lastSeen}</dd></div><div><dt>{t('publicCase.area')}</dt><dd><Icon name="map-pin-2" />{area}</dd></div></dl><Link className="primary-cta report-cta" to="/sighting/new"><Icon name="eye" />{t('publicCase.action', { petName: caseData.pet_name })}</Link><p className="privacy-note"><Icon name="shield-check" />{t('publicCase.privacy', { petName: caseData.pet_name })}</p></section></div><section className="case-details"><div><p className="eyebrow">{t('publicCase.about', { petName: caseData.pet_name })}</p><h2>{descriptionTitle}</h2><p>{caseData.pet_description || t('publicCase.description', { petName: caseData.pet_name })}</p></div><div className="map-card"><PublicLocationMap latitude={caseData.public_latitude} longitude={caseData.public_longitude} label={t('publicCase.mapLabel', { petName: caseData.pet_name })} /><p><Icon name="information" />{t('publicCase.mapNote', { petName: caseData.pet_name })}</p></div></section></>
+}
 
 function SightingPage() { const { t } = useTranslation(); return <div className="form-shell"><SimpleHeader /><main className="flow-layout"><Progress label={t('sighting.progress')} total={2} /><section className="form-intro"><p className="eyebrow">{t('sighting.eyebrow')}</p><h1>{t('sighting.title')}</h1><p>{t('sighting.intro')}</p></section><form className="case-form sighting-form"><fieldset><legend>{t('sighting.petQuestion')}</legend><label>{t('sighting.petOrCase')}<select defaultValue="milo"><option value="milo">{t('sighting.knownPet')}</option><option value="">{t('sighting.unknownPet')}</option></select><small>{t('sighting.petHelp')}</small></label></fieldset><fieldset><legend>{t('sighting.whenWhere')}</legend><label>{t('sighting.where')}<input placeholder={t('sighting.whereHint')} /></label><label>{t('sighting.when')}<input placeholder={t('sighting.whenHint')} /></label></fieldset><fieldset><legend>{t('sighting.detailsQuestion')}</legend><label>{t('sighting.details')}<textarea placeholder={t('sighting.detailsHint')} rows={4} /></label><label className="upload-field compact"><Icon name="camera" /><span><strong>{t('sighting.addPhoto')}</strong><small>{t('sighting.photoHint')}</small></span><input type="file" accept="image/png,image/jpeg" /></label></fieldset><button className="primary-cta form-submit" type="button">{t('common.submitSighting')} <Icon name="arrow-right" /></button><p className="form-privacy"><Icon name="shield-check" />{t('sighting.privacy')}</p></form></main></div> }
 
