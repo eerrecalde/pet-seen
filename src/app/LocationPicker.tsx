@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import * as maplibregl from 'maplibre-gl'
-import type { Map, MapMouseEvent, Marker } from 'maplibre-gl'
+import { maplibregl } from '../lib/maplibre'
+import type { Map, MapMouseEvent, Marker } from '../lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 type Coordinates = { latitude: number; longitude: number }

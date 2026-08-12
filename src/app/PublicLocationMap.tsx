@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import * as maplibregl from 'maplibre-gl'
-import type { Map } from 'maplibre-gl'
+import { maplibregl } from '../lib/maplibre'
+import type { Map } from '../lib/maplibre'
 
 type PublicLocationMapProps = {
   latitude: number
@@ -27,7 +27,6 @@ export function PublicLocationMap({ latitude, longitude, label }: PublicLocation
       center: [longitude, latitude],
       zoom: 12,
       interactive: false,
-      attributionControl: false,
       style: import.meta.env.VITE_MAP_STYLE_URL || fallbackStyle,
     })
     instance.on('load', () => {

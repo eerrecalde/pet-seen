@@ -35,16 +35,16 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 | ID | Task | Status |
 | --- | --- | --- |
-| PS-101 | Configure magic-link authentication and lightweight profiles | Done |
+| PS-101 | Configure magic-link authentication and lightweight profiles | In progress |
 | PS-102 | Create PostGIS schema, migrations, Storage buckets and RLS policies, including exact and public-safe location fields | Done |
 | PS-103 | Build pet details and photo-upload flow for dogs and cats | Done |
 | PS-104 | Process uploads automatically: validate, strip EXIF and generate display images | Done |
-| PS-105 | Build missing-case draft, publication and location-picker flow with GPS, movable-pin confirmation and manual fallback | Not started |
+| PS-105 | Build missing-case draft, publication and location-picker flow with GPS, movable-pin confirmation and manual fallback | In progress |
 | PS-106 | Generate non-sequential public URLs under `petseen.org/find/:slug` | Done |
 | PS-107 | Build public case page with a server-provided approximate location map; never return exact coordinates publicly | Done |
 | PS-108 | Build owner dashboard: edit, close and mark reunited | Done |
 | PS-109 | Add basic report-content action and protected moderation view | Done |
-| PS-110 | Validate MapLibre with one hosted tile and geocoding provider using representative UK locations, production terms and cost controls | Not started |
+| PS-110 | Validate MapLibre with one hosted tile and geocoding provider using representative UK locations, production terms and cost controls | Done |
 
 ## Release 2 — Controlled beta: sightings
 
