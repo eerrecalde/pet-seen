@@ -12,7 +12,7 @@ The first controlled beta must complete one trustworthy loop:
 ```text
 Owner creates a missing-pet case
 → shares its public page
-→ neighbour submits a sighting without an account
+→ neighbour submits a location-first sighting without an account
 → owner sees the report and its exact location
 → owner marks the pet reunited or closes the case
 ```
@@ -36,22 +36,23 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | ID | Task | Status |
 | --- | --- | --- |
 | PS-101 | Configure magic-link authentication and lightweight profiles | Done |
-| PS-102 | Create PostGIS schema, migrations, Storage buckets and RLS policies | Not started |
+| PS-102 | Create PostGIS schema, migrations, Storage buckets and RLS policies, including exact and public-safe location fields | Not started |
 | PS-103 | Build pet details and photo-upload flow for dogs and cats | Not started |
 | PS-104 | Process uploads automatically: validate, strip EXIF and generate display images | Not started |
-| PS-105 | Build missing-case draft, location and publication flow | Not started |
+| PS-105 | Build missing-case draft, publication and location-picker flow with GPS, movable-pin confirmation and manual fallback | Not started |
 | PS-106 | Generate non-sequential public URLs under `petseen.org/find/:slug` | Not started |
-| PS-107 | Build public case page with approximate location | Not started |
+| PS-107 | Build public case page with a server-provided approximate location map; never return exact coordinates publicly | Not started |
 | PS-108 | Build owner dashboard: edit, close and mark reunited | Not started |
 | PS-109 | Add basic report-content action and protected moderation view | Not started |
+| PS-110 | Validate MapLibre with one hosted tile and geocoding provider using representative UK locations, production terms and cost controls | Not started |
 
 ## Release 2 — Controlled beta: sightings
 
 | ID | Task | Status |
 | --- | --- | --- |
-| PS-201 | Build anonymous, standalone sighting flow | Not started |
+| PS-201 | Build a location-first anonymous sighting flow with GPS, movable-pin confirmation, manual fallback and a default time of now | Not started |
 | PS-202 | Support optional case selection; do not require matching | Not started |
-| PS-203 | Show linked sightings in owner timeline and map | Not started |
+| PS-203 | Show linked sightings with exact authorised locations in the owner timeline and case map | Not started |
 | PS-204 | Send owner email notifications for linked sightings | Not started |
 | PS-205 | Add report states: pending, confirmed and dismissed | Not started |
 | PS-206 | Add reunion reason and self-reported Pet Seen attribution | Not started |
@@ -64,7 +65,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 - Web Share, copied-link and WhatsApp sharing
 - Open Graph image and metadata generation
 - Sharing attribution
-- Nearby cases and sightings discovery
+- Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins
 
 ## Later releases
 
@@ -84,3 +85,8 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 - Photos need automated EXIF removal and public display derivatives.
 - Default retention is one year, subject to a data-type-specific policy before public beta.
 - Poster generation is part of the initial release, after the controlled-beta loop works.
+- MapLibre is the initial map renderer; hosted tiles and geocoding remain configurable, while Supabase/PostGIS owns location data and spatial queries.
+- GPS-assisted reports must allow pin correction and manual location entry. A denied or unavailable location permission must not block submission.
+- Exact locations are generated and protected server-side. Public clients receive only persisted public-safe locations.
+- The controlled beta keeps exact sighting locations on the owner map. Approximate public sighting pins are deferred to Release 3 discovery.
+- Map work is delivered through the existing `PS-*` tasks; the map strategy does not maintain a separate implementation backlog.

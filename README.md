@@ -8,7 +8,7 @@ The initial beta serves the United Kingdom and will concentrate promotion in one
 
 Release 0 is in progress. The initial application shell, visual foundation, and delivery breakdown are now in place.
 
-See [the delivery breakdown](docs/PROJECT_BREAKDOWN.md) and the product plan for the roadmap.
+See [the delivery breakdown](docs/PROJECT_BREAKDOWN.md) for the roadmap and [the map strategy](docs/MAP_STRATEGY.md) for location and mapping decisions.
 
 The controlled-beta operating rules are documented in the [safety, privacy, retention and moderation policy](docs/BETA_SAFETY_PRIVACY_POLICY.md).
 
