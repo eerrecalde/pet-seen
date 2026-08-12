@@ -50,9 +50,9 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 | ID | Task | Status |
 | --- | --- | --- |
-| PS-201 | Build a location-first anonymous sighting flow with GPS, movable-pin confirmation, manual fallback and a default time of now | Not started |
-| PS-202 | Support optional case selection; do not require matching | Not started |
-| PS-203 | Show linked sightings with exact authorised locations in the owner timeline and case map | Not started |
+| PS-201 | Build a location-first anonymous sighting flow with GPS, movable-pin confirmation, manual fallback and a default time of now | Done |
+| PS-202 | Support optional case selection; do not require matching | Done |
+| PS-203 | Show linked sightings with exact authorised locations in the owner timeline and case map | Done |
 | PS-204 | Send owner email notifications for linked sightings | Not started |
 | PS-205 | Add report states: pending, confirmed and dismissed | Not started |
 | PS-206 | Add reunion reason and self-reported Pet Seen attribution | Not started |
