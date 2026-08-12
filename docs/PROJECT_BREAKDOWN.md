@@ -61,8 +61,8 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 ## Release 3 — Distribution
 
-- A4 poster generator and QR code
-- Web Share, copied-link and WhatsApp sharing
+- A4 poster generator and QR code — Done
+- Web Share, copied-link and WhatsApp sharing — Done
 - Open Graph image and metadata generation
 - Sharing attribution
 - Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins
