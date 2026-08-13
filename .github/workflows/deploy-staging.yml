@@ -30,14 +30,14 @@ jobs:
       url: ${{ steps.deploy.outputs.deployment-url }}
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Deploy exactly the commit that passed Quality checks, rather than a
           # newer commit which may have arrived while this workflow was queued.
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -55,7 +55,7 @@ jobs:
 
       - name: Deploy Cloudflare Pages project
         id: deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -73,12 +73,12 @@ jobs:
     environment: staging
     steps:
       - name: Check out deployed source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -96,7 +96,7 @@ jobs:
 
       - name: Upload Playwright failure evidence
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-staging-${{ github.run_id }}
           path: |
