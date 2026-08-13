@@ -382,6 +382,11 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
+# Anonymous found-pet submissions have no user JWT. The screening function
+# validates the unguessable report submission token itself and fails closed.
+[functions.screen-found-pet-report]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
