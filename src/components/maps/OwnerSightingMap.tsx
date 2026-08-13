@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { maplibregl } from '../lib/maplibre'
-import type { Map, Marker } from '../lib/maplibre'
+import { maplibregl } from '../../lib/maplibre'
+import type { Map, Marker } from '../../lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 export type SightingMapPoint = { id: string, latitude: number, longitude: number, label: string }

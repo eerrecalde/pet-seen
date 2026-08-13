@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { approximateArea } from '../lib/approximate-area'
-import { maplibregl } from '../lib/maplibre'
-import type { Map } from '../lib/maplibre'
+import { approximateArea } from '../../lib/approximate-area'
+import { maplibregl } from '../../lib/maplibre'
+import type { Map } from '../../lib/maplibre'
 
 type PublicLocationMapProps = {
   latitude: number

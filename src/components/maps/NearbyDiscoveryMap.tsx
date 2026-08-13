@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { approximateArea } from '../lib/approximate-area'
-import { maplibregl } from '../lib/maplibre'
-import type { Map, Marker } from '../lib/maplibre'
+import { approximateArea } from '../../lib/approximate-area'
+import { maplibregl } from '../../lib/maplibre'
+import type { Map, Marker } from '../../lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-export type NearbyMapPoint = { id: string, kind: 'case' | 'sighting', latitude: number, longitude: number, label: string }
+type NearbyMapCoordinates = { id: string, latitude: number, longitude: number, label: string }
+export type NearbyMapPoint =
+  | (NearbyMapCoordinates & { kind: 'case' })
+  | (NearbyMapCoordinates & { kind: 'sighting' })
 
 const fallbackStyle = { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#e7f0df' } }] } as const
 

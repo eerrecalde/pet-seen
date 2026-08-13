@@ -83,9 +83,12 @@ deploys only pushes to `main` and serialized deployments through its
 
 - Every push to `main` runs `.github/workflows/quality.yml`. A successful run
   triggers `.github/workflows/deploy-staging.yml`, which deploys that same
-  commit to staging. Playwright is entirely manual while the product is in
-  active development; run it against staging after a meaningful change or
-  before merging a release-sized set of work.
+  commit to staging. Playwright is deliberately separate from deployment while
+  the product is in active development: run **Staging E2E regression** from
+  the Actions tab after a meaningful change or before merging a release-sized
+  set of work. Choose `core` for the beta loop or `all` to include the visual
+  regression suite. The workflow uses the `staging` environment and uploads
+  its report, traces, screenshots, and videos on every run.
 - The deployment workflow does not apply database migrations or deploy Edge
   Functions. When changes under `supabase/` need staging validation, apply them
   deliberately to the staging ref:
