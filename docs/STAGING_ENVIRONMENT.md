@@ -112,19 +112,23 @@ rest of each page is compared pixel-for-pixel. Each run creates and deletes a
 separate staging owner, which prevents one run's case or sighting from changing
 another run's result.
 
-After adding or intentionally changing a visual baseline, use staging-only
-credentials to run:
+After adding or intentionally changing a visual baseline, use the pinned
+Playwright Linux image used by GitHub Actions. This ensures the baseline has
+the same platform suffix and rendering environment as CI:
 
 ```sh
-PLAYWRIGHT_STAGING_SUPABASE_URL=... \
-PLAYWRIGHT_STAGING_SUPABASE_ANON_KEY=... \
-PLAYWRIGHT_STAGING_SUPABASE_SERVICE_ROLE_KEY=... \
-npm run test:e2e:update
+docker run --rm --init --ipc=host --platform linux/amd64 \
+  --env-file .env.playwright.local \
+  -v "$PWD:/work" -v petseen-playwright-node-modules-v162:/work/node_modules -w /work \
+  mcr.microsoft.com/playwright:v1.62.1-noble \
+  bash -lc 'npm ci && npm run test:e2e:update'
 ```
 
 Review and commit the generated files under
 `tests/e2e/visual-regression.spec.ts-snapshots/`. Normal CI runs
-`npm run test:e2e` and never updates a baseline.
+`npm run test:e2e` and never updates a baseline. The container creates
+`*-chromium-linux.png` files; remove the macOS-only `*-chromium-darwin.png`
+files once the Linux baselines are reviewed.
 - `case-social-card` and `case-pet-photo` are public and must be deployed with
   `--no-verify-jwt`. `case-pet-photo` returns only a short-lived URL for a
   processed image on a published case. The photo-processing and sighting-email

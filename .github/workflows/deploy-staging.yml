@@ -69,6 +69,7 @@ jobs:
     name: Playwright staging regression
     needs: deploy
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
     environment: staging
     steps:
       - name: Check out deployed source
@@ -84,9 +85,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
 
       - name: Run staging regression suite
         run: npm run test:e2e
