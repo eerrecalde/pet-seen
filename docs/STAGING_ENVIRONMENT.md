@@ -1,9 +1,9 @@
 # Staging environment
 
 PS-305 deploys `main` to the separate Cloudflare Pages project
-`pet-seen-staging`. Its temporary, public staging address is:
+`petseen-staging`. Its temporary, public staging address is:
 
-`https://pet-seen-staging.pages.dev`
+`https://petseen-staging.pages.dev`
 
 ## Hosted project identifiers
 
@@ -30,8 +30,8 @@ client-side routes working when opened directly.
    `case-social-card`. Configure their staging-only secrets and verified email
    sender there.
 3. In Supabase Auth, set the Site URL to
-   `https://pet-seen-staging.pages.dev` and add
-   `https://pet-seen-staging.pages.dev/auth` to the redirect allow-list. Keep
+   `https://petseen-staging.pages.dev` and add
+   `https://petseen-staging.pages.dev/auth` to the redirect allow-list. Keep
    the production URLs out of this project.
 4. Create the Cloudflare Pages project named `pet-seen-staging`, set `main` as
    its production branch, and use Direct Upload rather than Cloudflare's Git
