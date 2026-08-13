@@ -33,12 +33,12 @@ export class SightingPage {
 
   async open() { await this.page.goto('/sighting/new'); await expect(this.page.getByRole('heading', { name: 'Tell us what you saw.' })).toBeVisible() }
 
-  async submit(caseSlug: string) {
+  async submit(petName: string) {
     await this.open()
-    await this.page.getByLabel('Pet or case').selectOption(caseSlug)
+    await this.page.getByRole('button', { name: 'Choose a missing pet' }).click()
+    await this.page.getByRole('dialog').getByRole('button', { name: new RegExp(petName) }).click()
     await this.page.getByLabel('Where did you see the pet?').fill('Victoria Park lakeside path')
-    await this.page.getByLabel('Latitude').fill('51.536200')
-    await this.page.getByLabel('Longitude').fill('-0.035100')
+    await this.page.getByLabel('Map for choosing the last seen location').click({ position: { x: 220, y: 120 } })
     await this.page.getByLabel('Details').fill('Saw the dog heading east near the lake.')
     await this.page.getByRole('button', { name: 'Submit sighting' }).click()
     await expect(this.page.getByRole('heading', { name: 'Sighting shared.' })).toBeVisible()

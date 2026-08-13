@@ -28,7 +28,7 @@ test.describe.serial('core beta loop on staging', () => {
 
   test('neighbour can submit a linked sighting', async ({ page }) => {
     await useFixedTime(page)
-    await new SightingPage(page).submit(slug)
+    await new SightingPage(page).submit(petName)
   })
 
   test('owner can confirm the sighting and mark the pet reunited', async ({ page }) => {
