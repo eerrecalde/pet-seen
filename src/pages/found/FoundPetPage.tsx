@@ -57,7 +57,7 @@ export function FoundPetPage() {
       if (uploadError) { setState('error'); setError(t('found.photoUploadError')); return }
       const { data: photoId, error: attachError } = await supabase.rpc('attach_found_pet_photo', { target_report_id: reportId, submission_token: submissionToken.current })
       if (attachError || !photoId) { setState('error'); setError(t('found.photoUploadError')); return }
-      const { error: processError } = await supabase.functions.invoke('process-pet-photo', { body: { foundPhotoId: photoId, foundSubmissionToken: submissionToken.current } })
+      const { error: processError } = await supabase.functions.invoke('process-pet-photo', { body: { foundReportId: reportId, foundSubmissionToken: submissionToken.current } })
       if (processError) { setState('error'); setError(t('found.photoProcessError')); return }
     }
     // Screening failure deliberately does not expose the report: it remains in

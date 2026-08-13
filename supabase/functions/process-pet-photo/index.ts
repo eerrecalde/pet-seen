@@ -52,18 +52,20 @@ Deno.serve(async (request) => {
 
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   const admin = createClient(supabaseUrl, serviceRoleKey)
-  const { photoId, foundPhotoId, foundSubmissionToken } = await request.json().catch(() => ({ photoId: null, foundPhotoId: null, foundSubmissionToken: null })) as { photoId?: string | null, foundPhotoId?: string | null, foundSubmissionToken?: string | null }
-  if ((!photoId && !foundPhotoId) || (photoId && foundPhotoId)) return response(request, 400, { error: 'A photo is required.' })
-  const isFoundPhoto = Boolean(foundPhotoId)
+  const { photoId, foundPhotoId, foundReportId, foundSubmissionToken } = await request.json().catch(() => ({ photoId: null, foundPhotoId: null, foundReportId: null, foundSubmissionToken: null })) as { photoId?: string | null, foundPhotoId?: string | null, foundReportId?: string | null, foundSubmissionToken?: string | null }
+  if ((!photoId && !foundPhotoId && !foundReportId) || (photoId && (foundPhotoId || foundReportId))) return response(request, 400, { error: 'A photo is required.' })
+  const isFoundPhoto = Boolean(foundPhotoId || foundReportId)
   let sourceObjectPath = ''
   let displayObjectPath = ''
-  if (foundPhotoId) {
-    const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq('id', foundPhotoId).maybeSingle<FoundPhotoRecord>()
-    if (!photo) return response(request, 404, { error: 'Photo not found.' })
+  let targetPhotoId = photoId
+  if (isFoundPhoto) {
     if (!foundSubmissionToken) return response(request, 401, { error: 'Found-pet photo not found.' })
+    const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq(foundReportId ? 'found_pet_report_id' : 'id', foundReportId ?? foundPhotoId!).maybeSingle<FoundPhotoRecord>()
+    if (!photo) return response(request, 404, { error: 'Found-pet photo not found.' })
     const { data: report } = await admin.from('found_pet_reports').select('client_submission_id').eq('id', photo.found_pet_report_id).maybeSingle<{ client_submission_id: string }>()
     if (!report || report.client_submission_id !== foundSubmissionToken) return response(request, 404, { error: 'Found-pet photo not found.' })
     if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
+    targetPhotoId = photo.id
     sourceObjectPath = photo.source_object_path
     displayObjectPath = `display/${photo.id}.jpg`
   } else {
@@ -95,12 +97,12 @@ Deno.serve(async (request) => {
 
     const { error: uploadError } = await admin.storage.from(bucket).upload(displayObjectPath, displayBytes, { contentType: 'image/jpeg', upsert: true })
     if (uploadError) throw new Error('display upload failed')
-    const { error: updateError } = await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', foundPhotoId ?? photoId)
+    const { error: updateError } = await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', targetPhotoId!)
     if (updateError) throw new Error('photo record update failed')
     return response(request, 200, { status: 'processed' })
   } catch (error) {
     console.error('Pet photo processing failed', error)
-    await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', foundPhotoId ?? photoId)
+    await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', targetPhotoId!)
     return response(request, 422, { error: 'We could not process this photo.' })
   }
 })
