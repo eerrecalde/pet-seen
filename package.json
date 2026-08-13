@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test:e2e": "playwright test",
+    "test:e2e:update": "playwright test --update-snapshots",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint .",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
+    "@playwright/test": "^1.55.0",
     "@types/node": "^24.3.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.0",

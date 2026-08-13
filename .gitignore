@@ -5,6 +5,8 @@ dist/
 .env.*.local
 !.env.example
 coverage/
+playwright-report/
+test-results/
 .DS_Store
 
 # Local product references; they are intentionally not part of the code repository.

@@ -26,6 +26,8 @@ jobs:
     environment:
       name: staging
       url: https://petseen-staging.pages.dev
+    outputs:
+      url: ${{ steps.deploy.outputs.deployment-url }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -62,3 +64,45 @@ jobs:
 
       - name: Publish deployment URL
         run: 'echo "Staging deployment: ${{ steps.deploy.outputs.deployment-url }}" >> "$GITHUB_STEP_SUMMARY"'
+
+  test-staging:
+    name: Playwright staging regression
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Check out deployed source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run staging regression suite
+        run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.url }}
+          PLAYWRIGHT_STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          PLAYWRIGHT_STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          PLAYWRIGHT_STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Upload Playwright failure evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-staging-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14

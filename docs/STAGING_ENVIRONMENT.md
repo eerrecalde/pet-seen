@@ -46,7 +46,10 @@ client-side routes working when opened directly.
    - `STAGING_SUPABASE_ANON_KEY`
    - `STAGING_SOCIAL_CARD_URL` — the staging `case-social-card` function URL
    - `STAGING_MAP_STYLE_URL` — a MapTiler style URL restricted to the staging
-     Pages origin
+    Pages origin
+   - `STAGING_SUPABASE_SERVICE_ROLE_KEY` — used only by the post-deployment
+    Playwright job to create and remove its isolated test owner; never expose
+    this key to the browser or frontend build
 
 6. Run **Deploy staging** manually once, confirm the generated Pages URL, and
    exercise a magic-link sign-in and a case social-card request. After that,
@@ -59,7 +62,7 @@ accidentally building staging with local or production values.
 
 ## Current GitHub environment contract
 
-The GitHub `staging` environment holds these six secrets. Their values are not
+The GitHub `staging` environment holds these seven secrets. Their values are not
 committed and must never be printed in workflow logs:
 
 | Secret | Purpose |
@@ -70,6 +73,7 @@ committed and must never be printed in workflow logs:
 | `STAGING_SUPABASE_ANON_KEY` | Browser publishable/anon key for the staging project |
 | `STAGING_SOCIAL_CARD_URL` | Staging `case-social-card` function URL |
 | `STAGING_MAP_STYLE_URL` | MapTiler URL whose key is restricted to `petseen-staging.pages.dev` |
+| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | Server-only key for disposable Playwright users and cleanup |
 
 No environment protection rules are needed for staging: the workflow itself
 deploys only pushes to `main` and serialized deployments through its
@@ -79,7 +83,12 @@ deploys only pushes to `main` and serialized deployments through its
 
 - Every push to `main` runs `.github/workflows/quality.yml`. A successful run
   triggers `.github/workflows/deploy-staging.yml`, which deploys that same
-  commit to staging.
+  commit to staging and then runs the Playwright core-loop and visual
+  regression suites against the deployment URL. On a failure, the workflow
+  retains the HTML report, trace, screenshot and video evidence for 14 days.
+  Enable GitHub Actions email notifications for failed workflows in the
+  repository's **Watch → Custom** settings; GitHub then emails subscribed
+  maintainers without sending credentials to a third-party mail service.
 - The deployment workflow does not apply database migrations or deploy Edge
   Functions. When changes under `supabase/` need staging validation, apply them
   deliberately to the staging ref:
@@ -92,6 +101,30 @@ deploys only pushes to `main` and serialized deployments through its
   Confirm the repository is linked to `anaafdoeddfpylybwlzu` first with
   `npx supabase projects list`; `db push --linked` will otherwise target the
   wrong remote project.
+
+## Playwright visual baselines
+
+The suite keeps one desktop snapshot for each core-loop page: missing-case,
+public-case, sighting and owner dashboard. Maps, generated pet images and
+datetime controls are masked because their rendering or value is expected to
+vary between runs; the browser clock, names and form content are fixed so the
+rest of each page is compared pixel-for-pixel. Each run creates and deletes a
+separate staging owner, which prevents one run's case or sighting from changing
+another run's result.
+
+After adding or intentionally changing a visual baseline, use staging-only
+credentials to run:
+
+```sh
+PLAYWRIGHT_STAGING_SUPABASE_URL=... \
+PLAYWRIGHT_STAGING_SUPABASE_ANON_KEY=... \
+PLAYWRIGHT_STAGING_SUPABASE_SERVICE_ROLE_KEY=... \
+npm run test:e2e:update
+```
+
+Review and commit the generated files under
+`tests/e2e/visual-regression.spec.ts-snapshots/`. Normal CI runs
+`npm run test:e2e` and never updates a baseline.
 - `case-social-card` and `case-pet-photo` are public and must be deployed with
   `--no-verify-jwt`. `case-pet-photo` returns only a short-lived URL for a
   processed image on a published case. The photo-processing and sighting-email
