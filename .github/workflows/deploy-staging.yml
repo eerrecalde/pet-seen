@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: https://pet-seen-staging.pages.dev
+      url: https://petseen-staging.pages.dev
     steps:
       - name: Check out source
         uses: actions/checkout@v4
