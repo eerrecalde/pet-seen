@@ -52,7 +52,7 @@ Deno.serve(async (request) => {
 
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   const admin = createClient(supabaseUrl, serviceRoleKey)
-  const { photoId, foundPhotoId } = await request.json().catch(() => ({ photoId: null, foundPhotoId: null })) as { photoId?: string | null, foundPhotoId?: string | null }
+  const { photoId, foundPhotoId, foundSubmissionToken } = await request.json().catch(() => ({ photoId: null, foundPhotoId: null, foundSubmissionToken: null })) as { photoId?: string | null, foundPhotoId?: string | null, foundSubmissionToken?: string | null }
   if ((!photoId && !foundPhotoId) || (photoId && foundPhotoId)) return response(request, 400, { error: 'A photo is required.' })
   const isFoundPhoto = Boolean(foundPhotoId)
   let sourceObjectPath = ''
@@ -60,6 +60,9 @@ Deno.serve(async (request) => {
   if (foundPhotoId) {
     const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq('id', foundPhotoId).maybeSingle<FoundPhotoRecord>()
     if (!photo) return response(request, 404, { error: 'Photo not found.' })
+    if (!foundSubmissionToken) return response(request, 401, { error: 'Found-pet photo not found.' })
+    const { data: report } = await admin.from('found_pet_reports').select('client_submission_id').eq('id', photo.found_pet_report_id).maybeSingle<{ client_submission_id: string }>()
+    if (!report || report.client_submission_id !== foundSubmissionToken) return response(request, 404, { error: 'Found-pet photo not found.' })
     if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
     sourceObjectPath = photo.source_object_path
     displayObjectPath = `display/${photo.id}.jpg`

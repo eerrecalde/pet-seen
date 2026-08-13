@@ -387,6 +387,11 @@ deno_version = 2
 [functions.screen-found-pet-report]
 verify_jwt = false
 
+# Found-pet photos use the same submission-token validation inside the function.
+# Authenticated missing-pet photo processing retains its user-token check.
+[functions.process-pet-photo]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
