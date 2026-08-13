@@ -1,0 +1,3 @@
+# Cloudflare Pages configuration. The project itself is named explicitly in the
+# deployment workflow so this file remains safe to use for local Pages commands.
+pages_build_output_dir = "./dist"
