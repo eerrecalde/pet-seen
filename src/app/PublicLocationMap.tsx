@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { approximateArea } from '../lib/approximate-area'
 import { maplibregl } from '../lib/maplibre'
 import type { Map } from '../lib/maplibre'
 
@@ -25,27 +26,29 @@ export function PublicLocationMap({ latitude, longitude, label }: PublicLocation
     const instance = new maplibregl.Map({
       container: container.current,
       center: [longitude, latitude],
-      zoom: 12,
+      zoom: 16,
       interactive: false,
       style: import.meta.env.VITE_MAP_STYLE_URL || fallbackStyle,
     })
     instance.on('load', () => {
+      const area = approximateArea(latitude, longitude)
       instance.addSource('approximate-area', {
         type: 'geojson',
-        data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [longitude, latitude] } },
+        data: area.data,
       })
       instance.addLayer({
         id: 'approximate-area-fill',
-        type: 'circle',
+        type: 'fill',
         source: 'approximate-area',
-        paint: { 'circle-radius': 62, 'circle-color': '#ffffff', 'circle-opacity': 0.62, 'circle-stroke-color': '#426c68', 'circle-stroke-width': 2, 'circle-stroke-opacity': 0.8 },
+        paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.62 },
       })
       instance.addLayer({
-        id: 'approximate-area-centre',
-        type: 'circle',
+        id: 'approximate-area-outline',
+        type: 'line',
         source: 'approximate-area',
-        paint: { 'circle-radius': 8, 'circle-color': '#d76f4e', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 },
+        paint: { 'line-color': '#426c68', 'line-width': 2, 'line-opacity': 0.8 },
       })
+      instance.fitBounds(area.bounds, { padding: 48, maxZoom: 16, duration: 0 })
     })
     map.current = instance
     return () => { instance.remove(); map.current = null }

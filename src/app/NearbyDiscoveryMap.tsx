@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { approximateArea } from '../lib/approximate-area'
 import { maplibregl } from '../lib/maplibre'
 import type { Map, Marker } from '../lib/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -15,7 +16,19 @@ export function NearbyDiscoveryMap({ points, label }: { points: NearbyMapPoint[]
   useEffect(() => {
     if (!container.current || map.current || points.length === 0) return
     const instance = new maplibregl.Map({ container: container.current, center: [points[0].longitude, points[0].latitude], zoom: 12, style: import.meta.env.VITE_MAP_STYLE_URL || fallbackStyle })
-    markers.current = points.map((point) => {
+    const caseAreas = points.filter((point) => point.kind === 'case').map((point) => ({ ...approximateArea(point.latitude, point.longitude).data, properties: { label: point.label } }))
+    instance.on('load', () => {
+      instance.addSource('nearby-case-areas', { type: 'geojson', data: { type: 'FeatureCollection', features: caseAreas } })
+      instance.addLayer({ id: 'nearby-case-areas-fill', type: 'fill', source: 'nearby-case-areas', paint: { 'fill-color': '#d76f4e', 'fill-opacity': 0.3 } })
+      instance.addLayer({ id: 'nearby-case-areas-outline', type: 'line', source: 'nearby-case-areas', paint: { 'line-color': '#9b553a', 'line-width': 2 } })
+      instance.on('mouseenter', 'nearby-case-areas-fill', () => { instance.getCanvas().style.cursor = 'pointer' })
+      instance.on('mouseleave', 'nearby-case-areas-fill', () => { instance.getCanvas().style.cursor = '' })
+      instance.on('click', 'nearby-case-areas-fill', (event) => {
+        const label = event.features?.[0]?.properties?.label
+        if (label) new maplibregl.Popup({ offset: 12 }).setLngLat(event.lngLat).setText(label).addTo(instance)
+      })
+    })
+    markers.current = points.filter((point) => point.kind === 'sighting').map((point) => {
       const element = document.createElement('span')
       element.className = `nearby-map-pin ${point.kind}`
       element.setAttribute('aria-hidden', 'true')
