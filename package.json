@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test:e2e": "playwright test",
-    "test:e2e:update": "playwright test --update-snapshots",
+    "test:e2e": "playwright test tests/e2e/core-beta.spec.ts",
+    "test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
+    "test:e2e:visual:update": "playwright test tests/e2e/visual-regression.spec.ts --update-snapshots",
+    "test:e2e:update": "npm run test:e2e:visual:update",
+    "test:e2e:all": "playwright test",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint .",

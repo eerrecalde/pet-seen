@@ -83,8 +83,9 @@ deploys only pushes to `main` and serialized deployments through its
 
 - Every push to `main` runs `.github/workflows/quality.yml`. A successful run
   triggers `.github/workflows/deploy-staging.yml`, which deploys that same
-  commit to staging and then runs the Playwright core-loop and visual
-  regression suites against the deployment URL. On a failure, the workflow
+  commit to staging and then runs the Playwright core-loop regression suite
+  against the deployment URL. Visual snapshot comparison is manual while the
+  product is in active development. On a failure, the workflow
   retains the HTML report, trace, screenshot and video evidence for 14 days.
   Enable GitHub Actions email notifications for failed workflows in the
   repository's **Watch → Custom** settings; GitHub then emails subscribed
@@ -121,12 +122,13 @@ docker run --rm --init --ipc=host --platform linux/amd64 \
   --env-file .env.playwright.local \
   -v "$PWD:/work" -v petseen-playwright-node-modules-v162:/work/node_modules -w /work \
   mcr.microsoft.com/playwright:v1.62.1-noble \
-  bash -lc 'npm ci && npm run test:e2e:update'
+  bash -lc 'npm ci && npm run test:e2e:visual:update'
 ```
 
 Review and commit the generated files under
-`tests/e2e/visual-regression.spec.ts-snapshots/`. Normal CI runs
-`npm run test:e2e` and never updates a baseline. The container creates
+`tests/e2e/visual-regression.spec.ts-snapshots/`. Normal CI runs only
+`npm run test:e2e` (the core loop); run `npm run test:e2e:visual` manually
+when you want to compare snapshots. The container creates
 `*-chromium-linux.png` files; remove the macOS-only `*-chromium-darwin.png`
 files once the Linux baselines are reviewed.
 - `case-social-card` and `case-pet-photo` are public and must be deployed with

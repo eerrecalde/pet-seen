@@ -66,7 +66,7 @@ jobs:
         run: 'echo "Staging deployment: ${{ steps.deploy.outputs.deployment-url }}" >> "$GITHUB_STEP_SUMMARY"'
 
   test-staging:
-    name: Playwright staging regression
+    name: Playwright core-loop regression
     needs: deploy
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/playwright:v1.62.1-noble
@@ -86,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run staging regression suite
+      - name: Run staging core-loop regression
         run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: ${{ needs.deploy.outputs.url }}
