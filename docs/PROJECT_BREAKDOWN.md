@@ -67,11 +67,22 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-302 | Web Share, copied-link and WhatsApp sharing; Open Graph image and metadata generation; sharing attribution | Done |
 | PS-303 | Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins | Done |
 
+## Release 3.5 — Delivery safeguards
+
+Complete this release before PS-401 so the refactor is protected by a deployed regression suite.
+
+| ID | Task | Status |
+| --- | --- | --- |
+| PS-304 | Add GitHub Actions quality checks for pull requests and pushes to `main`: dependency install, typecheck, lint and production build | Not started |
+| PS-305 | Configure a Cloudflare Pages staging deployment and temporary staging domain from `main`, using a separate hosted Supabase staging environment | Not started |
+| PS-306 | Build a Playwright Page Object Model regression suite against staging for the core beta loop, including PS-208: missing case → public case → sighting → owner review/reunion | Not started |
+| PS-307 | Run the staging Playwright suite after each `main` deployment, retain failure reports/traces/screenshots, and notify through GitHub Actions email notifications | Not started |
+
 ## Release 4 — Scale and follow-up
 
 | ID | Task | Status |
 | --- | --- | --- |
-| PS-401 | Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable | Not started |
+| PS-401 | Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable; start only after Release 3.5 is complete | Not started |
 | PS-402 | Found-pet flow and custody status | Not started |
 | PS-403 | Deterministic report-to-case matching | Not started |
 | PS-404 | Optional reporter magic-link follow-up and private messaging | Not started |
@@ -92,3 +103,4 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 - Exact locations are generated and protected server-side. Public clients receive only persisted public-safe locations.
 - The controlled beta keeps exact sighting locations on the owner map. Approximate public sighting pins are deferred to Release 3 discovery.
 - Map work is delivered through the existing `PS-*` tasks; the map strategy does not maintain a separate implementation backlog.
+- Cloudflare Pages is the selected Git-connected host for the temporary staging frontend. `main` deploys to staging until a separate production environment and domain are introduced.
