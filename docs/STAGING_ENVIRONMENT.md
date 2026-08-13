@@ -49,8 +49,9 @@ client-side routes working when opened directly.
      Pages origin
 
 6. Run **Deploy staging** manually once, confirm the generated Pages URL, and
-   exercise a magic-link sign-in and a case social-card request. The workflow
-   then deploys every subsequent push to `main`.
+   exercise a magic-link sign-in and a case social-card request. After that,
+   staging deploys the exact `main` commit only after **Quality checks** pass.
+   A manual deployment remains available for deliberate recovery work.
 
 The Supabase anon key is intentionally supplied only at build time. It is a
 browser public key, but keeping all environment values in GitHub secrets avoids
@@ -76,8 +77,9 @@ deploys only pushes to `main` and serialized deployments through its
 
 ## Routine operations
 
-- Every push to `main` runs `.github/workflows/quality.yml` and then builds and
-  deploys the frontend through `.github/workflows/deploy-staging.yml`.
+- Every push to `main` runs `.github/workflows/quality.yml`. A successful run
+  triggers `.github/workflows/deploy-staging.yml`, which deploys that same
+  commit to staging.
 - The deployment workflow does not apply database migrations or deploy Edge
   Functions. When changes under `supabase/` need staging validation, apply them
   deliberately to the staging ref:

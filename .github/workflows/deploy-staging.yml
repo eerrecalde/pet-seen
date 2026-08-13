@@ -1,7 +1,11 @@
 name: Deploy staging
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Quality checks
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch:
@@ -16,6 +20,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     name: Build and deploy to staging
     runs-on: ubuntu-latest
     environment:
@@ -24,6 +29,10 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          # Deploy exactly the commit that passed Quality checks, rather than a
+          # newer commit which may have arrived while this workflow was queued.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
