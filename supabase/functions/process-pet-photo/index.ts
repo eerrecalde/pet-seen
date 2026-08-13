@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
+import { ImageMagick, initializeImageMagick, MagickFormat } from 'npm:@imagemagick/magick-wasm@^0'
 
-const maxSourceBytes = 10 * 1024 * 1024
+const maxSourceBytes = 5 * 1024 * 1024
+const displayMaxDimension = 1600
+const displayQuality = 82
 const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127.0.0.1:5173', 'http://localhost:5173'])
+
+const wasmBytes = await Deno.readFile(new URL('magick.wasm', import.meta.resolve('npm:@imagemagick/magick-wasm@^0')))
+await initializeImageMagick(wasmBytes)
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get('origin')
@@ -23,16 +29,6 @@ function detectedFormat(bytes: Uint8Array) {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'jpeg' as const
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'png' as const
   return null
-}
-
-function contains(bytes: Uint8Array, text: string) {
-  const needle = new TextEncoder().encode(text)
-  return bytes.some((_, index) => needle.every((value, offset) => bytes[index + offset] === value))
-}
-
-function hasEmbeddedMetadata(bytes: Uint8Array, format: 'jpeg' | 'png') {
-  if (format === 'jpeg') return contains(bytes, 'Exif\u0000\u0000') || contains(bytes, 'http://ns.adobe.com/xap/1.0/')
-  return contains(bytes, 'eXIf') || contains(bytes, 'tEXt') || contains(bytes, 'iTXt') || contains(bytes, 'zTXt')
 }
 
 function response(request: Request, status: number, body: Record<string, string>) {
@@ -62,15 +58,19 @@ Deno.serve(async (request) => {
     if (downloadError || !source) throw new Error('source download failed')
     const bytes = new Uint8Array(await source.arrayBuffer())
     const format = detectedFormat(bytes)
-    if (!format || bytes.byteLength > maxSourceBytes || hasEmbeddedMetadata(bytes, format)) throw new Error('unsafe image source')
+    if (!format || bytes.byteLength > maxSourceBytes) throw new Error('unsafe image source')
 
-    // The browser re-encodes accepted uploads through a canvas before upload.
-    // Reject any source that still carries common image metadata before creating
-    // the processed display copy exposed by public case pages.
-    const extension = format === 'jpeg' ? 'jpg' : 'png'
-    const contentType = format === 'jpeg' ? 'image/jpeg' : 'image/png'
-    const displayObjectPath = `${photo.owner_id}/display/${photo.id}.${extension}`
-    const { error: uploadError } = await admin.storage.from('pet-photos').upload(displayObjectPath, bytes, { contentType, upsert: true })
+    const displayBytes = ImageMagick.read(bytes, (image) => {
+      image.autoOrient()
+      const scale = Math.min(1, displayMaxDimension / image.width, displayMaxDimension / image.height)
+      if (scale < 1) image.resize(Math.round(image.width * scale), Math.round(image.height * scale))
+      image.strip()
+      image.quality = displayQuality
+      return image.write(MagickFormat.Jpeg, (data) => data)
+    })
+
+    const displayObjectPath = `${photo.owner_id}/display/${photo.id}.jpg`
+    const { error: uploadError } = await admin.storage.from('pet-photos').upload(displayObjectPath, displayBytes, { contentType: 'image/jpeg', upsert: true })
     if (uploadError) throw new Error('display upload failed')
     const { error: updateError } = await admin.from('pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', photo.id)
     if (updateError) throw new Error('photo record update failed')
