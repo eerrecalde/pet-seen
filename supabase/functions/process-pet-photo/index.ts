@@ -43,7 +43,7 @@ Deno.serve(async (request) => {
     const bytes = new Uint8Array(await source.arrayBuffer())
     const format = detectedFormat(bytes)
     if (!format) throw new Error('unsupported image format')
-    const image = await Image.decode(format, bytes)
+    const image = await Image.decode(bytes)
     if (image.width * image.height > maxPixels) throw new Error('image dimensions are too large')
     const scale = Math.min(1, displayMaxDimension / Math.max(image.width, image.height))
     if (scale < 1) image.resize('cubic', Math.round(image.width * scale), Math.round(image.height * scale))
