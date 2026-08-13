@@ -83,13 +83,9 @@ deploys only pushes to `main` and serialized deployments through its
 
 - Every push to `main` runs `.github/workflows/quality.yml`. A successful run
   triggers `.github/workflows/deploy-staging.yml`, which deploys that same
-  commit to staging and then runs the Playwright core-loop regression suite
-  against the deployment URL. Visual snapshot comparison is manual while the
-  product is in active development. On a failure, the workflow
-  retains the HTML report, trace, screenshot and video evidence for 14 days.
-  Enable GitHub Actions email notifications for failed workflows in the
-  repository's **Watch → Custom** settings; GitHub then emails subscribed
-  maintainers without sending credentials to a third-party mail service.
+  commit to staging. Playwright is entirely manual while the product is in
+  active development; run it against staging after a meaningful change or
+  before merging a release-sized set of work.
 - The deployment workflow does not apply database migrations or deploy Edge
   Functions. When changes under `supabase/` need staging validation, apply them
   deliberately to the staging ref:
@@ -103,6 +99,18 @@ deploys only pushes to `main` and serialized deployments through its
   `npx supabase projects list`; `db push --linked` will otherwise target the
   wrong remote project.
 
+## Manual Playwright regression
+
+Run the complete functional and visual suite in the pinned Linux container:
+
+```sh
+docker run --rm --init --ipc=host --platform linux/amd64 \
+  --env-file .env.playwright.local \
+  -v "$PWD:/work" -v petseen-playwright-node-modules-v162:/work/node_modules -w /work \
+  mcr.microsoft.com/playwright:v1.62.1-noble \
+  bash -lc 'npm ci && npm run test:e2e:all'
+```
+
 ## Playwright visual baselines
 
 The suite keeps one desktop snapshot for each core-loop page: missing-case,
@@ -114,8 +122,8 @@ separate staging owner, which prevents one run's case or sighting from changing
 another run's result.
 
 After adding or intentionally changing a visual baseline, use the pinned
-Playwright Linux image used by GitHub Actions. This ensures the baseline has
-the same platform suffix and rendering environment as CI:
+Playwright Linux image. This ensures the baseline has a consistent Linux
+platform suffix and rendering environment:
 
 ```sh
 docker run --rm --init --ipc=host --platform linux/amd64 \
@@ -126,9 +134,8 @@ docker run --rm --init --ipc=host --platform linux/amd64 \
 ```
 
 Review and commit the generated files under
-`tests/e2e/visual-regression.spec.ts-snapshots/`. Normal CI runs only
-`npm run test:e2e` (the core loop); run `npm run test:e2e:visual` manually
-when you want to compare snapshots. The container creates
+`tests/e2e/visual-regression.spec.ts-snapshots/`. Run `npm run test:e2e:visual`
+manually when you want to compare snapshots. The container creates
 `*-chromium-linux.png` files; remove the macOS-only `*-chromium-darwin.png`
 files once the Linux baselines are reviewed.
 - `case-social-card` and `case-pet-photo` are public and must be deployed with
