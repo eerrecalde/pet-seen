@@ -90,9 +90,10 @@ deploys only pushes to `main` and serialized deployments through its
   Confirm the repository is linked to `anaafdoeddfpylybwlzu` first with
   `npx supabase projects list`; `db push --linked` will otherwise target the
   wrong remote project.
-- `case-social-card` is public for social crawlers and must be deployed with
-  `--no-verify-jwt`. The photo-processing and sighting-email functions are
-  invoked through the Supabase client and retain JWT verification.
+- `case-social-card` and `case-pet-photo` are public and must be deployed with
+  `--no-verify-jwt`. `case-pet-photo` returns only a short-lived URL for a
+  processed image on a published case. The photo-processing and sighting-email
+  functions are invoked through the Supabase client and retain JWT verification.
 - The staging `send-sighting-owner-email` function needs its own
   `RESEND_API_KEY` and `SIGHTING_EMAIL_FROM` Supabase Function secrets before
   sighting-email delivery can be tested end-to-end.

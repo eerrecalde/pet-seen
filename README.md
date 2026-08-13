@@ -43,7 +43,7 @@ Photo processing and social cards run in Edge Functions. Start them alongside th
 npx supabase functions serve --no-verify-jwt
 ```
 
-For a hosted project, deploy `process-pet-photo` and `case-social-card` after linking the intended project. Set `VITE_SOCIAL_CARD_URL` to the latter’s public URL at build time. The function uses Supabase’s built-in service-role environment variables; do not add them to browser environment files.
+For a hosted project, deploy `process-pet-photo`, `case-pet-photo` and `case-social-card` after linking the intended project. `case-pet-photo` and `case-social-card` are public and must be deployed with `--no-verify-jwt`; they use Supabase’s built-in service-role environment variables to return only processed display images for published cases. Set `VITE_SOCIAL_CARD_URL` to the latter’s public URL at build time.
 
 Stop the stack with `npm run supabase:stop`. To rebuild it from the tracked migrations and seed data, run `npm run supabase:db:reset`. Do not use `--linked` for local commands unless you intentionally mean to operate on a remote project.
 
