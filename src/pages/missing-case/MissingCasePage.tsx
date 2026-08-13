@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LocationPicker } from '../../app/LocationPicker'
+import { LocationPicker } from '../../components/maps/LocationPicker'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
 import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'

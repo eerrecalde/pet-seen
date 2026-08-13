@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NearbyDiscoveryMap, type NearbyMapPoint } from '../../app/NearbyDiscoveryMap'
+import { NearbyDiscoveryMap, type NearbyMapPoint } from '../../components/maps/NearbyDiscoveryMap'
 import { Icon } from '../../components/Icon'
 import { PetImage } from '../../components/PetImage'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'

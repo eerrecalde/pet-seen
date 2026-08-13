@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router'
-import { PublicLocationMap } from '../../app/PublicLocationMap'
+import { PublicLocationMap } from '../../components/maps/PublicLocationMap'
 import { Icon } from '../../components/Icon'
 import { PetImage } from '../../components/PetImage'
 import { PublicCaseNotice } from '../../components/PublicCaseNotice'
