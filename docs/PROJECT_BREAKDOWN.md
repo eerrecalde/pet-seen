@@ -67,6 +67,8 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-302 | Web Share, copied-link and WhatsApp sharing; Open Graph image and metadata generation; sharing attribution | Done |
 | PS-303 | Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins | Done |
 
+Follow-up: WhatsApp currently reads the generic app description because per-case Open Graph tags are set client-side. Revisit PS-302 when server-rendered or prerendered metadata is introduced, so previews can use the individual case description.
+
 ## Release 3.5 — Delivery safeguards
 
 Complete this release before PS-401 so the refactor is protected by a deployed regression suite.
