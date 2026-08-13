@@ -11,8 +11,9 @@ await initializeImageMagick(wasmBytes)
 
 function corsHeaders(request: Request) {
   const origin = request.headers.get('origin')
+  const localOrigin = origin ? /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) : false
   return {
-    ...(origin && allowedOrigins.has(origin) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}),
+    ...(origin && (allowedOrigins.has(origin) || localOrigin) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}),
     'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
     'access-control-allow-methods': 'POST, OPTIONS',
   }
@@ -21,6 +22,13 @@ function corsHeaders(request: Request) {
 type PhotoRecord = {
   id: string
   owner_id: string
+  source_object_path: string
+  status: 'pending' | 'processed' | 'failed'
+}
+
+type FoundPhotoRecord = {
+  id: string
+  found_pet_report_id: string
   source_object_path: string
   status: 'pending' | 'processed' | 'failed'
 }
@@ -44,17 +52,30 @@ Deno.serve(async (request) => {
 
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   const admin = createClient(supabaseUrl, serviceRoleKey)
-  const { data: authData } = token ? await admin.auth.getUser(token) : { data: { user: null } }
-  if (!authData.user) return response(request, 401, { error: 'Sign in is required.' })
-
-  const { photoId } = await request.json().catch(() => ({ photoId: null })) as { photoId?: string | null }
-  if (!photoId) return response(request, 400, { error: 'A photo is required.' })
-  const { data: photo } = await admin.from('pet_photos').select('id, owner_id, source_object_path, status').eq('id', photoId).maybeSingle<PhotoRecord>()
-  if (!photo || photo.owner_id !== authData.user.id) return response(request, 404, { error: 'Photo not found.' })
-  if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
+  const { photoId, foundPhotoId } = await request.json().catch(() => ({ photoId: null, foundPhotoId: null })) as { photoId?: string | null, foundPhotoId?: string | null }
+  if ((!photoId && !foundPhotoId) || (photoId && foundPhotoId)) return response(request, 400, { error: 'A photo is required.' })
+  const isFoundPhoto = Boolean(foundPhotoId)
+  let sourceObjectPath = ''
+  let displayObjectPath = ''
+  if (foundPhotoId) {
+    const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq('id', foundPhotoId).maybeSingle<FoundPhotoRecord>()
+    if (!photo) return response(request, 404, { error: 'Photo not found.' })
+    if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
+    sourceObjectPath = photo.source_object_path
+    displayObjectPath = `display/${photo.id}.jpg`
+  } else {
+    const { data: authData } = token ? await admin.auth.getUser(token) : { data: { user: null } }
+    if (!authData.user) return response(request, 401, { error: 'Sign in is required.' })
+    const { data: photo } = await admin.from('pet_photos').select('id, owner_id, source_object_path, status').eq('id', photoId).maybeSingle<PhotoRecord>()
+    if (!photo || photo.owner_id !== authData.user.id) return response(request, 404, { error: 'Photo not found.' })
+    if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
+    sourceObjectPath = photo.source_object_path
+    displayObjectPath = `${photo.owner_id}/display/${photo.id}.jpg`
+  }
 
   try {
-    const { data: source, error: downloadError } = await admin.storage.from('pet-photos').download(photo.source_object_path)
+    const bucket = isFoundPhoto ? 'found-pet-photos' : 'pet-photos'
+    const { data: source, error: downloadError } = await admin.storage.from(bucket).download(sourceObjectPath)
     if (downloadError || !source) throw new Error('source download failed')
     const bytes = new Uint8Array(await source.arrayBuffer())
     const format = detectedFormat(bytes)
@@ -69,15 +90,14 @@ Deno.serve(async (request) => {
       return image.write(MagickFormat.Jpeg, (data) => data)
     })
 
-    const displayObjectPath = `${photo.owner_id}/display/${photo.id}.jpg`
-    const { error: uploadError } = await admin.storage.from('pet-photos').upload(displayObjectPath, displayBytes, { contentType: 'image/jpeg', upsert: true })
+    const { error: uploadError } = await admin.storage.from(bucket).upload(displayObjectPath, displayBytes, { contentType: 'image/jpeg', upsert: true })
     if (uploadError) throw new Error('display upload failed')
-    const { error: updateError } = await admin.from('pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', photo.id)
+    const { error: updateError } = await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', foundPhotoId ?? photoId)
     if (updateError) throw new Error('photo record update failed')
     return response(request, 200, { status: 'processed' })
   } catch (error) {
     console.error('Pet photo processing failed', error)
-    await admin.from('pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', photo.id)
+    await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', foundPhotoId ?? photoId)
     return response(request, 422, { error: 'We could not process this photo.' })
   }
 })

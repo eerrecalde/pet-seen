@@ -86,18 +86,19 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | --- | --- | --- |
 | PS-401 | Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable; start only after Release 3.5 is complete | Done |
 | PS-402 | Found-pet flow and custody status | Done |
-| PS-403 | Deterministic report-to-case matching | Not started |
+| PS-403 | Deterministic report-to-case matching: rank private found-pet reports against active cases using species, distance, recency, breed and markings; create a provisional link only for a close, unambiguous match, then let the owner confirm or decline it using the private found-pet photo where present. A decline removes the active link and suppresses repeat matching for that pair | In progress |
 | PS-404 | Optional reporter magic-link follow-up and private messaging | Not started |
 | PS-405 | Watch areas, PWA push notifications and email fallback | Not started |
 | PS-406 | Expiry/reopen lifecycle | Not started |
 | PS-407 | Production monitoring, accessibility and security hardening | Not started |
-| PS-408 | AI-assisted sighting-to-case candidate matching: evaluate new standalone sightings against active nearby cases using photos and descriptions; require conservative confidence thresholds, preserve a human-review path, and notify an owner only for a close candidate match | Not started |
+| PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review, require conservative thresholds, never auto-link, and notify an owner only after a staff-approved close match | Not started |
 | PS-409 | Add a public list of confirmed, approximate sightings alongside the missing-pet list; make the two content types clearly distinct, never expose exact locations or reporter details, and link a sighting to its case only where that is safe and useful | Not started |
+| PS-410 | Optional found-pet photo: accept a photo of the found pet only, validate and remove EXIF, and generate a private display derivative; never request or expose a reporter portrait | Done |
 
 ## Decisions already made
 
 - A missing case requires an authenticated creator, but users do not need to create an account to submit a sighting.
-- Standalone sightings are allowed. AI-assisted candidate matching is deferred to PS-408; it must be conservative, explainable to the owner, and notify only for close matches.
+- Standalone sightings and found-pet reports are allowed. A close, unambiguous deterministic found-pet match may be provisionally linked for owner review; an owner can decline it, which removes the active link and prevents repeat matching of that pair. AI-assisted scoring is deferred to PS-408, must remain conservative and reviewable, and must never auto-link a report.
 - Anonymous sightings are immutable after submission. Case owners can dismiss reports from their dashboard.
 - Photos need automated EXIF removal and public display derivatives.
 - Default retention is one year, subject to a data-type-specific policy before public beta.

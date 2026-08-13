@@ -4,8 +4,8 @@ const acceptedTypes = new Set(['image/jpeg', 'image/png'])
 
 export class PetPhotoError extends Error {}
 
-export async function preparePetPhoto(file: File): Promise<File> {
-  if (!acceptedTypes.has(file.type) || file.size > maxSourceBytes) throw new PetPhotoError('unsupported')
+export async function preparePetPhoto(file: File, maxBytes = maxSourceBytes): Promise<File> {
+  if (!acceptedTypes.has(file.type) || file.size > maxBytes) throw new PetPhotoError('unsupported')
   const image = await loadImage(file)
   const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight))
   const canvas = document.createElement('canvas')
