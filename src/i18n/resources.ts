@@ -24,6 +24,7 @@ export const resources = {
         privacyTitle: 'Keep exact locations private.', privacyBody: 'Public maps show a broader area, while the owner sees precise sighting details.',
         neighboursTitle: 'Give neighbours one route to help.', neighboursBody: 'Every public case has a simple sighting form.',
       },
+      nearby: { eyebrow: 'Nearby', title: 'Missing pets in the area', intro: 'Browse active cases first, then switch to the map for a broader view.', showMap: 'Show map', showList: 'Show list', loading: 'Loading nearby cases…', unavailable: 'Nearby discovery is unavailable right now.', empty: 'There are no active missing-pet cases nearby yet.', missingLabel: 'Missing pet', missingLegend: 'Missing-pet case', sightingLegend: 'Confirmed, approximate sighting', casePin: '{{petName}}’s approximate missing area', sightingPin: 'Approximate confirmed sighting', mapLabel: 'Map of approximate missing-pet areas and confirmed sightings' },
       missingCase: {
         progress: 'Missing-pet case', step: 'Step {{current}} of {{total}}', eyebrow: 'Start a case', title: 'Tell us about your pet.',
         intro: 'We’ll help you create a shareable page. You can review everything before it goes public.', details: 'Pet details',
@@ -79,6 +80,7 @@ export const resources = {
         privacyTitle: 'Mantén privados los lugares exactos.', privacyBody: 'Los mapas públicos muestran un área más amplia, mientras que la persona dueña ve los detalles precisos.',
         neighboursTitle: 'Dale a tus vecinos una forma de ayudar.', neighboursBody: 'Cada caso público tiene un formulario sencillo para reportar avistamientos.',
       },
+      nearby: { eyebrow: 'Cerca', title: 'Mascotas perdidas en la zona', intro: 'Primero revisa los casos activos; luego cambia al mapa para una vista más amplia.', showMap: 'Ver mapa', showList: 'Ver lista', loading: 'Cargando casos cercanos…', unavailable: 'La búsqueda cercana no está disponible ahora.', empty: 'Aún no hay casos activos de mascotas perdidas cerca.', missingLabel: 'Mascota perdida', missingLegend: 'Caso de mascota perdida', sightingLegend: 'Avistamiento confirmado y aproximado', casePin: 'Área aproximada donde se perdió {{petName}}', sightingPin: 'Avistamiento confirmado aproximado', mapLabel: 'Mapa de áreas aproximadas de mascotas perdidas y avistamientos confirmados' },
       missingCase: {
         progress: 'Caso de mascota perdida', step: 'Paso {{current}} de {{total}}', eyebrow: 'Inicia un caso', title: 'Cuéntanos sobre tu mascota.', intro: 'Te ayudaremos a crear una página para compartir. Podrás revisar todo antes de que se publique.', details: 'Datos de la mascota',
         petName: 'Nombre de la mascota', species: 'Especie', breed: 'Raza', breedHint: 'Por ejemplo, border collie', markings: 'Color o marcas', markingsHint: 'Por ejemplo, negro con el pecho blanco', description: 'Detalles útiles', descriptionHint: 'Collar, temperamento o cualquier detalle que ayude a reconocer a tu mascota.',

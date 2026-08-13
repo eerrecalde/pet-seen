@@ -37,13 +37,13 @@ npm run supabase:status
 
 Magic links return to `/auth`; the local email inbox is available at `http://127.0.0.1:54324`.
 
-Photo processing runs in the `process-pet-photo` Edge Function. Start it alongside the local stack when testing an authenticated upload:
+Photo processing and social cards run in Edge Functions. Start them alongside the local stack when testing an authenticated upload or Open Graph image:
 
 ```sh
 npx supabase functions serve --no-verify-jwt
 ```
 
-For a hosted project, deploy it with `npx supabase functions deploy process-pet-photo` after linking the intended project. The function uses Supabase’s built-in service-role environment variables; do not add them to browser environment files.
+For a hosted project, deploy `process-pet-photo` and `case-social-card` after linking the intended project. Set `VITE_SOCIAL_CARD_URL` to the latter’s public URL at build time. The function uses Supabase’s built-in service-role environment variables; do not add them to browser environment files.
 
 Stop the stack with `npm run supabase:stop`. To rebuild it from the tracked migrations and seed data, run `npm run supabase:db:reset`. Do not use `--linked` for local commands unless you intentionally mean to operate on a remote project.
 

@@ -61,21 +61,23 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 
 ## Release 3 — Distribution
 
-- A4 poster generator and QR code — Done
-- Web Share, copied-link and WhatsApp sharing — Done
-- Open Graph image and metadata generation
-- Sharing attribution
-- Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins
+| ID | Task | Status |
+| --- | --- | --- |
+| PS-301 | A4 poster generator and QR code | Done |
+| PS-302 | Web Share, copied-link and WhatsApp sharing; Open Graph image and metadata generation; sharing attribution | Done |
+| PS-303 | Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins | Done |
 
-## Later releases
+## Release 4 — Scale and follow-up
 
-- PS-401 — Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable
-- Found-pet flow and custody status
-- Deterministic report-to-case matching
-- Optional reporter magic-link follow-up and private messaging
-- Watch areas, PWA push notifications and email fallback
-- Expiry/reopen lifecycle
-- Production monitoring, accessibility and security hardening
+| ID | Task | Status |
+| --- | --- | --- |
+| PS-401 | Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable | Not started |
+| PS-402 | Found-pet flow and custody status | Not started |
+| PS-403 | Deterministic report-to-case matching | Not started |
+| PS-404 | Optional reporter magic-link follow-up and private messaging | Not started |
+| PS-405 | Watch areas, PWA push notifications and email fallback | Not started |
+| PS-406 | Expiry/reopen lifecycle | Not started |
+| PS-407 | Production monitoring, accessibility and security hardening | Not started |
 
 ## Decisions already made
 
