@@ -85,7 +85,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | ID | Task | Status |
 | --- | --- | --- |
 | PS-401 | Refactor the React frontend into maintainable feature modules, reusable components, hooks and shared utilities once the core beta flows are stable; start only after Release 3.5 is complete | Done |
-| PS-402 | Found-pet flow and custody status | Not started |
+| PS-402 | Found-pet flow and custody status | Done |
 | PS-403 | Deterministic report-to-case matching | Not started |
 | PS-404 | Optional reporter magic-link follow-up and private messaging | Not started |
 | PS-405 | Watch areas, PWA push notifications and email fallback | Not started |
