@@ -26,7 +26,8 @@ client-side routes working when opened directly.
 1. Create a separate hosted Supabase project for staging. Do not link the local
    project or a production project to this workflow.
 2. Apply the tracked migrations and deploy these Edge Functions to the staging
-   project: `send-sighting-owner-email`, `process-pet-photo`, and
+   project: `send-sighting-owner-email`, `process-pet-photo`,
+   `screen-found-pet-report`, `moderate-found-pet-report`, and
    `case-social-card`. Configure their staging-only secrets and verified email
    sender there.
 3. In Supabase Auth, set the Site URL to

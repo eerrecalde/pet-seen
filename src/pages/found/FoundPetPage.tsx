@@ -60,6 +60,9 @@ export function FoundPetPage() {
       const { error: processError } = await supabase.functions.invoke('process-pet-photo', { body: { foundPhotoId: photoId } })
       if (processError) { setState('error'); setError(t('found.photoProcessError')); return }
     }
+    // Screening failure deliberately does not expose the report: it remains in
+    // the private pending queue, while the person submitting it gets a receipt.
+    await supabase.functions.invoke('screen-found-pet-report', { body: { reportId, submissionToken: submissionToken.current } })
     setState('success')
   }
 
