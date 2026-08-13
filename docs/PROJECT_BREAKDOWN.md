@@ -74,7 +74,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | ID | Task | Status |
 | --- | --- | --- |
 | PS-304 | Add GitHub Actions quality checks for pull requests and pushes to `main`: dependency install, typecheck, lint and production build | Done |
-| PS-305 | Configure a Cloudflare Pages staging deployment and temporary staging domain from `main`, using a separate hosted Supabase staging environment | In progress — validating the first main deployment |
+| PS-305 | Configure a Cloudflare Pages staging deployment and temporary staging domain from `main`, using a separate hosted Supabase staging environment | Done |
 | PS-306 | Build a Playwright Page Object Model regression suite against staging for the core beta loop, including PS-208: missing case → public case → sighting → owner review/reunion | Not started |
 | PS-307 | Run the staging Playwright suite after each `main` deployment, retain failure reports/traces/screenshots, and notify through GitHub Actions email notifications | Not started |
 
