@@ -1,8 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
-import { Image } from 'imagescript'
 
-const maxPixels = 40_000_000
-const displayMaxDimension = 1600
+const maxSourceBytes = 10 * 1024 * 1024
+const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127.0.0.1:5173', 'http://localhost:5173'])
+
+function corsHeaders(request: Request) {
+  const origin = request.headers.get('origin')
+  return {
+    ...(origin && allowedOrigins.has(origin) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}),
+    'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
+    'access-control-allow-methods': 'POST, OPTIONS',
+  }
+}
 
 type PhotoRecord = {
   id: string
@@ -17,48 +25,59 @@ function detectedFormat(bytes: Uint8Array) {
   return null
 }
 
-function response(status: number, body: Record<string, string>) {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
+function contains(bytes: Uint8Array, text: string) {
+  const needle = new TextEncoder().encode(text)
+  return bytes.some((_, index) => needle.every((value, offset) => bytes[index + offset] === value))
+}
+
+function hasEmbeddedMetadata(bytes: Uint8Array, format: 'jpeg' | 'png') {
+  if (format === 'jpeg') return contains(bytes, 'Exif\u0000\u0000') || contains(bytes, 'http://ns.adobe.com/xap/1.0/')
+  return contains(bytes, 'eXIf') || contains(bytes, 'tEXt') || contains(bytes, 'iTXt') || contains(bytes, 'zTXt')
+}
+
+function response(request: Request, status: number, body: Record<string, string>) {
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } })
 }
 
 Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
+  if (request.method !== 'POST') return response(request, 405, { error: 'Method not allowed.' })
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!supabaseUrl || !serviceRoleKey) return response(500, { error: 'Photo processing is unavailable.' })
+  if (!supabaseUrl || !serviceRoleKey) return response(request, 500, { error: 'Photo processing is unavailable.' })
 
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   const admin = createClient(supabaseUrl, serviceRoleKey)
   const { data: authData } = token ? await admin.auth.getUser(token) : { data: { user: null } }
-  if (!authData.user) return response(401, { error: 'Sign in is required.' })
+  if (!authData.user) return response(request, 401, { error: 'Sign in is required.' })
 
   const { photoId } = await request.json().catch(() => ({ photoId: null })) as { photoId?: string | null }
-  if (!photoId) return response(400, { error: 'A photo is required.' })
+  if (!photoId) return response(request, 400, { error: 'A photo is required.' })
   const { data: photo } = await admin.from('pet_photos').select('id, owner_id, source_object_path, status').eq('id', photoId).maybeSingle<PhotoRecord>()
-  if (!photo || photo.owner_id !== authData.user.id) return response(404, { error: 'Photo not found.' })
-  if (photo.status === 'processed') return response(200, { status: 'processed' })
+  if (!photo || photo.owner_id !== authData.user.id) return response(request, 404, { error: 'Photo not found.' })
+  if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
 
   try {
     const { data: source, error: downloadError } = await admin.storage.from('pet-photos').download(photo.source_object_path)
     if (downloadError || !source) throw new Error('source download failed')
     const bytes = new Uint8Array(await source.arrayBuffer())
     const format = detectedFormat(bytes)
-    if (!format) throw new Error('unsupported image format')
-    const image = await Image.decode(bytes)
-    if (image.width * image.height > maxPixels) throw new Error('image dimensions are too large')
-    const scale = Math.min(1, displayMaxDimension / Math.max(image.width, image.height))
-    if (scale < 1) image.resize('cubic', Math.round(image.width * scale), Math.round(image.height * scale))
+    if (!format || bytes.byteLength > maxSourceBytes || hasEmbeddedMetadata(bytes, format)) throw new Error('unsafe image source')
 
-    // Re-encoding drops EXIF, XMP and other source metadata before this file can be displayed.
-    const displayObjectPath = `${photo.owner_id}/display/${photo.id}.jpg`
-    const displayBytes = await image.encode('jpeg', { quality: 82 })
-    const { error: uploadError } = await admin.storage.from('pet-photos').upload(displayObjectPath, displayBytes, { contentType: 'image/jpeg', upsert: true })
+    // The browser re-encodes accepted uploads through a canvas before upload.
+    // Reject any source that still carries common image metadata before creating
+    // the processed display copy exposed by public case pages.
+    const extension = format === 'jpeg' ? 'jpg' : 'png'
+    const contentType = format === 'jpeg' ? 'image/jpeg' : 'image/png'
+    const displayObjectPath = `${photo.owner_id}/display/${photo.id}.${extension}`
+    const { error: uploadError } = await admin.storage.from('pet-photos').upload(displayObjectPath, bytes, { contentType, upsert: true })
     if (uploadError) throw new Error('display upload failed')
     const { error: updateError } = await admin.from('pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', photo.id)
     if (updateError) throw new Error('photo record update failed')
-    return response(200, { status: 'processed' })
+    return response(request, 200, { status: 'processed' })
   } catch (error) {
     console.error('Pet photo processing failed', error)
     await admin.from('pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', photo.id)
-    return response(422, { error: 'We could not process this photo.' })
+    return response(request, 422, { error: 'We could not process this photo.' })
   }
 })
