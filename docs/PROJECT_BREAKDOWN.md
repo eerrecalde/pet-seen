@@ -97,6 +97,14 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | PS-411 | Trust and safety moderation for found-pet reports: screen submitted text and photos server-side before they are shown to an owner; quarantine unsafe, abusive, scam or irrelevant content; fail closed to staff review when checks are uncertain; expose only approved private content, rate-limit abuse, and promptly delete rejected files while retaining minimal audit data | Done |
 | PS-412 | Production monitoring and launch-environment hardening: configure privacy-safe error and operational monitoring with alert routing; add the final production origin to Supabase Auth, Edge Function CORS, MapTiler and notification-provider restrictions; configure HSTS after the hostname is final; and pass an authenticated production smoke test with alert delivery confirmed | Not started |
 
+PS-405 maintenance note (2026-08-14): push registration waits until the service
+worker is active before subscribing, avoiding the intermittent browser push-service
+registration failure. The watch-area form now makes clear that it uses the
+current location; its name field only labels the saved location.
+Authenticated owners are granted access to their watch areas and push
+subscriptions; their existing row-level policies limit that access to the
+owner's own records.
+
 ## Decisions already made
 
 - A missing case requires an authenticated creator, but users do not need to create an account to submit a sighting.

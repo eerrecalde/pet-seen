@@ -14,8 +14,10 @@ export async function enablePushNotifications(client: SupabaseClient, vapidPubli
   if (!vapidPublicKey) throw new Error('Push notifications have not been configured yet.')
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') throw new Error('Notifications were not allowed. You can change this in your browser settings.')
-  const registration = await navigator.serviceWorker.register('/service-worker.js')
-  const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlToUint8Array(vapidPublicKey) })
+  await navigator.serviceWorker.register('/service-worker.js')
+  const registration = await navigator.serviceWorker.ready
+  const subscription = await registration.pushManager.getSubscription()
+    ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlToUint8Array(vapidPublicKey) })
   const json = subscription.toJSON()
   const { error } = await client.from('push_subscriptions').upsert({ endpoint: subscription.endpoint, p256dh: json.keys?.p256dh, auth: json.keys?.auth }, { onConflict: 'endpoint' })
   if (error) throw error
