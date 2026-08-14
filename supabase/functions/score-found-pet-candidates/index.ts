@@ -1,0 +1,58 @@
+import { createClient } from '@supabase/supabase-js'
+
+const model = 'gpt-4.1-mini'
+const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127.0.0.1:5173', 'http://localhost:5173'])
+function corsHeaders(request: Request) { const origin = request.headers.get('origin'); const local = origin ? /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) : false; return { ...(origin && (allowedOrigins.has(origin) || local) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}), 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type', 'access-control-allow-methods': 'POST, OPTIONS' } }
+function response(request: Request, status: number, body: Record<string, unknown>) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } }) }
+function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start < bytes.length; start += 0x8000) binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(binary) }
+
+type Candidate = { case_id: string, pet_name: string, breed: string | null, colour: string | null, last_seen_at: string | null, distance_km: number, match_score: number, match_reasons: string[] }
+type AiResult = { case_id: string, similarity_score: number, confidence: 'low' | 'medium' | 'high', explanation: string }
+
+Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
+  if (request.method !== 'POST') return response(request, 405, { error: 'Method not allowed.' })
+  const url = Deno.env.get('SUPABASE_URL'), serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), apiKey = Deno.env.get('OPENAI_API_KEY'), token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  if (!url || !serviceKey || !token) return response(request, 401, { error: 'Sign in is required.' })
+  if (!apiKey) return response(request, 503, { error: 'AI candidate scoring is not configured.' })
+  const { reportId } = await request.json().catch(() => ({})) as { reportId?: string }
+  if (!reportId) return response(request, 400, { error: 'A found-pet report is required.' })
+  const user = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { authorization: `Bearer ${token}` } } })
+  const { data: staff } = await user.rpc('is_authorized_staff')
+  if (staff !== true) return response(request, 403, { error: 'Only Pet Seen staff can run AI candidate scoring.' })
+  const { data: candidates, error: candidatesError } = await user.rpc('found_pet_case_candidates', { target_report_id: reportId })
+  if (candidatesError) return response(request, 400, { error: candidatesError.message })
+  const shortlist = (candidates ?? []) as Candidate[]
+  if (!shortlist.length) return response(request, 200, { scores: [] })
+  const admin = createClient(url, serviceKey)
+  const { data: actor } = await admin.auth.getUser(token)
+  if (!actor.user) return response(request, 401, { error: 'Sign in is required.' })
+  const { data: report } = await admin.from('found_pet_reports').select('species,breed,colour,details,photo:found_pet_photos(display_object_path)').eq('id', reportId).eq('moderation_status', 'approved').eq('lifecycle_status', 'active').maybeSingle()
+  if (!report) return response(request, 404, { error: 'This active approved report is not available for scoring.' })
+  const { data: run, error: runError } = await admin.from('ai_found_pet_match_runs').insert({ found_pet_report_id: reportId, requested_by: actor.user.id, model, candidate_count: shortlist.length, status: 'failed', failure_reason: 'Analysis did not complete.', completed_at: new Date().toISOString() }).select('id').single()
+  if (runError || !run) return response(request, 502, { error: 'Could not record the AI analysis request.' })
+  try {
+    const photo = Array.isArray(report.photo) ? report.photo[0] : report.photo
+    let imageDataUrl: string | undefined
+    if (photo?.display_object_path) { const { data, error } = await admin.storage.from('found-pet-photos').download(photo.display_object_path); if (!error && data) imageDataUrl = `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}` }
+    const candidateText = shortlist.map((candidate) => ({ case_id: candidate.case_id, pet: { name: candidate.pet_name, breed: candidate.breed, colour: candidate.colour }, deterministic_score: candidate.match_score, deterministic_reasons: candidate.match_reasons, distance_km: candidate.distance_km, last_seen_at: candidate.last_seen_at }))
+    const content: Array<Record<string, unknown>> = [{ type: 'input_text', text: `Assess whether this found pet could be the same animal as each candidate. This is a private staff aid, not identity verification. Be conservative: uncertain, generic, or conflicting evidence must receive low confidence. Do not infer a match from location alone. Return only JSON matching the schema.\n\nFound report: ${JSON.stringify({ species: report.species, breed: report.breed, colour: report.colour, details: report.details })}\n\nCandidates: ${JSON.stringify(candidateText)}` }]
+    if (imageDataUrl) content.push({ type: 'input_image', image_url: imageDataUrl, detail: 'low' })
+    const itemSchema = { type: 'object', additionalProperties: false, required: ['case_id', 'similarity_score', 'confidence', 'explanation'], properties: { case_id: { type: 'string' }, similarity_score: { type: 'integer', minimum: 0, maximum: 100 }, confidence: { type: 'string', enum: ['low', 'medium', 'high'] }, explanation: { type: 'string', minLength: 1, maxLength: 800 } } }
+    const schema = { type: 'object', additionalProperties: false, required: ['scores'], properties: { scores: { type: 'array', minItems: shortlist.length, maxItems: shortlist.length, items: itemSchema } } }
+    const aiResponse = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' }, body: JSON.stringify({ model, input: [{ role: 'user', content }], text: { format: { type: 'json_schema', name: 'candidate_scores', strict: true, schema } } }) })
+    if (!aiResponse.ok) throw new Error(`OpenAI request failed (${aiResponse.status})`)
+    const payload = await aiResponse.json() as { output_text?: string }
+    const parsed = JSON.parse(payload.output_text ?? '{}') as { scores?: AiResult[] }
+    if (!parsed.scores || parsed.scores.length !== shortlist.length || new Set(parsed.scores.map((score) => score.case_id)).size !== shortlist.length || parsed.scores.some((score) => !shortlist.some((candidate) => candidate.case_id === score.case_id))) throw new Error('AI response did not cover the deterministic shortlist')
+    const rows = parsed.scores.map((score) => { const candidate = shortlist.find((item) => item.case_id === score.case_id)!; const aiScore = Math.round(Math.max(0, Math.min(100, score.similarity_score))); const combined = Math.round(candidate.match_score * 0.65 + aiScore * 0.35); return { run_id: run.id, found_pet_report_id: reportId, case_id: score.case_id, deterministic_score: candidate.match_score, ai_similarity_score: aiScore, combined_score: combined, confidence: score.confidence, explanation: score.explanation.trim().slice(0, 800), priority_review: candidate.match_score >= 75 && aiScore >= 85 && score.confidence === 'high' && combined >= 85 } })
+    const { error: scoreError } = await admin.from('ai_found_pet_match_scores').insert(rows)
+    if (scoreError) throw new Error('Could not save AI scores')
+    await admin.from('ai_found_pet_match_runs').update({ status: 'completed', failure_reason: null, completed_at: new Date().toISOString() }).eq('id', run.id)
+    return response(request, 200, { scores: rows })
+  } catch (error) {
+    const failureReason = error instanceof Error ? error.message.slice(0, 240) : 'Analysis failed.'
+    await admin.from('ai_found_pet_match_runs').update({ failure_reason: failureReason, completed_at: new Date().toISOString() }).eq('id', run.id)
+    return response(request, 502, { error: 'AI candidate analysis did not complete. No match was created.' })
+  }
+})
