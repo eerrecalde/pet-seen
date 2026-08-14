@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon'
 import { AuthPage } from '../pages/auth/AuthPage'
 import { OwnerDashboardPage } from '../pages/dashboard/OwnerDashboardPage'
 import { FoundPetPage } from '../pages/found/FoundPetPage'
+import { FoundPetFollowUpPage } from '../pages/found/FoundPetFollowUpPage'
 import { HomePage } from '../pages/home/HomePage'
 import { MissingCasePage } from '../pages/missing-case/MissingCasePage'
 import { ModerationPage } from '../pages/moderation/ModerationPage'
@@ -25,5 +26,5 @@ export function App() {
     return () => window.clearTimeout(timeout)
   }, [acknowledgeSignIn, justSignedIn])
 
-  return <><>{justSignedIn && <div className="sign-in-toast" role="status"><Icon name="check-line" />{t('auth.toast')}</div>}</><Routes><Route path="/:locale?" element={<LocaleLayout />}><Route index element={<HomePage />} /><Route path="lost/new" element={<MissingCasePage />} /><Route path="dashboard" element={<OwnerDashboardPage />} /><Route path="moderation" element={<ModerationPage />} /><Route path="sighting/new" element={<SightingPage />} /><Route path="find/:slug/poster" element={<PosterPage />} /><Route path="find/:slug" element={<PublicCasePage />} /><Route path="auth" element={<AuthPage />} /><Route path="found/new" element={<FoundPetPage />} /><Route path="*" element={<NotFoundPage />} /></Route></Routes></>
+  return <><>{justSignedIn && <div className="sign-in-toast" role="status"><Icon name="check-line" />{t('auth.toast')}</div>}</><Routes><Route path="/:locale?" element={<LocaleLayout />}><Route index element={<HomePage />} /><Route path="lost/new" element={<MissingCasePage />} /><Route path="dashboard" element={<OwnerDashboardPage />} /><Route path="moderation" element={<ModerationPage />} /><Route path="sighting/new" element={<SightingPage />} /><Route path="find/:slug/poster" element={<PosterPage />} /><Route path="find/:slug" element={<PublicCasePage />} /><Route path="auth" element={<AuthPage />} /><Route path="found/new" element={<FoundPetPage />} /><Route path="found/follow-up" element={<FoundPetFollowUpPage />} /><Route path="*" element={<NotFoundPage />} /></Route></Routes></>
 }
