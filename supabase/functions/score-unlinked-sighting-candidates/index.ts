@@ -6,6 +6,8 @@ function corsHeaders(request: Request) { const origin = request.headers.get('ori
 function reply(request: Request, status: number, body: Record<string, unknown>) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } }) }
 type Candidate = { case_id: string, pet_name: string, breed: string | null, colour: string | null, last_seen_at: string | null, distance_km: number, match_score: number, match_reasons: string[] }
 type Result = { case_id: string, similarity_score: number, confidence: 'low' | 'medium' | 'high', explanation: string }
+type ResponsesPayload = { output_text?: string, output?: Array<{ content?: Array<{ type?: string, text?: string }> }> }
+function outputText(payload: ResponsesPayload) { return payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).find((item) => item.type === 'output_text')?.text ?? '' }
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
@@ -35,7 +37,7 @@ Deno.serve(async (request) => {
     const schema = { type: 'object', additionalProperties: false, required: ['scores'], properties: { scores: { type: 'array', minItems: candidates.length, maxItems: candidates.length, items: itemSchema } } }
     const openai = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' }, body: JSON.stringify({ model, input: prompt, text: { format: { type: 'json_schema', name: 'sighting_candidate_scores', strict: true, schema } } }) })
     if (!openai.ok) throw new Error(`OpenAI request failed (${openai.status})`)
-    const parsed = JSON.parse((await openai.json() as { output_text?: string }).output_text ?? '{}') as { scores?: Result[] }
+    const parsed = JSON.parse(outputText(await openai.json() as ResponsesPayload) || '{}') as { scores?: Result[] }
     if (!parsed.scores || parsed.scores.length !== candidates.length || new Set(parsed.scores.map((score) => score.case_id)).size !== candidates.length || parsed.scores.some((score) => !candidates.some((candidate) => candidate.case_id === score.case_id))) throw new Error('AI response did not cover the deterministic shortlist')
     const rows = parsed.scores.map((score) => { const candidate = candidates.find((item) => item.case_id === score.case_id)!; const ai = Math.round(Math.max(0, Math.min(100, score.similarity_score))); const combined = Math.round(candidate.match_score * .65 + ai * .35); return { run_id: run.id, sighting_id: sightingId, case_id: score.case_id, deterministic_score: candidate.match_score, ai_similarity_score: ai, combined_score: combined, confidence: score.confidence, explanation: score.explanation.trim().slice(0, 800), priority_review: candidate.match_score >= 75 && ai >= 85 && score.confidence === 'high' && combined >= 85 } })
     const { error } = await admin.from('ai_unlinked_sighting_match_scores').insert(rows)

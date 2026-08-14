@@ -8,6 +8,8 @@ function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start 
 
 type Candidate = { case_id: string, pet_name: string, breed: string | null, colour: string | null, last_seen_at: string | null, distance_km: number, match_score: number, match_reasons: string[] }
 type AiResult = { case_id: string, similarity_score: number, confidence: 'low' | 'medium' | 'high', explanation: string }
+type ResponsesPayload = { output_text?: string, output?: Array<{ content?: Array<{ type?: string, text?: string }> }> }
+function outputText(payload: ResponsesPayload) { return payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).find((item) => item.type === 'output_text')?.text ?? '' }
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
@@ -46,8 +48,8 @@ Deno.serve(async (request) => {
       const detail = (await aiResponse.text()).replace(/\s+/g, ' ').slice(0, 160)
       throw new Error(`OpenAI request failed (${aiResponse.status}): ${detail || 'no detail returned'}`)
     }
-    const payload = await aiResponse.json() as { output_text?: string }
-    const parsed = JSON.parse(payload.output_text ?? '{}') as { scores?: AiResult[] }
+    const payload = await aiResponse.json() as ResponsesPayload
+    const parsed = JSON.parse(outputText(payload) || '{}') as { scores?: AiResult[] }
     if (!parsed.scores || parsed.scores.length !== shortlist.length || new Set(parsed.scores.map((score) => score.case_id)).size !== shortlist.length || parsed.scores.some((score) => !shortlist.some((candidate) => candidate.case_id === score.case_id))) throw new Error('AI response did not cover the deterministic shortlist')
     const rows = parsed.scores.map((score) => { const candidate = shortlist.find((item) => item.case_id === score.case_id)!; const aiScore = Math.round(Math.max(0, Math.min(100, score.similarity_score))); const combined = Math.round(candidate.match_score * 0.65 + aiScore * 0.35); return { run_id: run.id, found_pet_report_id: reportId, case_id: score.case_id, deterministic_score: candidate.match_score, ai_similarity_score: aiScore, combined_score: combined, confidence: score.confidence, explanation: score.explanation.trim().slice(0, 800), priority_review: candidate.match_score >= 75 && aiScore >= 85 && score.confidence === 'high' && combined >= 85 } })
     const { error: scoreError } = await admin.from('ai_found_pet_match_scores').insert(rows)
