@@ -4,6 +4,8 @@ import { ImageMagick, initializeImageMagick, MagickFormat } from 'npm:@imagemagi
 const maxSourceBytes = 5 * 1024 * 1024
 const displayMaxDimension = 1600
 const displayQuality = 82
+const foundPhotoLookupAttempts = 4
+const foundPhotoLookupDelayMs = 250
 const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127.0.0.1:5173', 'http://localhost:5173'])
 
 const wasmBytes = await Deno.readFile(new URL('magick.wasm', import.meta.resolve('npm:@imagemagick/magick-wasm@^0')))
@@ -43,6 +45,10 @@ function response(request: Request, status: number, body: Record<string, string>
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } })
 }
 
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
+
 async function auditFoundPhotoProcessing(admin: ReturnType<typeof createClient>, reportId: string | null, event: 'photo_processing_started' | 'photo_processing_completed' | 'photo_processing_failed', metadata: Record<string, string> = {}) {
   if (!reportId) return
   const { error } = await admin.from('found_pet_report_moderation_audit').insert({ found_pet_report_id: reportId, event, metadata })
@@ -70,9 +76,22 @@ Deno.serve(async (request) => {
       console.warn('Found-pet photo processing request rejected', { stage: 'missing_submission_token', reportId: foundReportId ?? null, photoId: foundPhotoId ?? null })
       return response(request, 401, { error: 'Found-pet photo not found.' })
     }
-    const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq(foundReportId ? 'found_pet_report_id' : 'id', foundReportId ?? foundPhotoId!).maybeSingle<FoundPhotoRecord>()
+    let photo: FoundPhotoRecord | null = null
+    let lookupAttempts = 0
+    for (; lookupAttempts < foundPhotoLookupAttempts; lookupAttempts += 1) {
+      const { data, error } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq(foundReportId ? 'found_pet_report_id' : 'id', foundReportId ?? foundPhotoId!).maybeSingle<FoundPhotoRecord>()
+      if (data) {
+        photo = data
+        break
+      }
+      if (error) {
+        console.error('Found-pet photo lookup failed', { reportId: foundReportId ?? null, photoId: foundPhotoId ?? null, message: error.message })
+        return response(request, 503, { error: 'Photo processing is temporarily unavailable.' })
+      }
+      if (lookupAttempts < foundPhotoLookupAttempts - 1) await wait(foundPhotoLookupDelayMs)
+    }
     if (!photo) {
-      console.warn('Found-pet photo processing request rejected', { stage: 'photo_row_not_found', reportId: foundReportId ?? null, photoId: foundPhotoId ?? null })
+      console.warn('Found-pet photo processing request rejected', { stage: 'photo_row_not_found', attempts: lookupAttempts, reportId: foundReportId ?? null, photoId: foundPhotoId ?? null })
       return response(request, 404, { error: 'Found-pet photo not found.' })
     }
     const { data: report } = await admin.from('found_pet_reports').select('client_submission_id').eq('id', photo.found_pet_report_id).maybeSingle<{ client_submission_id: string }>()
