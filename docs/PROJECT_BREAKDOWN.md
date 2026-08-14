@@ -113,6 +113,9 @@ confidence is guidance rather than a server-enforced approval threshold.
 Any safely approved found-pet report whose top deterministic candidate has a
 deterministic or combined score of 90 or more creates a provisional owner-review
 link automatically. The owner can confirm or decline that link.
+Found-pet scoring now provides the processed found-pet image and each available
+candidate case image to the model, so the AI score can compare the animals rather
+than relying on report text alone.
 
 ## Decisions already made
 

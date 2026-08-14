@@ -7,6 +7,8 @@ function response(request: Request, status: number, body: Record<string, unknown
 function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start < bytes.length; start += 0x8000) binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(binary) }
 
 type Candidate = { case_id: string, pet_name: string, breed: string | null, colour: string | null, last_seen_at: string | null, distance_km: number, match_score: number, match_reasons: string[] }
+type CandidateCase = { id: string, pet_id: string }
+type CandidatePhoto = { pet_id: string, display_object_path: string | null }
 type AiResult = { case_id: string, similarity_score: number, confidence: 'low' | 'medium' | 'high', explanation: string }
 type ResponsesPayload = { output_text?: string, output?: Array<{ content?: Array<{ type?: string, text?: string }> }> }
 function outputText(payload: ResponsesPayload) { return payload.output_text ?? payload.output?.flatMap((item) => item.content ?? []).find((item) => item.type === 'output_text')?.text ?? '' }
@@ -38,9 +40,25 @@ Deno.serve(async (request) => {
     const photo = Array.isArray(report.photo) ? report.photo[0] : report.photo
     let imageDataUrl: string | undefined
     if (photo?.display_object_path) { const { data, error } = await admin.storage.from('found-pet-photos').download(photo.display_object_path); if (!error && data) imageDataUrl = `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}` }
+    const { data: candidateCases } = await admin.from('missing_cases').select('id,pet_id').in('id', shortlist.map((candidate) => candidate.case_id))
+    const candidateCaseRecords = (candidateCases ?? []) as CandidateCase[]
+    const { data: candidatePhotos } = candidateCaseRecords.length ? await admin.from('pet_photos').select('pet_id,display_object_path').in('pet_id', candidateCaseRecords.map((candidate) => candidate.pet_id)).not('display_object_path', 'is', null) : { data: [] as CandidatePhoto[] }
+    const photoPathByPetId = new Map((candidatePhotos ?? [] as CandidatePhoto[]).map((candidate) => [candidate.pet_id, candidate.display_object_path]))
+    const petIdByCaseId = new Map(candidateCaseRecords.map((candidate) => [candidate.id, candidate.pet_id]))
+    const candidateImageDataUrls = new Map<string, string>()
+    await Promise.all(shortlist.map(async (candidate) => {
+      const path = photoPathByPetId.get(petIdByCaseId.get(candidate.case_id) ?? '')
+      if (!path) return
+      const { data, error } = await admin.storage.from('pet-photos').download(path)
+      if (!error && data) candidateImageDataUrls.set(candidate.case_id, `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}`)
+    }))
     const candidateText = shortlist.map((candidate) => ({ case_id: candidate.case_id, pet: { name: candidate.pet_name, breed: candidate.breed, colour: candidate.colour }, deterministic_score: candidate.match_score, deterministic_reasons: candidate.match_reasons, distance_km: candidate.distance_km, last_seen_at: candidate.last_seen_at }))
-    const content: Array<Record<string, unknown>> = [{ type: 'input_text', text: `Assess whether this found pet could be the same animal as each candidate. This is a private staff aid, not identity verification. Be conservative: uncertain, generic, or conflicting evidence must receive low confidence. Do not infer a match from location alone. Return only JSON matching the schema.\n\nFound report: ${JSON.stringify({ species: report.species, breed: report.breed, colour: report.colour, details: report.details })}\n\nCandidates: ${JSON.stringify(candidateText)}` }]
-    if (imageDataUrl) content.push({ type: 'input_image', image_url: imageDataUrl, detail: 'low' })
+    const content: Array<Record<string, unknown>> = [{ type: 'input_text', text: `Assess whether this found pet could be the same animal as each candidate. This is a private staff aid, not identity verification. Be conservative: uncertain, generic, or conflicting evidence must receive low confidence. Do not infer a match from location alone. Compare the found-pet photo with each labelled candidate photo when both are available. Return only JSON matching the schema.\n\nFound report: ${JSON.stringify({ species: report.species, breed: report.breed, colour: report.colour, details: report.details })}\n\nCandidates: ${JSON.stringify(candidateText)}` }]
+    if (imageDataUrl) { content.push({ type: 'input_text', text: 'Found-pet photo:' }); content.push({ type: 'input_image', image_url: imageDataUrl, detail: 'low' }) }
+    for (const candidate of shortlist) {
+      const candidateImageDataUrl = candidateImageDataUrls.get(candidate.case_id)
+      if (candidateImageDataUrl) { content.push({ type: 'input_text', text: `Candidate photo for case_id ${candidate.case_id}:` }); content.push({ type: 'input_image', image_url: candidateImageDataUrl, detail: 'low' }) }
+    }
     const itemSchema = { type: 'object', additionalProperties: false, required: ['case_id', 'similarity_score', 'confidence', 'explanation'], properties: { case_id: { type: 'string' }, similarity_score: { type: 'integer', minimum: 0, maximum: 100 }, confidence: { type: 'string', enum: ['low', 'medium', 'high'] }, explanation: { type: 'string', minLength: 1, maxLength: 800 } } }
     const schema = { type: 'object', additionalProperties: false, required: ['scores'], properties: { scores: { type: 'array', minItems: shortlist.length, maxItems: shortlist.length, items: itemSchema } } }
     const aiResponse = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' }, body: JSON.stringify({ model, input: [{ role: 'user', content }], text: { format: { type: 'json_schema', name: 'candidate_scores', strict: true, schema } } }) })
