@@ -42,7 +42,10 @@ Deno.serve(async (request) => {
     const itemSchema = { type: 'object', additionalProperties: false, required: ['case_id', 'similarity_score', 'confidence', 'explanation'], properties: { case_id: { type: 'string' }, similarity_score: { type: 'integer', minimum: 0, maximum: 100 }, confidence: { type: 'string', enum: ['low', 'medium', 'high'] }, explanation: { type: 'string', minLength: 1, maxLength: 800 } } }
     const schema = { type: 'object', additionalProperties: false, required: ['scores'], properties: { scores: { type: 'array', minItems: shortlist.length, maxItems: shortlist.length, items: itemSchema } } }
     const aiResponse = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' }, body: JSON.stringify({ model, input: [{ role: 'user', content }], text: { format: { type: 'json_schema', name: 'candidate_scores', strict: true, schema } } }) })
-    if (!aiResponse.ok) throw new Error(`OpenAI request failed (${aiResponse.status})`)
+    if (!aiResponse.ok) {
+      const detail = (await aiResponse.text()).replace(/\s+/g, ' ').slice(0, 160)
+      throw new Error(`OpenAI request failed (${aiResponse.status}): ${detail || 'no detail returned'}`)
+    }
     const payload = await aiResponse.json() as { output_text?: string }
     const parsed = JSON.parse(payload.output_text ?? '{}') as { scores?: AiResult[] }
     if (!parsed.scores || parsed.scores.length !== shortlist.length || new Set(parsed.scores.map((score) => score.case_id)).size !== shortlist.length || parsed.scores.some((score) => !shortlist.some((candidate) => candidate.case_id === score.case_id))) throw new Error('AI response did not cover the deterministic shortlist')
