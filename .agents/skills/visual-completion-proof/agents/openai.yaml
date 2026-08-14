@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Completion Proof"
+  short_description: "Verify visual work and report it with a screenshot."
+  default_prompt: "Use $visual-completion-proof to verify this completed visual task and show proof with a screenshot."
