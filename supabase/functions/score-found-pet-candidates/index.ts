@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const model = 'gpt-4.1-mini'
 const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127.0.0.1:5173', 'http://localhost:5173'])
-function corsHeaders(request: Request) { const origin = request.headers.get('origin'); const local = origin ? /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) : false; return { ...(origin && (allowedOrigins.has(origin) || local) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}), 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type', 'access-control-allow-methods': 'POST, OPTIONS' } }
+function corsHeaders(request: Request) { const origin = request.headers.get('origin'); const local = origin ? /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) : false; return { ...(origin && (allowedOrigins.has(origin) || local) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}), 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-petseen-internal', 'access-control-allow-methods': 'POST, OPTIONS' } }
 function response(request: Request, status: number, body: Record<string, unknown>) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } }) }
 function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start < bytes.length; start += 0x8000) binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(binary) }
 
@@ -17,7 +17,7 @@ Deno.serve(async (request) => {
   if (!apiKey) return response(request, 503, { error: 'AI candidate scoring is not configured.' })
   const { reportId } = await request.json().catch(() => ({})) as { reportId?: string }
   if (!reportId) return response(request, 400, { error: 'A found-pet report is required.' })
-  const serviceCall = token === serviceKey
+  const serviceCall = request.headers.get('x-petseen-internal') === serviceKey
   const user = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { authorization: `Bearer ${token}` } } })
   const { data: staff } = await user.rpc('is_authorized_staff')
   if (!serviceCall && staff !== true) return response(request, 403, { error: 'Only Pet Seen staff can run AI candidate scoring.' })
