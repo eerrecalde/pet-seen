@@ -43,6 +43,12 @@ function response(request: Request, status: number, body: Record<string, string>
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } })
 }
 
+async function auditFoundPhotoProcessing(admin: ReturnType<typeof createClient>, reportId: string | null, event: 'photo_processing_started' | 'photo_processing_completed' | 'photo_processing_failed', metadata: Record<string, string> = {}) {
+  if (!reportId) return
+  const { error } = await admin.from('found_pet_report_moderation_audit').insert({ found_pet_report_id: reportId, event, metadata })
+  if (error) console.error('Could not record found-pet photo processing audit', error.message)
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
   if (request.method !== 'POST') return response(request, 405, { error: 'Method not allowed.' })
@@ -58,14 +64,29 @@ Deno.serve(async (request) => {
   let sourceObjectPath = ''
   let displayObjectPath = ''
   let targetPhotoId = photoId
+  let targetReportId: string | null = null
   if (isFoundPhoto) {
-    if (!foundSubmissionToken) return response(request, 401, { error: 'Found-pet photo not found.' })
+    if (!foundSubmissionToken) {
+      console.warn('Found-pet photo processing request rejected', { stage: 'missing_submission_token', reportId: foundReportId ?? null, photoId: foundPhotoId ?? null })
+      return response(request, 401, { error: 'Found-pet photo not found.' })
+    }
     const { data: photo } = await admin.from('found_pet_photos').select('id,found_pet_report_id,source_object_path,status').eq(foundReportId ? 'found_pet_report_id' : 'id', foundReportId ?? foundPhotoId!).maybeSingle<FoundPhotoRecord>()
-    if (!photo) return response(request, 404, { error: 'Found-pet photo not found.' })
+    if (!photo) {
+      console.warn('Found-pet photo processing request rejected', { stage: 'photo_row_not_found', reportId: foundReportId ?? null, photoId: foundPhotoId ?? null })
+      return response(request, 404, { error: 'Found-pet photo not found.' })
+    }
     const { data: report } = await admin.from('found_pet_reports').select('client_submission_id').eq('id', photo.found_pet_report_id).maybeSingle<{ client_submission_id: string }>()
-    if (!report || report.client_submission_id !== foundSubmissionToken) return response(request, 404, { error: 'Found-pet photo not found.' })
+    if (!report) {
+      console.warn('Found-pet photo processing request rejected', { stage: 'report_not_found', reportId: photo.found_pet_report_id, photoId: photo.id })
+      return response(request, 404, { error: 'Found-pet photo not found.' })
+    }
+    if (report.client_submission_id !== foundSubmissionToken) {
+      console.warn('Found-pet photo processing request rejected', { stage: 'submission_token_mismatch', reportId: photo.found_pet_report_id, photoId: photo.id })
+      return response(request, 404, { error: 'Found-pet photo not found.' })
+    }
     if (photo.status === 'processed') return response(request, 200, { status: 'processed' })
     targetPhotoId = photo.id
+    targetReportId = photo.found_pet_report_id
     sourceObjectPath = photo.source_object_path
     displayObjectPath = `display/${photo.id}.jpg`
   } else {
@@ -79,6 +100,7 @@ Deno.serve(async (request) => {
   }
 
   try {
+    await auditFoundPhotoProcessing(admin, targetReportId, 'photo_processing_started', { source: 'found-pet-photo' })
     const bucket = isFoundPhoto ? 'found-pet-photos' : 'pet-photos'
     const { data: source, error: downloadError } = await admin.storage.from(bucket).download(sourceObjectPath)
     if (downloadError || !source) throw new Error('source download failed')
@@ -99,10 +121,12 @@ Deno.serve(async (request) => {
     if (uploadError) throw new Error('display upload failed')
     const { error: updateError } = await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'processed', display_object_path: displayObjectPath, processed_at: new Date().toISOString(), processing_error: null }).eq('id', targetPhotoId!)
     if (updateError) throw new Error('photo record update failed')
+    await auditFoundPhotoProcessing(admin, targetReportId, 'photo_processing_completed', { source: 'found-pet-photo' })
     return response(request, 200, { status: 'processed' })
   } catch (error) {
     console.error('Pet photo processing failed', error)
     await admin.from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos').update({ status: 'failed', display_object_path: null, processing_error: 'We could not process this photo. Please choose a different image.' }).eq('id', targetPhotoId!)
+    await auditFoundPhotoProcessing(admin, targetReportId, 'photo_processing_failed', { source: 'found-pet-photo', reason: error instanceof Error ? error.message.slice(0, 160) : 'unknown error' })
     return response(request, 422, { error: 'We could not process this photo.' })
   }
 })
