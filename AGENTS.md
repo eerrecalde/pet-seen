@@ -13,6 +13,8 @@ Keep the supplied User Insights project intact as the starting example. Make sco
 
 For task verification that needs an authenticated owner or staff member, use the local-only auth bypass documented in the README rather than waiting for a magic link. Start the local Supabase stack and Edge Functions runtime, set the browser's `bypass` local-storage value to `<local-user-email-or-id>:<role>`, then reload the app. Use `owner` for case-management flows and `moderator` or `administrator` for staff-only flows such as `/moderation`.
 
+Use these stable local test accounts where their existing data is useful: `owner@petseen.org:owner` for owner flows, and `moderator@petseen.org:moderator` for moderation flows. They are local development accounts only.
+
 The bypass only works with a Vite development build connected to the local Supabase stack. Never use it against a hosted environment, and do not deploy the `dev-auth-bypass` Edge Function.
 
 ## Task tracking

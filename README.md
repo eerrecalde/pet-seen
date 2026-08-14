@@ -55,6 +55,8 @@ The app provisions that user in the local Supabase stack and signs in with the s
 
 Use this bypass when verifying authenticated work locally: choose `owner` for owner case flows, and `moderator` or `administrator` for staff-only pages such as `/moderation`.
 
+For repeatable local testing, use `owner@petseen.org:owner` for owner flows and `moderator@petseen.org:moderator` for moderation flows. These accounts exist only in the local Supabase stack.
+
 Photo processing and social cards run in Edge Functions. Start them alongside the local stack when testing an authenticated upload or Open Graph image:
 
 ```sh
