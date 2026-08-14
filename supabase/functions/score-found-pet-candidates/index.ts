@@ -18,14 +18,14 @@ Deno.serve(async (request) => {
   const { reportId } = await request.json().catch(() => ({})) as { reportId?: string }
   if (!reportId) return response(request, 400, { error: 'A found-pet report is required.' })
   const serviceCall = request.headers.get('x-petseen-internal') === serviceKey
+  const admin = createClient(url, serviceKey)
   const user = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { authorization: `Bearer ${token}` } } })
-  const { data: staff } = await user.rpc('is_authorized_staff')
+  const { data: staff } = serviceCall ? { data: false } : await user.rpc('is_authorized_staff')
   if (!serviceCall && staff !== true) return response(request, 403, { error: 'Only Pet Seen staff can run AI candidate scoring.' })
-  const { data: candidates, error: candidatesError } = await user.rpc('found_pet_case_candidates', { target_report_id: reportId })
+  const { data: candidates, error: candidatesError } = await (serviceCall ? admin : user).rpc('found_pet_case_candidates', { target_report_id: reportId })
   if (candidatesError) return response(request, 400, { error: candidatesError.message })
   const shortlist = (candidates ?? []) as Candidate[]
   if (!shortlist.length) return response(request, 200, { scores: [] })
-  const admin = createClient(url, serviceKey)
   const { data: actor } = serviceCall ? { data: { user: null } } : await admin.auth.getUser(token)
   if (!serviceCall && !actor.user) return response(request, 401, { error: 'Sign in is required.' })
   const { data: report } = await admin.from('found_pet_reports').select('species,breed,colour,details,photo:found_pet_photos(display_object_path)').eq('id', reportId).eq('moderation_status', 'approved').eq('lifecycle_status', 'active').maybeSingle()
