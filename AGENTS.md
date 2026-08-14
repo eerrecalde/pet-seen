@@ -5,6 +5,8 @@ Before changing frontend code in this repo, read and follow both local skills:
 - `.agents/skills/design-ui-with-restraint/SKILL.md`
 - `.agents/skills/write-practical-copy/SKILL.md`
 
+For any completed task with a user-visible visual result, follow `.agents/skills/visual-completion-proof/SKILL.md` before reporting completion. Verify the current rendered result and include a current screenshot as proof.
+
 ## Work with starter project
 
 Keep the supplied User Insights project intact as the starting example. Make scoped changes, use deterministic public-safe data, and verify the rendered desktop and mobile experience before claiming the work is complete.
