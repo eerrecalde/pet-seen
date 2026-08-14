@@ -6,6 +6,7 @@ function corsHeaders(request: Request) { const origin = request.headers.get('ori
 function response(request: Request, status: number, body: Record<string, string>) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } }) }
 function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start < bytes.length; start += 0x8000) binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(binary) }
 async function scoreApprovedReport(url: string, serviceKey: string, reportId: string) { const result = await fetch(`${url}/functions/v1/score-found-pet-candidates`, { method: 'POST', headers: { authorization: `Bearer ${serviceKey}`, apikey: serviceKey, 'content-type': 'application/json' }, body: JSON.stringify({ reportId }) }); if (!result.ok) console.error('Automatic found-pet scoring failed', { reportId, status: result.status }) }
+function wait(milliseconds: number) { return new Promise((resolve) => setTimeout(resolve, milliseconds)) }
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
@@ -27,7 +28,13 @@ Deno.serve(async (request) => {
       const bytes = new Uint8Array(await image.arrayBuffer())
       imageDataUrl = `data:image/jpeg;base64,${base64(bytes)}`
     }
-    const result = await contentSafetyProvider().screen({ text: [report.breed, report.colour, report.details, report.location_description, report.custody_details].filter(Boolean).join('\n'), imageDataUrl })
+    const input = { text: [report.breed, report.colour, report.details, report.location_description, report.custody_details].filter(Boolean).join('\n'), imageDataUrl }
+    let result
+    try { result = await contentSafetyProvider().screen(input) } catch (firstError) {
+      console.warn('Automatic found-pet screening attempt failed; retrying once', { reportId, error: firstError instanceof Error ? firstError.message : 'unknown' })
+      await wait(750)
+      result = await contentSafetyProvider().screen(input)
+    }
     const decision = result.flagged ? 'rejected' : 'approved'
     const note = result.categories.length ? `OpenAI moderation flagged: ${result.categories.join(', ')}` : 'OpenAI moderation passed'
     await admin.from('found_pet_reports').update({ moderation_status: decision, moderated_at: new Date().toISOString(), moderated_by: null, automated_screening_note: note }).eq('id', reportId).eq('moderation_status', 'pending')
@@ -42,6 +49,9 @@ Deno.serve(async (request) => {
     return response(request, 200, { status: decision })
   } catch (error) {
     console.error('Found-pet report screening failed', error)
+    const note = 'Automatic safety screening could not complete. This report needs staff review.'
+    await admin.from('found_pet_reports').update({ automated_screening_note: note }).eq('id', reportId).eq('moderation_status', 'pending')
+    await admin.from('found_pet_report_moderation_audit').insert({ found_pet_report_id: reportId, event: 'automatic_screening_failed', automated_screening_note: note, metadata: { stage: 'automatic_screening' } })
     return response(request, 202, { status: 'pending' })
   }
 })
