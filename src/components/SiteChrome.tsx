@@ -4,6 +4,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import type { AppLocale } from '../i18n/resources'
 import { localisedPath } from '../lib/routing'
+import { supabase } from '../lib/supabase'
 import { Icon } from './Icon'
 
 export function Link({ to, ...props }: ComponentProps<typeof RouterLink>) {
@@ -26,7 +27,12 @@ export function LanguagePicker() {
 export function SiteHeader() {
   const { t } = useTranslation()
   const { session } = useAuth()
-  return <header className="site-header"><Link className="wordmark" to="/" aria-label={t('common.petSeenHome')}><PetSeenMark />Pet Seen</Link><nav aria-label={t('common.petSeenHome')}><Link className="nearby-link" to="/#nearby"><Icon name="map-pin-2" />{t('common.nearbyPets')}</Link><LanguagePicker /><Link className="sign-in" to={session ? '/dashboard' : '/auth'}><Icon name="user-3" />{session ? t('common.account') : t('common.signIn')}</Link></nav></header>
+
+  async function signOut() {
+    await supabase?.auth.signOut()
+  }
+
+  return <header className="site-header"><Link className="wordmark" to="/" aria-label={t('common.petSeenHome')}><PetSeenMark />Pet Seen</Link><nav aria-label={t('common.petSeenHome')}><Link className="nearby-link" to="/#nearby"><Icon name="map-pin-2" />{t('common.nearbyPets')}</Link><LanguagePicker />{session ? <details className="account-menu"><summary><Icon name="user-3" /><span className="account-email">{session.user.email ?? t('common.account')}</span><Icon name="arrow-down-s" /></summary><div className="account-menu-panel"><Link to="/dashboard">{t('dashboard.title')}</Link><button type="button" onClick={() => void signOut()}>{t('auth.signOut')}</button></div></details> : <Link className="sign-in" to="/auth"><Icon name="user-3" />{t('common.signIn')}</Link>}</nav></header>
 }
 
 export function SiteFooter() {

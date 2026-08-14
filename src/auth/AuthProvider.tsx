@@ -46,7 +46,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
-      if (event === 'SIGNED_IN') recordMagicLinkSignIn()
+      if (event === 'SIGNED_IN') {
+        setJustSignedIn(true)
+        recordMagicLinkSignIn()
+      }
       if (event === 'SIGNED_OUT') setJustSignedIn(false)
       setIsLoading(false)
     })
