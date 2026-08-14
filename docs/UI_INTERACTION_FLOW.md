@@ -43,7 +43,7 @@ flowchart TB
   NotFound["Not-found screen\nDone"]:::neutral
   FollowUp["Reporter magic-link follow-up\nNot started · PS-404"]:::planned
   Watch["Watch area and push / email alerts\nDone · PS-405"]:::done
-  Lifecycle["Expiry, reopen and data housekeeping\nNot started · PS-406"]:::planned
+  Lifecycle["Expiry, reopen and data housekeeping\nDone · PS-406"]:::done
   Hardening["Monitoring, accessibility and security hardening\nNot started · PS-407"]:::planned
   AI["AI candidate scoring with staff review\nNot started · PS-408"]:::planned
   PublicSightings["Public approximate sighting list\nNot started · PS-409"]:::planned
@@ -90,7 +90,7 @@ flowchart TB
   NotFound -->|"Go home"| Home
   FoundReceipt -.-> FollowUp
   Dashboard -.-> Watch
-  Dashboard -.-> Lifecycle
+  Moderation -->|"Resolve, expire, reopen or delete"| Lifecycle
   Moderation -.-> AI
   Home -.-> PublicSightings
   Deploy -.-> Hardening

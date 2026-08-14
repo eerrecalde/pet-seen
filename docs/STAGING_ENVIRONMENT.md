@@ -27,7 +27,8 @@ client-side routes working when opened directly.
    project or a production project to this workflow.
 2. Apply the tracked migrations and deploy these Edge Functions to the staging
    project: `send-sighting-owner-email`, `process-pet-photo`,
-   `screen-found-pet-report`, `moderate-found-pet-report`, and
+   `screen-found-pet-report`, `moderate-found-pet-report`,
+   `manage-found-pet-report`, `housekeep-found-pet-reports`, and
    `case-social-card`. Configure their staging-only secrets and verified email
    sender there.
 3. In Supabase Auth, set the Site URL to
@@ -62,6 +63,15 @@ client-side routes working when opened directly.
 The Supabase anon key is intentionally supplied only at build time. It is a
 browser public key, but keeping all environment values in GitHub secrets avoids
 accidentally building staging with local or production values.
+
+## Found-pet housekeeping schedule
+
+Schedule a daily authenticated POST to `housekeep-found-pet-reports` using the
+project's service-role key (for example, through Supabase Cron or the platform
+scheduler). The function expires unlinked reports after 30 days and removes
+expired or resolved reports, photos and messages one year after the lifecycle
+decision. It records only the report UUID, action and timing in the staff audit
+trail. Staff can also run the same function from a protected maintenance job.
 
 ## Current GitHub environment contract
 
