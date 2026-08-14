@@ -88,7 +88,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | PS-402 | Found-pet flow and custody status | Done |
 | PS-403 | Deterministic report-to-case matching: rank private found-pet reports against active cases using species, distance, recency, breed and markings; create a provisional link only for a close, unambiguous match, then let the owner confirm or decline it using the private found-pet photo where present. A decline removes the active link and suppresses repeat matching for that pair | Done |
 | PS-404 | Optional reporter magic-link follow-up and private messaging | Done |
-| PS-405 | Watch areas, PWA push notifications and email fallback | Not started |
+| PS-405 | Watch areas, PWA push notifications and email fallback | Done |
 | PS-406 | Expiry/reopen lifecycle and staff data housekeeping: provide a protected staff queue for pending and approved found-pet reports; let staff resolve, expire or delete test, duplicate, rejected and stale reports; safely remove associated source/display files while retaining only the minimal moderation audit trail; automatically expire unlinked reports and enforce the one-year retention policy, with a deliberate reopen path where appropriate | Not started |
 | PS-407 | Production monitoring, accessibility and security hardening | Not started |
 | PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review, require conservative thresholds, never auto-link, and notify an owner only after a staff-approved close match | Not started |

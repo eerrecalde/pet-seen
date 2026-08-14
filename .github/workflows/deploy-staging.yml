@@ -52,6 +52,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           VITE_SOCIAL_CARD_URL: ${{ secrets.STAGING_SOCIAL_CARD_URL }}
           VITE_MAP_STYLE_URL: ${{ secrets.STAGING_MAP_STYLE_URL }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.STAGING_VAPID_PUBLIC_KEY }}
 
       - name: Deploy Cloudflare Pages project
         id: deploy

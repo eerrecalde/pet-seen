@@ -7,6 +7,10 @@ import './i18n'
 import 'remixicon/fonts/remixicon.css'
 import './styles/index.css'
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { void navigator.serviceWorker.register('/service-worker.js') })
+}
+
 const rootElement = document.getElementById('root')
 
 if (!rootElement) {

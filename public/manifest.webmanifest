@@ -1,0 +1,10 @@
+{
+  "name": "Pet Seen",
+  "short_name": "Pet Seen",
+  "description": "Help missing pets find their way home.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf4",
+  "theme_color": "#fff7ed",
+  "icons": [{ "src": "/pet-seen-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

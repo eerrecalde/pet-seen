@@ -42,7 +42,7 @@ flowchart TB
   Reunite["Mark reunited / close / remove / edit\nDone · PS-108, PS-206"]:::done
   NotFound["Not-found screen\nDone"]:::neutral
   FollowUp["Reporter magic-link follow-up\nNot started · PS-404"]:::planned
-  Watch["Watch area and push / email alerts\nNot started · PS-405"]:::planned
+  Watch["Watch area and push / email alerts\nDone · PS-405"]:::done
   Lifecycle["Expiry, reopen and data housekeeping\nNot started · PS-406"]:::planned
   Hardening["Monitoring, accessibility and security hardening\nNot started · PS-407"]:::planned
   AI["AI candidate scoring with staff review\nNot started · PS-408"]:::planned

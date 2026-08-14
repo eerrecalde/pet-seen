@@ -47,7 +47,9 @@ client-side routes working when opened directly.
    - `STAGING_SUPABASE_ANON_KEY`
    - `STAGING_SOCIAL_CARD_URL` — the staging `case-social-card` function URL
    - `STAGING_MAP_STYLE_URL` — a MapTiler style URL restricted to the staging
-    Pages origin
+     Pages origin
+   - `STAGING_VAPID_PUBLIC_KEY` — the browser-safe VAPID public key for
+     staging push subscriptions
    - `STAGING_SUPABASE_SERVICE_ROLE_KEY` — used only by the post-deployment
     Playwright job to create and remove its isolated test owner; never expose
     this key to the browser or frontend build
@@ -63,7 +65,7 @@ accidentally building staging with local or production values.
 
 ## Current GitHub environment contract
 
-The GitHub `staging` environment holds these seven secrets. Their values are not
+The GitHub `staging` environment holds these eight secrets. Their values are not
 committed and must never be printed in workflow logs:
 
 | Secret | Purpose |
@@ -74,6 +76,7 @@ committed and must never be printed in workflow logs:
 | `STAGING_SUPABASE_ANON_KEY` | Browser publishable/anon key for the staging project |
 | `STAGING_SOCIAL_CARD_URL` | Staging `case-social-card` function URL |
 | `STAGING_MAP_STYLE_URL` | MapTiler URL whose key is restricted to `petseen-staging.pages.dev` |
+| `STAGING_VAPID_PUBLIC_KEY` | Browser-safe VAPID public key used when building staging |
 | `STAGING_SUPABASE_SERVICE_ROLE_KEY` | Server-only key for disposable Playwright users and cleanup |
 
 No environment protection rules are needed for staging: the workflow itself
