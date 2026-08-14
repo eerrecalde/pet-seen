@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PropsWithChildren } from 're
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { AuthContext } from './auth-context'
+import { readDevAuthBypass, signInWithDevBypass } from './dev-auth-bypass'
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true)
@@ -27,11 +28,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${query.size ? `?${query}` : ''}`)
     }
 
-    void supabase.auth.getSession().then(({ data }) => {
+    void (async () => {
+      const bypass = readDevAuthBypass()
+      if (bypass) {
+        try {
+          await signInWithDevBypass(bypass)
+        } catch (error) {
+          console.warn('Local development auth bypass was not available.', error)
+        }
+      }
+
+      const { data } = await supabase.auth.getSession()
       setSession(data.session)
       if (data.session) recordMagicLinkSignIn()
       setIsLoading(false)
-    })
+    })()
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
