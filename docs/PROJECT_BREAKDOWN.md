@@ -105,6 +105,10 @@ Authenticated owners are granted access to their watch areas and push
 subscriptions; their existing row-level policies limit that access to the
 owner's own records.
 
+PS-408 maintenance note (2026-08-14): moderator-triggered AI scoring sends the
+current signed-in session explicitly as a bearer token, so the Edge Function
+gateway can authenticate the request before it reaches the scoring handler.
+
 ## Decisions already made
 
 - A missing case requires an authenticated creator, but users do not need to create an account to submit a sighting.
