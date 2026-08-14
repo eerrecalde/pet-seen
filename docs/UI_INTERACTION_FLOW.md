@@ -46,7 +46,7 @@ flowchart TB
   Lifecycle["Expiry, reopen and data housekeeping\nDone · PS-406"]:::done
   Hardening["Accessibility and security hardening\nDone · PS-407"]:::done
   ProductionHardening["Production monitoring and launch hardening\nNot started · PS-412"]:::planned
-  AI["AI candidate scoring with staff review\nNot started · PS-408"]:::planned
+  AI["AI candidate scoring with staff review\nIn progress · PS-408"]:::progress
   PublicSightings["Public approximate sighting list\nNot started · PS-409"]:::planned
   Deploy["Post-deploy regression run and alerts\nIn progress · PS-307"]:::progress
 
@@ -92,7 +92,7 @@ flowchart TB
   FoundReceipt -.-> FollowUp
   Dashboard -.-> Watch
   Moderation -->|"Resolve, expire, reopen or delete"| Lifecycle
-  Moderation -.-> AI
+  Moderation --> AI
   Home -.-> PublicSightings
   Deploy --> Hardening
   Hardening -.-> ProductionHardening

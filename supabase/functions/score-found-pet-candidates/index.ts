@@ -54,6 +54,8 @@ Deno.serve(async (request) => {
     const rows = parsed.scores.map((score) => { const candidate = shortlist.find((item) => item.case_id === score.case_id)!; const aiScore = Math.round(Math.max(0, Math.min(100, score.similarity_score))); const combined = Math.round(candidate.match_score * 0.65 + aiScore * 0.35); return { run_id: run.id, found_pet_report_id: reportId, case_id: score.case_id, deterministic_score: candidate.match_score, ai_similarity_score: aiScore, combined_score: combined, confidence: score.confidence, explanation: score.explanation.trim().slice(0, 800), priority_review: candidate.match_score >= 75 && aiScore >= 85 && score.confidence === 'high' && combined >= 85 } })
     const { error: scoreError } = await admin.from('ai_found_pet_match_scores').insert(rows)
     if (scoreError) throw new Error('Could not save AI scores')
+    const { error: autoLinkError } = await admin.rpc('create_provisional_found_pet_match', { target_report_id: reportId })
+    if (autoLinkError) throw new Error('Could not create the automatic owner-review link')
     await admin.from('ai_found_pet_match_runs').update({ status: 'completed', failure_reason: null, completed_at: new Date().toISOString() }).eq('id', run.id)
     return response(request, 200, { scores: rows })
   } catch (error) {

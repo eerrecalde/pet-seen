@@ -91,7 +91,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | PS-405 | Watch areas, PWA push notifications and email fallback | Done |
 | PS-406 | Expiry/reopen lifecycle and staff data housekeeping: provide a protected staff queue for pending and approved found-pet reports; let staff resolve, expire or delete test, duplicate, rejected and stale reports; safely remove associated source/display files while retaining only the minimal moderation audit trail; automatically expire unlinked reports and enforce the one-year retention policy, with a deliberate reopen path where appropriate | Done |
 | PS-407 | Accessibility and security hardening for development and staging: keyboard skip navigation and route focus handling, reduced-motion and visible-focus support, and Cloudflare Pages browser security headers | Done |
-| PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review, require conservative thresholds, never auto-link, and notify an owner only after a staff-approved close match | In progress |
+| PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review; automatically create a provisional owner-review link for any safely approved found-pet report whose top deterministic candidate has a deterministic or combined score of 90 or more; and let staff decide whether to link any listed candidate and notify its owner | In progress |
 | PS-409 | Add a public list of confirmed, approximate sightings alongside the missing-pet list; make the two content types clearly distinct, never expose exact locations or reporter details, and link a sighting to its case only where that is safe and useful | Not started |
 | PS-410 | Optional found-pet photo: accept a photo of the found pet only, validate and remove EXIF, and generate a private display derivative; never request or expose a reporter portrait | Done |
 | PS-411 | Trust and safety moderation for found-pet reports: screen submitted text and photos server-side before they are shown to an owner; quarantine unsafe, abusive, scam or irrelevant content; fail closed to staff review when checks are uncertain; expose only approved private content, rate-limit abuse, and promptly delete rejected files while retaining minimal audit data | Done |
@@ -108,6 +108,11 @@ owner's own records.
 PS-408 maintenance note (2026-08-14): moderator-triggered AI scoring sends the
 current signed-in session explicitly as a bearer token, so the Edge Function
 gateway can authenticate the request before it reaches the scoring handler.
+Moderators can link any candidate in the conservative staff shortlist; AI
+confidence is guidance rather than a server-enforced approval threshold.
+Any safely approved found-pet report whose top deterministic candidate has a
+deterministic or combined score of 90 or more creates a provisional owner-review
+link automatically. The owner can confirm or decline that link.
 
 ## Decisions already made
 
