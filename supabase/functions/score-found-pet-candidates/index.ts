@@ -17,19 +17,20 @@ Deno.serve(async (request) => {
   if (!apiKey) return response(request, 503, { error: 'AI candidate scoring is not configured.' })
   const { reportId } = await request.json().catch(() => ({})) as { reportId?: string }
   if (!reportId) return response(request, 400, { error: 'A found-pet report is required.' })
+  const serviceCall = token === serviceKey
   const user = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { authorization: `Bearer ${token}` } } })
   const { data: staff } = await user.rpc('is_authorized_staff')
-  if (staff !== true) return response(request, 403, { error: 'Only Pet Seen staff can run AI candidate scoring.' })
+  if (!serviceCall && staff !== true) return response(request, 403, { error: 'Only Pet Seen staff can run AI candidate scoring.' })
   const { data: candidates, error: candidatesError } = await user.rpc('found_pet_case_candidates', { target_report_id: reportId })
   if (candidatesError) return response(request, 400, { error: candidatesError.message })
   const shortlist = (candidates ?? []) as Candidate[]
   if (!shortlist.length) return response(request, 200, { scores: [] })
   const admin = createClient(url, serviceKey)
-  const { data: actor } = await admin.auth.getUser(token)
-  if (!actor.user) return response(request, 401, { error: 'Sign in is required.' })
+  const { data: actor } = serviceCall ? { data: { user: null } } : await admin.auth.getUser(token)
+  if (!serviceCall && !actor.user) return response(request, 401, { error: 'Sign in is required.' })
   const { data: report } = await admin.from('found_pet_reports').select('species,breed,colour,details,photo:found_pet_photos(display_object_path)').eq('id', reportId).eq('moderation_status', 'approved').eq('lifecycle_status', 'active').maybeSingle()
   if (!report) return response(request, 404, { error: 'This active approved report is not available for scoring.' })
-  const { data: run, error: runError } = await admin.from('ai_found_pet_match_runs').insert({ found_pet_report_id: reportId, requested_by: actor.user.id, model, candidate_count: shortlist.length, status: 'failed', failure_reason: 'Analysis did not complete.', completed_at: new Date().toISOString() }).select('id').single()
+  const { data: run, error: runError } = await admin.from('ai_found_pet_match_runs').insert({ found_pet_report_id: reportId, requested_by: actor.user?.id ?? null, model, candidate_count: shortlist.length, status: 'failed', failure_reason: 'Analysis did not complete.', completed_at: new Date().toISOString() }).select('id').single()
   if (runError || !run) return response(request, 502, { error: 'Could not record the AI analysis request.' })
   try {
     const photo = Array.isArray(report.photo) ? report.photo[0] : report.photo

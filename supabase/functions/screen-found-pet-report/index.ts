@@ -5,6 +5,7 @@ const allowedOrigins = new Set(['https://petseen-staging.pages.dev', 'http://127
 function corsHeaders(request: Request) { const origin = request.headers.get('origin'); const local = origin ? /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) : false; return { ...(origin && (allowedOrigins.has(origin) || local) ? { 'access-control-allow-origin': origin, vary: 'origin' } : {}), 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type', 'access-control-allow-methods': 'POST, OPTIONS' } }
 function response(request: Request, status: number, body: Record<string, string>) { return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(request), 'content-type': 'application/json' } }) }
 function base64(bytes: Uint8Array) { let binary = ''; for (let start = 0; start < bytes.length; start += 0x8000) binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(binary) }
+async function scoreApprovedReport(url: string, serviceKey: string, reportId: string) { const result = await fetch(`${url}/functions/v1/score-found-pet-candidates`, { method: 'POST', headers: { authorization: `Bearer ${serviceKey}`, apikey: serviceKey, 'content-type': 'application/json' }, body: JSON.stringify({ reportId }) }); if (!result.ok) console.error('Automatic found-pet scoring failed', { reportId, status: result.status }) }
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
@@ -31,6 +32,7 @@ Deno.serve(async (request) => {
     const note = result.categories.length ? `OpenAI moderation flagged: ${result.categories.join(', ')}` : 'OpenAI moderation passed'
     await admin.from('found_pet_reports').update({ moderation_status: decision, moderated_at: new Date().toISOString(), moderated_by: null, automated_screening_note: note }).eq('id', reportId).eq('moderation_status', 'pending')
     await admin.from('found_pet_report_moderation_audit').insert({ found_pet_report_id: reportId, event: result.flagged ? 'automatically_rejected' : 'automatically_approved', automated_screening_note: note })
+    if (decision === 'approved') await scoreApprovedReport(url, serviceKey, reportId)
     if (result.flagged) {
       const { data: storedPhoto } = await admin.from('found_pet_photos').select('source_object_path,display_object_path').eq('found_pet_report_id', reportId).maybeSingle()
       if (storedPhoto) await admin.storage.from('found-pet-photos').remove([storedPhoto.source_object_path, storedPhoto.display_object_path].filter(Boolean))
