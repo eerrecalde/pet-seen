@@ -23,7 +23,6 @@ flowchart TB
   Dashboard["Owner dashboard\nDone · PS-108"]:::done
   Missing["Create missing case\nIn progress · PS-105"]:::progress
   MissingLocation["Set GPS / move pin / manual location\nIn progress · PS-105"]:::progress
-  MissingReview["Review and publish\nIn progress · PS-105"]:::progress
   Public["Public missing-case page\nDone · PS-106–107"]:::done
   Poster["Poster + QR / print\nDone · PS-301"]:::done
   Share["Copy, Web Share or WhatsApp\nDone · PS-302"]:::done
@@ -61,8 +60,7 @@ flowchart TB
   Dashboard -->|"New case"| Missing
   Missing -->|"Not signed in"| Auth
   Missing -->|"Save pet details"| MissingLocation
-  MissingLocation -->|"Review"| MissingReview
-  MissingReview -->|"Publish"| Dashboard
+  MissingLocation -->|"Save and publish"| Dashboard
   Dashboard -->|"View public case"| Public
   Public -->|"Report a sighting"| Sighting
   Public -->|"Create poster"| Poster

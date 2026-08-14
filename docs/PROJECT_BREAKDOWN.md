@@ -39,7 +39,7 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-102 | Create PostGIS schema, migrations, Storage buckets and RLS policies, including exact and public-safe location fields | Done |
 | PS-103 | Build pet details and photo-upload flow for dogs and cats | Done |
 | PS-104 | Process uploads automatically: validate, strip EXIF and generate display images | Done |
-| PS-105 | Build missing-case draft, publication and location-picker flow with GPS, movable-pin confirmation and manual fallback | In progress |
+| PS-105 | Build missing-case creation and location-picker flow with GPS, movable-pin confirmation and manual fallback; publish automatically after an owner confirms the required last-seen location | In progress |
 | PS-106 | Generate non-sequential public URLs under `petseen.org/find/:slug` | Done |
 | PS-107 | Build public case page with a server-provided 100 m-wide approximate location circle; never return exact coordinates publicly | Done |
 | PS-108 | Build owner dashboard: edit, close, mark reunited and remove cases, with secondary local alerts kept in a collapsed panel below case management | Done |
