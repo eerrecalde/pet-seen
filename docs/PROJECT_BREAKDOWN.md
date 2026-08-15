@@ -96,6 +96,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | PS-410 | Optional found-pet photo: accept a photo of the found pet only, validate and remove EXIF, and generate a private display derivative; never request or expose a reporter portrait | Done |
 | PS-411 | Trust and safety moderation for found-pet reports: screen submitted text and photos server-side before they are shown to an owner; quarantine unsafe, abusive, scam or irrelevant content; fail closed to staff review when checks are uncertain; expose only approved private content, rate-limit abuse, and promptly delete rejected files while retaining minimal audit data | Done |
 | PS-412 | Production monitoring and launch-environment hardening: configure privacy-safe error and operational monitoring with alert routing; add the final production origin to Supabase Auth, Edge Function CORS, MapTiler and notification-provider restrictions; configure HSTS after the hostname is final; and pass an authenticated production smoke test with alert delivery confirmed | Not started |
+| PS-413 | Normalize breed and colour matching for missing cases and found-pet reports: preserve entered values for display, but compare canonical lowercased punctuation- and whitespace-free values; award a reduced score only for safe, specific partial breed matches; introduce searchable controlled suggestions with unknown, mixed and other options rather than exhaustive rigid breed dropdowns | Not started |
 
 PS-405 maintenance note (2026-08-14): push registration waits until the service
 worker is active before subscribing, avoiding the intermittent browser push-service
@@ -121,7 +122,7 @@ than relying on report text alone.
 ## Decisions already made
 
 - A missing case requires an authenticated creator, but users do not need to create an account to submit a sighting.
-- Standalone sightings and found-pet reports are allowed. A close, unambiguous deterministic found-pet match may be provisionally linked for owner review; an owner can decline it, which removes the active link and prevents repeat matching of that pair. AI-assisted scoring is deferred to PS-408, must remain conservative and reviewable, and must never auto-link a report.
+- Standalone sightings and found-pet reports are allowed. A close, unambiguous deterministic found-pet match may be provisionally linked for owner review; an owner can decline it, which removes the active link and prevents repeat matching for that pair. AI-assisted scoring is retained for staff review and may create a provisional owner-review link only under PS-408's conservative deterministic, combined-score and confidence rule.
 - Anonymous sightings are immutable after submission. Case owners can dismiss reports from their dashboard.
 - Photos need automated EXIF removal and public display derivatives.
 - Default retention is one year, subject to a data-type-specific policy before public beta.
