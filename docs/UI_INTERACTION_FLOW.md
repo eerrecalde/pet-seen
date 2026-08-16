@@ -46,7 +46,7 @@ flowchart TB
   Hardening["Accessibility and security hardening\nDone · PS-407"]:::done
   ProductionHardening["Production monitoring and launch hardening\nNot started · PS-412"]:::planned
   AI["AI candidate scoring with staff review\nIn progress · PS-408"]:::progress
-  MatchNormalization["Normalized breed and colour matching\nNot started · PS-413"]:::planned
+  MatchNormalization["Normalized breed and colour matching\nDone · PS-413"]:::done
   PublicSightings["Public approximate sighting list\nNot started · PS-409"]:::planned
   Deploy["Post-deploy regression run and alerts\nIn progress · PS-307"]:::progress
 
