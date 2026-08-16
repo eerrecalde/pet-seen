@@ -40,7 +40,7 @@ flowchart TB
   OwnerMatch["Owner: confirm or decline match\nDone · PS-403"]:::done
   Reunite["Mark reunited / close / remove / edit\nDone · PS-108, PS-206"]:::done
   NotFound["Not-found screen\nDone"]:::neutral
-  FollowUp["Reporter magic-link follow-up\nNot started · PS-404"]:::planned
+  FollowUp["Reporter magic-link follow-up + messaging\nDone · PS-404"]:::done
   Watch["Watch area and push / email alerts\nDone · PS-405"]:::done
   Lifecycle["Expiry, reopen and data housekeeping\nDone · PS-406"]:::done
   Hardening["Accessibility and security hardening\nDone · PS-407"]:::done
@@ -88,11 +88,13 @@ flowchart TB
   Match -->|"Link close candidate"| OwnerMatch
   OwnerMatch -->|"Confirm or decline"| Dashboard
   NotFound -->|"Go home"| Home
-  FoundReceipt -.-> FollowUp
-  Dashboard -.-> Watch
+  FoundReceipt -->|"Magic-link follow-up"| FollowUp
+  Dashboard -->|"Manage local alerts"| Watch
+  OwnerMatch -->|"Confirmed match"| FollowUp
   Moderation -->|"Resolve, expire, reopen or delete"| Lifecycle
   Moderation --> AI
-  Found -.-> MatchNormalization
+  AI -->|"Qualifying candidate"| OwnerMatch
+  Found -->|"Normalizes matching attributes"| MatchNormalization
   Home -.-> PublicSightings
   Deploy --> Hardening
   Hardening -.-> ProductionHardening
