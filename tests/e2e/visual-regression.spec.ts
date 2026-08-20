@@ -8,6 +8,7 @@ function volatileUi(page: Page) {
     page.locator('.location-map'),
     page.locator('.pet-photo, .pet-placeholder'),
     page.locator('input[type="datetime-local"]'),
+    page.locator('.account-email'),
   ]
 }
 

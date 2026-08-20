@@ -13,8 +13,8 @@ export class MissingCasePage {
     await this.page.getByRole('button', { name: 'Continue' }).click()
     await expect(this.page.getByRole('heading', { name: `Where was ${name} last seen?` })).toBeVisible()
     await this.page.getByLabel('Place or landmark').fill('Victoria Park south gate')
-    await this.page.getByRole('button', { name: 'Review case' }).click()
-    await this.page.getByRole('button', { name: 'Publish missing-pet case' }).click()
+    await this.page.getByLabel('Map for choosing the last seen location').click({ position: { x: 220, y: 120 } })
+    await this.page.getByRole('button', { name: 'Save and publish case' }).click()
     await expect(this.page.getByText('Case published.')).toBeVisible()
   }
 }
