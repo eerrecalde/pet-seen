@@ -1,35 +1,19 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { OwnerSightingMap, type SightingMapPoint } from '../../components/maps/OwnerSightingMap'
+import { OwnerSightingMap } from '../../components/maps/OwnerSightingMap'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
 import { PetImage } from '../../components/PetImage'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
-import { supabase } from '../../lib/supabase'
-import { enablePushNotifications, pushNotificationsSupported } from '../../lib/push-notifications'
-
-type OwnerCaseStatus = 'draft' | 'published' | 'closed' | 'reunited' | 'removed' | 'expired'
-
-type OwnerCase = {
-  id: string
-  public_slug: string
-  status: OwnerCaseStatus
-  title: string | null
-  last_seen_at: string | null
-  last_seen_description: string | null
-  closed_at: string | null
-  published_at: string | null
-  reunion_reason: 'returned_home' | 'found_by_neighbour' | 'seen_after_report' | 'other' | null
-  reunion_pet_seen_attributed: boolean | null
-  pet: { id: string, name: string, species: 'dog' | 'cat', breed: string | null, colour: string | null, description: string | null, pet_photos?: { display_object_path: string | null, status: 'pending' | 'processed' | 'failed' }[] } | null
-}
+import { pushNotificationsSupported } from '../../lib/push-notifications'
+import { signedFoundPetPhotoQuery, useOwnerDashboardQuery, useWatchAreasQuery } from '../../features/owner-dashboard/queries'
+import { useOwnerMutations } from '../../features/owner-dashboard/mutations'
+import type { FoundMatch, OwnerCase, OwnerCaseStatus, OwnerSighting } from '../../features/owner-dashboard/api'
 
 type SightingReportStatus = 'pending' | 'confirmed' | 'dismissed'
-type OwnerSighting = SightingMapPoint & { case_id: string | null, seen_at: string, location_description: string | null, details: string | null, report_status: SightingReportStatus }
-type FoundPhoto = { display_object_path: string | null }
-type FoundMatch = { found_pet_report_id: string, case_id: string, match_score: number, match_reasons: string[], status: 'pending_owner' | 'confirmed', report: { species: 'dog' | 'cat', breed: string | null, colour: string | null, details: string, custody_status: 'with_reporter' | 'with_vet_or_rescue' | 'not_in_custody', found_at: string, location_description: string | null, photo: FoundPhoto | null } | null }
 
 const dashboardAdditions = {
   'en-GB': { 'dashboard.sightingStatusError': 'We could not update this sighting. Please try again.', 'dashboard.sightingStatusSaved': 'Sighting status updated.', 'dashboard.markReunited': 'Mark reunited', 'dashboard.reunionTitle': 'Tell us about the reunion.', 'dashboard.reunionIntro': 'This helps Pet Seen understand what made a difference.', 'dashboard.reunionReason': 'How was your pet reunited?', 'dashboard.reunionReasons.returned_home': 'They returned home', 'dashboard.reunionReasons.found_by_neighbour': 'A neighbour found them', 'dashboard.reunionReasons.seen_after_report': 'A sighting helped us find them', 'dashboard.reunionReasons.other': 'Another way', 'dashboard.petSeenHelped': 'Did Pet Seen help with the reunion?', 'dashboard.confirmReunion': 'Confirm reunion', 'dashboard.sightingStatus.pending': 'Pending review', 'dashboard.sightingStatus.confirmed': 'Confirmed', 'dashboard.sightingStatus.dismissed': 'Dismissed', 'dashboard.confirmSighting': 'Confirm', 'dashboard.dismissSighting': 'Dismiss', 'dashboard.remove': 'Remove case', 'dashboard.removeTitle': 'Remove this case?', 'dashboard.removeIntro': 'This removes the case from your account and takes its public page offline. Your pet profile will stay saved.', 'dashboard.confirmRemove': 'Remove case', 'dashboard.removeError': 'We could not remove this case. Please try again.', 'dashboard.removed': 'Case removed.' },
@@ -53,130 +37,71 @@ export function OwnerDashboardPage() {
   const { t: translated, i18n } = useTranslation()
   const t = dashboardTranslation(translated, i18n.resolvedLanguage)
   const { isLoading, session } = useAuth()
-  const [cases, setCases] = useState<OwnerCase[]>([])
-  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [savingId, setSavingId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
-  const [sightings, setSightings] = useState<OwnerSighting[]>([])
-  const [foundMatches, setFoundMatches] = useState<FoundMatch[]>([])
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
-
-  const loadCases = useCallback(async () => {
-    if (!supabase || !session) return
-    const client = supabase
-    setState('loading')
-    const { data, error } = await client.from('missing_cases').select('id,public_slug,status,title,last_seen_at,last_seen_description,closed_at,published_at,reunion_reason,reunion_pet_seen_attributed,pet:pets(id,name,species,breed,colour,description,pet_photos(display_object_path,status))').eq('owner_id', session.user.id).order('created_at', { ascending: false })
-    if (error) { setState('error'); return }
-    const ownerCases = (data ?? []).map((caseData) => ({ ...caseData, pet: Array.isArray(caseData.pet) ? caseData.pet[0] ?? null : caseData.pet })) as OwnerCase[]
-    setCases(ownerCases)
-    const signedPhotos = await Promise.all(ownerCases.map(async (caseData) => {
-      const displayPath = caseData.pet?.pet_photos?.find((photo) => photo.status === 'processed')?.display_object_path
-      if (!displayPath) return [caseData.id, ''] as const
-      const { data: signed } = await client.storage.from('pet-photos').createSignedUrl(displayPath, 60 * 60)
-      return [caseData.id, signed?.signedUrl ?? ''] as const
-    }))
-    setPhotoUrls(Object.fromEntries(signedPhotos.filter(([, url]) => Boolean(url))))
-    const caseIds = ownerCases.map((caseData) => caseData.id)
-    if (caseIds.length > 0) {
-      const [sightingResult, matchResult] = await Promise.all([client.from('owner_case_sightings').select('id,case_id,seen_at,location_description,details,report_status,latitude,longitude').in('case_id', caseIds).order('seen_at', { ascending: false }), client.from('found_pet_case_links').select('found_pet_report_id,case_id,match_score,match_reasons,status,report:found_pet_reports(species,breed,colour,details,custody_status,found_at,location_description,photo:found_pet_photos(display_object_path))').in('case_id', caseIds).in('status', ['pending_owner', 'confirmed'])])
-      const { data: sightingData, error: sightingsError } = sightingResult
-      if (sightingsError || matchResult.error) { setState('error'); return }
-      setSightings((sightingData ?? []).map((sighting) => ({ ...sighting, latitude: Number(sighting.latitude), longitude: Number(sighting.longitude), label: sighting.location_description || 'Reported sighting' })) as OwnerSighting[])
-      setFoundMatches((matchResult.data ?? []).map((match) => {
-        const report = Array.isArray(match.report) ? match.report[0] ?? null : match.report
-        return report ? { ...match, report: { ...report, photo: Array.isArray(report.photo) ? report.photo[0] ?? null : report.photo } } : { ...match, report: null }
-      }) as unknown as FoundMatch[])
-    } else { setSightings([]); setFoundMatches([]) }
-    setState('ready')
-  }, [session])
-
-  useEffect(() => { if (session) void loadCases() }, [session, loadCases])
+  const dashboard = useOwnerDashboardQuery(session?.user.id)
+  const mutations = useOwnerMutations(session?.user.id ?? '')
+  const cases = dashboard.data?.cases ?? [], sightings = dashboard.data?.sightings ?? [], foundMatches = dashboard.data?.foundMatches ?? []
 
   async function saveCase(event: FormEvent<HTMLFormElement>, caseData: OwnerCase) {
     event.preventDefault()
-    if (!supabase || !session || !caseData.pet) return
+    if (!session || !caseData.pet) return
     const fields = new FormData(event.currentTarget)
-    setSavingId(caseData.id); setMessage('')
-    const petUpdate = await supabase.from('pets').update({ name: String(fields.get('name') ?? '').trim(), breed: String(fields.get('breed') ?? '').trim() || null, colour: String(fields.get('colour') ?? '').trim() || null, description: String(fields.get('description') ?? '').trim() || null }).eq('id', caseData.pet.id).eq('owner_id', session.user.id)
-    const caseUpdate = await supabase.from('missing_cases').update({ title: String(fields.get('title') ?? '').trim() || null, last_seen_description: String(fields.get('place') ?? '').trim() || null, last_seen_at: String(fields.get('lastSeenAt') ?? '') ? new Date(String(fields.get('lastSeenAt'))).toISOString() : null }).eq('id', caseData.id).eq('owner_id', session.user.id)
-    setSavingId(null)
-    if (petUpdate.error || caseUpdate.error) { setMessage(t('dashboard.saveError')); return }
-    setEditingId(null); setMessage(t('dashboard.saved')); await loadCases()
+    setMessage('')
+    try { await mutations.updateCase.mutateAsync({ userId: session.user.id, caseId: caseData.id, petId: caseData.pet.id, fields: Object.fromEntries(fields) as Record<string, string> }); setEditingId(null); setMessage(t('dashboard.saved')) } catch { setMessage(t('dashboard.saveError')) }
   }
 
   async function changeStatus(caseData: OwnerCase, status: Extract<OwnerCaseStatus, 'published' | 'closed' | 'reunited'>, reunion?: { reason: NonNullable<OwnerCase['reunion_reason']>, attributed: boolean }) {
-    if (!supabase || !session) return
-    setSavingId(caseData.id); setMessage('')
-    const updates = status === 'published'
-      ? { status, closed_at: null, published_at: caseData.published_at ?? new Date().toISOString(), reunion_reason: null, reunion_pet_seen_attributed: null }
-      : status === 'reunited' && reunion
-        ? { status, closed_at: new Date().toISOString(), reunion_reason: reunion.reason, reunion_pet_seen_attributed: reunion.attributed }
-        : { status, closed_at: new Date().toISOString() }
-    const { error } = await supabase.from('missing_cases').update(updates).eq('id', caseData.id).eq('owner_id', session.user.id)
-    setSavingId(null)
-    if (error) { setMessage(t('dashboard.statusError')); return }
-    setMessage(t('dashboard.statusSaved')); await loadCases()
+    if (!session) return
+    setMessage(''); try { await mutations.setStatus.mutateAsync({ userId: session.user.id, caseId: caseData.id, status, publishedAt: caseData.published_at, reunion }); setMessage(t('dashboard.statusSaved')) } catch { setMessage(t('dashboard.statusError')) }
   }
 
   async function removeCase(caseData: OwnerCase) {
-    if (!supabase || !session) return
-    setSavingId(caseData.id); setMessage('')
-    const { error } = await supabase.from('missing_cases').delete().eq('id', caseData.id).eq('owner_id', session.user.id)
-    setSavingId(null)
-    if (error) { setMessage(t('dashboard.removeError')); return }
-    setEditingId(null); setMessage(t('dashboard.removed')); await loadCases()
+    if (!session) return
+    setMessage(''); try { await mutations.deleteCase.mutateAsync({ userId: session.user.id, caseId: caseData.id }); setEditingId(null); setMessage(t('dashboard.removed')) } catch { setMessage(t('dashboard.removeError')) }
   }
 
   if (isLoading) return <main className="dashboard-shell"><p>{t('auth.loading')}</p></main>
   if (!session) return <main className="dashboard-shell"><section className="auth-card"><p className="eyebrow">{t('dashboard.eyebrow')}</p><h1>{t('dashboard.signInTitle')}</h1><p>{t('dashboard.signInBody')}</p><Link className="primary-cta" to="/auth">{t('common.signIn')}<Icon name="arrow-right" /></Link></section></main>
   async function reviewSighting(sighting: OwnerSighting, status: Exclude<SightingReportStatus, 'pending'>) {
-    if (!supabase) return
-    setSavingId(sighting.id); setMessage('')
-    const { error } = await supabase.rpc('review_sighting', { target_sighting_id: sighting.id, next_status: status })
-    setSavingId(null)
-    if (error) { setMessage(t('dashboard.sightingStatusError')); return }
-    setMessage(t('dashboard.sightingStatusSaved')); await loadCases()
+    setMessage(''); try { await mutations.reviewSighting.mutateAsync({ sightingId: sighting.id, status }); setMessage(t('dashboard.sightingStatusSaved')) } catch { setMessage(t('dashboard.sightingStatusError')) }
   }
-  async function reviewFoundMatch(match: FoundMatch, decision: 'confirmed' | 'declined') { if (!supabase) return; setSavingId(match.found_pet_report_id); setMessage(''); const { error } = await supabase.rpc('review_found_pet_match', { target_report_id: match.found_pet_report_id, target_case_id: match.case_id, decision }); setSavingId(null); if (error) { setMessage(error.message); return }; setMessage(decision === 'confirmed' ? 'Found-pet match confirmed.' : 'Found-pet match declined.'); await loadCases() }
+  async function reviewFoundMatch(match: FoundMatch, decision: 'confirmed' | 'declined') { setMessage(''); try { await mutations.reviewFoundMatch.mutateAsync({ reportId: match.found_pet_report_id, caseId: match.case_id, decision }); setMessage(decision === 'confirmed' ? 'Found-pet match confirmed.' : 'Found-pet match declined.') } catch (error) { setMessage(error instanceof Error ? error.message : 'We could not update this match.') } }
 
   const pendingFoundMatch = foundMatches.find((match) => match.status === 'pending_owner')
-  if (pendingFoundMatch) return <FoundMatchReview match={pendingFoundMatch} saving={savingId === pendingFoundMatch.found_pet_report_id} onReview={reviewFoundMatch} />
+  if (pendingFoundMatch) return <FoundMatchReview match={pendingFoundMatch} saving={mutations.reviewFoundMatch.isPending} onReview={reviewFoundMatch} />
 
-  return <div className="dashboard-page"><SiteHeader /><main className="dashboard-shell"><div className="dashboard-intro"><div><p className="eyebrow">{t('dashboard.eyebrow')}</p><h1>{t('dashboard.title')}</h1><p>{t('dashboard.intro')}</p></div>{cases.length > 0 && <Link className="secondary-button dashboard-new" to="/lost/new"><Icon name="add-line" />{t('dashboard.newCase')}</Link>}</div>{message && <p className="dashboard-message" role="status">{message}</p>}{state === 'loading' ? <p>{t('dashboard.loading')}</p> : state === 'error' ? <p className="form-error">{t('dashboard.loadError')}</p> : cases.length === 0 ? <section className="dashboard-empty"><h2>{t('dashboard.emptyTitle')}</h2><p>{t('dashboard.emptyBody')}</p><Link className="primary-cta" to="/lost/new">{t('dashboard.newCase')}<Icon name="arrow-right" /></Link></section> : <><div className="case-list">{cases.map((caseData) => <OwnerCaseCard key={caseData.id} caseData={caseData} photoUrl={photoUrls[caseData.id]} sightings={sightings.filter((sighting) => sighting.case_id === caseData.id)} matches={foundMatches.filter((match) => match.case_id === caseData.id)} editing={editingId === caseData.id} locale={i18n.resolvedLanguage as AppLocale} saving={savingId === caseData.id} onEdit={() => setEditingId(caseData.id)} onCancel={() => setEditingId(null)} onSave={saveCase} onStatus={changeStatus} onRemove={removeCase} onReviewSighting={reviewSighting} onReviewFoundMatch={reviewFoundMatch} />)}</div><ConfirmedConversations matches={foundMatches.filter((match) => match.status === 'confirmed')} /></>}<WatchAreas sessionUserId={session.user.id} /></main><SiteFooter /></div>
+  return <div className="dashboard-page"><SiteHeader /><main className="dashboard-shell"><div className="dashboard-intro"><div><p className="eyebrow">{t('dashboard.eyebrow')}</p><h1>{t('dashboard.title')}</h1><p>{t('dashboard.intro')}</p></div>{cases.length > 0 && <Link className="secondary-button dashboard-new" to="/lost/new"><Icon name="add-line" />{t('dashboard.newCase')}</Link>}</div>{message && <p className="dashboard-message" role="status">{message}</p>}{dashboard.isLoading ? <p>{t('dashboard.loading')}</p> : dashboard.isError ? <p className="form-error">{t('dashboard.loadError')}</p> : cases.length === 0 ? <section className="dashboard-empty"><h2>{t('dashboard.emptyTitle')}</h2><p>{t('dashboard.emptyBody')}</p><Link className="primary-cta" to="/lost/new">{t('dashboard.newCase')}<Icon name="arrow-right" /></Link></section> : <><div className="case-list">{cases.map((caseData) => <OwnerCaseCard key={caseData.id} caseData={caseData} sightings={sightings.filter((sighting) => sighting.case_id === caseData.id)} matches={foundMatches.filter((match) => match.case_id === caseData.id)} editing={editingId === caseData.id} locale={i18n.resolvedLanguage as AppLocale} saving={mutations.updateCase.isPending || mutations.setStatus.isPending || mutations.deleteCase.isPending || mutations.reviewSighting.isPending || mutations.reviewFoundMatch.isPending} onEdit={() => setEditingId(caseData.id)} onCancel={() => setEditingId(null)} onSave={saveCase} onStatus={changeStatus} onRemove={removeCase} onReviewSighting={reviewSighting} onReviewFoundMatch={reviewFoundMatch} />)}</div><ConfirmedConversations matches={foundMatches.filter((match) => match.status === 'confirmed')} /></>}<WatchAreas sessionUserId={session.user.id} /></main><SiteFooter /></div>
 }
 
-type WatchArea = { id: string, label: string, radius_metres: number }
-
 function WatchAreas({ sessionUserId }: { sessionUserId: string }) {
-  const [areas, setAreas] = useState<WatchArea[]>([]), [label, setLabel] = useState(''), [radius, setRadius] = useState(2000), [position, setPosition] = useState<{ latitude: number, longitude: number } | null>(null), [status, setStatus] = useState(''), [saving, setSaving] = useState(false)
+  const [label, setLabel] = useState(''), [radius, setRadius] = useState(2000), [position, setPosition] = useState<{ latitude: number, longitude: number } | null>(null), [status, setStatus] = useState('')
   const configuredVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
-  const load = useCallback(async () => { if (!supabase) return; const { data } = await supabase.from('watch_areas').select('id,label,radius_metres').order('created_at', { ascending: false }); setAreas((data ?? []) as WatchArea[]) }, [])
-  useEffect(() => { void load() }, [load])
+  const areasQuery = useWatchAreasQuery(sessionUserId)
+  const mutations = useOwnerMutations(sessionUserId)
+  const areas = areasQuery.data ?? []
+  const saving = mutations.createWatchArea.isPending || mutations.deleteWatchArea.isPending || mutations.enablePush.isPending
   function useLocation() { if (!navigator.geolocation) { setStatus('Your browser cannot provide a location.'); return }; setStatus(''); navigator.geolocation.getCurrentPosition(({ coords }) => { setPosition({ latitude: coords.latitude, longitude: coords.longitude }); setStatus('Location selected. Give this area a name before saving.') }, () => setStatus('We could not access your location. Check your browser permission and try again.'), { maximumAge: 60_000, timeout: 15_000 }) }
-  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!supabase || !position || !label.trim()) { setStatus('Choose your location and enter an area name first.'); return }; setSaving(true); setStatus(''); const { error } = await supabase.from('watch_areas').insert({ owner_id: sessionUserId, label: label.trim(), radius_metres: radius, centre: `POINT(${position.longitude} ${position.latitude})` }); setSaving(false); if (error) { setStatus('We could not save that watch area. Please try again.'); return }; setLabel(''); setPosition(null); setStatus('Watch area saved. We will alert you about new reports nearby.'); await load() }
-  async function enablePush() { if (!supabase) return; setSaving(true); setStatus(''); try { await enablePushNotifications(supabase, configuredVapidKey ?? ''); setStatus('Push notifications are on for this browser.') } catch (error) { setStatus(error instanceof Error ? error.message : 'We could not enable push notifications.') } finally { setSaving(false) } }
-  async function remove(id: string) { if (!supabase) return; await supabase.from('watch_areas').delete().eq('id', id); await load() }
+  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!position || !label.trim()) { setStatus('Choose your location and enter an area name first.'); return }; setStatus(''); try { await mutations.createWatchArea.mutateAsync({ userId: sessionUserId, label: label.trim(), radius, ...position }); setLabel(''); setPosition(null); setStatus('Watch area saved. We will alert you about new reports nearby.') } catch { setStatus('We could not save that watch area. Please try again.') } }
+  async function enablePush() { setStatus(''); try { await mutations.enablePush.mutateAsync(configuredVapidKey ?? ''); setStatus('Push notifications are on for this browser.') } catch (error) { setStatus(error instanceof Error ? error.message : 'We could not enable push notifications.') } }
+  async function remove(id: string) { try { await mutations.deleteWatchArea.mutateAsync(id) } catch { setStatus('We could not remove that watch area. Please try again.') } }
   return <details className="watch-areas"><summary><span><strong>Local alerts</strong><small>Get notified about reports near an area.</small></span><Icon name="arrow-down-s" /></summary><div className="watch-areas-content"><p>Use your current location to set the area, then choose an alert radius and a private name for it. Alerts never include the exact location; email is used if push cannot reach this browser.</p><form onSubmit={(event) => void save(event)}><button className="secondary-button" onClick={useLocation} type="button"><Icon name="map-pin-user" />{position ? 'Current location selected' : 'Use current location'}</button><label>Name this saved location<input maxLength={100} onChange={(event) => setLabel(event.target.value)} placeholder="e.g. Home" value={label} /></label><label>Alert radius<select onChange={(event) => setRadius(Number(event.target.value))} value={radius}><option value={500}>500 metres</option><option value={1000}>1 kilometre</option><option value={2000}>2 kilometres</option><option value={5000}>5 kilometres</option></select></label><button className="primary-cta" disabled={saving} type="submit">Save watch area</button></form>{pushNotificationsSupported() && <button className="text-button watch-push-button" disabled={saving} onClick={() => void enablePush()} type="button"><Icon name="notification-3" />Turn on push notifications</button>}{status && <p className="watch-status" role="status">{status}</p>}{areas.length > 0 && <ul>{areas.map((area) => <li key={area.id}><span><strong>{area.label}</strong><small>{area.radius_metres >= 1000 ? `${area.radius_metres / 1000} km radius` : `${area.radius_metres} m radius`}</small></span><button onClick={() => void remove(area.id)} type="button">Remove</button></li>)}</ul>}</div></details>
 }
 
 function ConfirmedConversations({ matches }: { matches: FoundMatch[] }) {
   const [body, setBody] = useState('')
-  const [sending, setSending] = useState<string | null>(null)
+  const { session } = useAuth()
+  const mutations = useOwnerMutations(session?.user.id ?? '')
   if (!matches.length) return null
-  async function send(reportId: string) { if (!supabase || !body.trim()) return; setSending(reportId); await supabase.rpc('send_found_pet_message', { target_report_id: reportId, message_body: body.trim() }); setBody(''); setSending(null) }
-  return <section className="dashboard-empty"><h2>Private messages</h2><p>Write to a reporter after they sign in with their follow-up email.</p>{matches.map((match) => <div key={match.found_pet_report_id}><textarea aria-label="Message to reporter" maxLength={1500} onChange={(event) => setBody(event.target.value)} value={body} /><button className="primary-cta" disabled={sending === match.found_pet_report_id} onClick={() => void send(match.found_pet_report_id)} type="button">{sending ? 'Sending…' : 'Send message'}</button></div>)}</section>
+  async function send(reportId: string) { if (!body.trim()) return; await mutations.sendMessage.mutateAsync({ reportId, body: body.trim() }); setBody('') }
+  return <section className="dashboard-empty"><h2>Private messages</h2><p>Write to a reporter after they sign in with their follow-up email.</p>{matches.map((match) => <div key={match.found_pet_report_id}><textarea aria-label="Message to reporter" maxLength={1500} onChange={(event) => setBody(event.target.value)} value={body} /><button className="primary-cta" disabled={mutations.sendMessage.isPending} onClick={() => void send(match.found_pet_report_id)} type="button">{mutations.sendMessage.isPending ? 'Sending…' : 'Send message'}</button></div>)}</section>
 }
 
 function FoundMatchReview({ match, saving, onReview }: { match: FoundMatch, saving: boolean, onReview: (match: FoundMatch, decision: 'confirmed' | 'declined') => Promise<void> }) {
   const { t } = useTranslation()
-  const [photoUrl, setPhotoUrl] = useState('')
-  useEffect(() => {
-    const path = match.report?.photo?.display_object_path
-    setPhotoUrl('')
-    if (!supabase || !path) return
-    void supabase.storage.from('found-pet-photos').createSignedUrl(path, 60 * 10).then(({ data }) => setPhotoUrl(data?.signedUrl ?? ''))
-  }, [match.report?.photo?.display_object_path])
+  const path = match.report?.photo?.display_object_path
+  const photo = useQuery({ ...signedFoundPetPhotoQuery(path ?? ''), enabled: Boolean(path) })
+  const photoUrl = photo.data ?? ''
   const reportSummary = [match.report?.colour, match.report?.breed].filter(Boolean).join(' · ') || 'Found pet'
   return <div className="dashboard-page"><SiteHeader /><main className="dashboard-shell"><section className="found-owner-matches" aria-labelledby="found-match-title"><div className="found-owner-match-intro"><p className="eyebrow">Possible match</p><h1 id="found-match-title">Is this your pet?</h1><p>We matched an approved found-pet report to one of your active cases. Check the private details before deciding.</p></div><article className="found-owner-match-card"><div className="found-owner-match-photo">{photoUrl ? <img src={photoUrl} alt="Private photo of the found pet" /> : <div className="found-owner-match-no-photo"><Icon name="image-line" /><span>No photo was provided</span></div>}</div><div className="found-owner-match-details"><p className="found-owner-match-label">Found pet</p><h2>{reportSummary}</h2>{match.report?.details && <p className="found-owner-match-description">{match.report.details}</p>}<dl><div><dt>Why it may be a match</dt><dd>{match.match_reasons.join(' · ')}</dd></div><div><dt>Found near</dt><dd>{match.report?.location_description || 'Exact location available after confirmation.'}</dd></div></dl><div className="found-owner-match-actions"><button className="primary-cta" type="button" disabled={saving} onClick={() => void onReview(match, 'confirmed')}>{saving ? 'Saving…' : 'Yes, this is my pet'}</button><button className="secondary-button" type="button" disabled={saving} onClick={() => void onReview(match, 'declined')}>No, this is not my pet</button></div></div></article><Link className="text-button found-owner-match-back" to="/dashboard">{t('dashboard.title')}</Link></section></main><SiteFooter /></div>
 }
