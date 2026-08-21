@@ -16,12 +16,19 @@ import {
 
 type CustodyStatus = 'with_reporter' | 'with_vet_or_rescue' | 'not_in_custody'
 
+type FoundPetLocation = {
+  label: string
+  latitude: string
+  longitude: string
+  foundAt: string
+}
+
 export function FoundPetPage() {
   const { t } = useTranslation()
   const [species, setSpecies] = useState<'dog' | 'cat'>('dog')
   const [custodyStatus, setCustodyStatus] =
     useState<CustodyStatus>('with_reporter')
-  const [location, setLocation] = useState({
+  const [location, setLocation] = useState<FoundPetLocation>({
     label: '',
     latitude: '',
     longitude: '',
@@ -73,8 +80,8 @@ export function FoundPetPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const latitude = Number(location.latitude),
-      longitude = Number(location.longitude)
+    const latitude = Number(location.latitude)
+    const longitude = Number(location.longitude)
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
@@ -128,7 +135,7 @@ export function FoundPetPage() {
     dispatch({ type: 'submission_succeeded' })
   }
 
-  if (workflow.submission === 'success')
+  if (workflow.submission === 'success') {
     return (
       <div className="form-shell">
         <SimpleHeader />
@@ -153,6 +160,7 @@ export function FoundPetPage() {
         </main>
       </div>
     )
+  }
 
   const requiresCustodyDetails = custodyStatus !== 'with_reporter'
   return (

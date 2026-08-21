@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useReducer,
-  useRef,
-  useState,
-  type FormEvent,
-} from 'react'
+import { useCallback, useReducer, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocationPicker } from '../../components/maps/LocationPicker'
 import { useAuth } from '../../auth/useAuth'
@@ -19,6 +13,19 @@ import {
   missingCaseWorkflowReducer,
 } from '../../features/missing-case/workflow'
 
+type MissingCaseDraft = {
+  id: string
+  petId: string
+  petName: string
+}
+
+type MissingCaseLocation = {
+  label: string
+  latitude: string
+  longitude: string
+  seenAt: string
+}
+
 export function MissingCasePage() {
   const { t } = useTranslation()
   const { session, isLoading } = useAuth()
@@ -27,18 +34,13 @@ export function MissingCasePage() {
     initialMissingCaseWorkflow,
   )
   const [species, setSpecies] = useState<'dog' | 'cat'>('dog')
-  const [draft, setDraft] = useState<{
-    id: string
-    petId: string
-    petName: string
-  } | null>(null)
-  const [location, setLocation] = useState({
+  const [draft, setDraft] = useState<MissingCaseDraft | null>(null)
+  const [location, setLocation] = useState<MissingCaseLocation>({
     label: '',
     latitude: '',
     longitude: '',
     seenAt: new Date().toISOString().slice(0, 16),
   })
-  const discardOnExit = useRef(true)
   const { choosePhoto, photo, photoError } = usePetPhotoSelection({
     invalidMessage: t('missingCase.invalidPhoto'),
     prepareErrorMessage: t('missingCase.preparePhotoError'),
@@ -46,7 +48,9 @@ export function MissingCasePage() {
 
   async function savePet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!supabase || !session) return
+    if (!supabase || !session) {
+      return
+    }
     const fields = new FormData(event.currentTarget)
     const petName = String(fields.get('name') ?? '').trim()
     dispatch({ type: 'start_submission' })
@@ -78,8 +82,12 @@ export function MissingCasePage() {
   }
 
   const discardDraft = useCallback(
-    async (caseDraft: { id: string; petId: string } | null = draft) => {
-      if (!supabase || !session || !caseDraft) return true
+    async (
+      caseDraft: Pick<MissingCaseDraft, 'id' | 'petId'> | null = draft,
+    ) => {
+      if (!supabase || !session || !caseDraft) {
+        return true
+      }
       const { error } = await supabase.functions.invoke('submit-workflow', {
         body: { kind: 'missing_case_discard', caseId: caseDraft.id },
       })
@@ -95,8 +103,10 @@ export function MissingCasePage() {
   async function exitFlow() {
     dispatch({ type: 'start_submission' })
     const discarded = await discardDraft()
-    if (!discarded) return false
-    discardOnExit.current = false
+    if (!discarded) {
+      return false
+    }
+
     return true
   }
 
@@ -129,9 +139,12 @@ export function MissingCasePage() {
 
   async function saveLocation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!supabase || !session || !draft) return
-    const latitude = Number(location.latitude),
-      longitude = Number(location.longitude)
+    if (!supabase || !session || !draft) {
+      return
+    }
+
+    const latitude = Number(location.latitude)
+    const longitude = Number(location.longitude)
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
@@ -162,7 +175,6 @@ export function MissingCasePage() {
       dispatch({ type: 'failed', error: updateError.message })
       return
     }
-    discardOnExit.current = false
     dispatch({ type: 'published' })
   }
 

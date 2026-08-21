@@ -164,9 +164,14 @@ export function SimpleHeader({ onExit }: { onExit?: () => Promise<boolean> }) {
   const navigate = useNavigate()
 
   async function leaveFlow(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (!onExit) return
+    if (!onExit) {
+      return
+    }
+
     event.preventDefault()
-    if (await onExit()) navigate(localisedPath('/', i18n.resolvedLanguage))
+    if (await onExit()) {
+      navigate(localisedPath('/', i18n.resolvedLanguage))
+    }
   }
 
   return (

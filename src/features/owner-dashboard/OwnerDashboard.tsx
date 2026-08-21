@@ -26,7 +26,10 @@ import type {
 type SightingReportStatus = 'pending' | 'confirmed' | 'dismissed'
 
 function dateTimeLocalValue(value: string | null) {
-  if (!value) return ''
+  if (!value) {
+    return ''
+  }
+
   const date = new Date(value)
   const pad = (part: number) => String(part).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
@@ -39,16 +42,18 @@ export function OwnerDashboardPage() {
   const [message, setMessage] = useState('')
   const dashboard = useOwnerDashboardQuery(session?.user.id)
   const mutations = useOwnerMutations(session?.user.id ?? '')
-  const cases = dashboard.data?.cases ?? [],
-    sightings = dashboard.data?.sightings ?? [],
-    foundMatches = dashboard.data?.foundMatches ?? []
+  const cases = dashboard.data?.cases ?? []
+  const sightings = dashboard.data?.sightings ?? []
+  const foundMatches = dashboard.data?.foundMatches ?? []
 
   async function saveCase(
     event: FormEvent<HTMLFormElement>,
     caseData: OwnerCase,
   ) {
     event.preventDefault()
-    if (!session || !caseData.pet) return
+    if (!session || !caseData.pet) {
+      return
+    }
     const fields = new FormData(event.currentTarget)
     setMessage('')
     try {
@@ -73,7 +78,9 @@ export function OwnerDashboardPage() {
       attributed: boolean
     },
   ) {
-    if (!session) return
+    if (!session) {
+      return
+    }
     setMessage('')
     try {
       await mutations.setStatus.mutateAsync({
@@ -90,7 +97,9 @@ export function OwnerDashboardPage() {
   }
 
   async function removeCase(caseData: OwnerCase) {
-    if (!session) return
+    if (!session) {
+      return
+    }
     setMessage('')
     try {
       await mutations.deleteCase.mutateAsync({
@@ -104,13 +113,15 @@ export function OwnerDashboardPage() {
     }
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <main className="dashboard-shell">
         <p>{t('auth.loading')}</p>
       </main>
     )
-  if (!session)
+  }
+
+  if (!session) {
     return (
       <main className="dashboard-shell">
         <section className="auth-card">
@@ -124,6 +135,7 @@ export function OwnerDashboardPage() {
         </section>
       </main>
     )
+  }
   async function reviewSighting(
     sighting: OwnerSighting,
     status: Exclude<SightingReportStatus, 'pending'>,
@@ -167,7 +179,7 @@ export function OwnerDashboardPage() {
   const pendingFoundMatch = foundMatches.find(
     (match) => match.status === 'pending_owner',
   )
-  if (pendingFoundMatch)
+  if (pendingFoundMatch) {
     return (
       <FoundMatchReview
         match={pendingFoundMatch}
@@ -175,6 +187,7 @@ export function OwnerDashboardPage() {
         onReview={reviewFoundMatch}
       />
     )
+  }
 
   return (
     <div className="dashboard-page">

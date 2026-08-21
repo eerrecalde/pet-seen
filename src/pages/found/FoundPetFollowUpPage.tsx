@@ -9,22 +9,22 @@ import { useReporterFollowUpQuery } from '../../features/reporter-follow-up/quer
 import { useReporterMessageMutation } from '../../features/reporter-follow-up/mutations'
 import type { FollowUpMessage } from '../../features/reporter-follow-up/api'
 
-type Message = FollowUpMessage
-
 export function FoundPetFollowUpPage() {
   const { t, i18n } = useTranslation()
   const { isLoading, session } = useAuth()
   const followUp = useReporterFollowUpQuery(session?.user.id)
   const sendMessage = useReporterMessageMutation(session?.user.id ?? '')
-  const reports = followUp.data?.reports ?? [],
-    messages = followUp.data?.messages ?? {}
+  const reports = followUp.data?.reports ?? []
+  const messages = followUp.data?.messages ?? {}
 
   async function send(event: FormEvent<HTMLFormElement>, reportId: string) {
     event.preventDefault()
     const body = String(
       new FormData(event.currentTarget).get('message') ?? '',
     ).trim()
-    if (!body) return
+    if (!body) {
+      return
+    }
     try {
       await sendMessage.mutateAsync({ reportId, body })
       event.currentTarget.reset()
@@ -33,13 +33,15 @@ export function FoundPetFollowUpPage() {
     }
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <main className="dashboard-shell">
         <p>{t('auth.loading')}</p>
       </main>
     )
-  if (!session)
+  }
+
+  if (!session) {
     return (
       <main className="dashboard-shell">
         <section className="auth-card">
@@ -53,6 +55,7 @@ export function FoundPetFollowUpPage() {
         </section>
       </main>
     )
+  }
   return (
     <div className="dashboard-page">
       <SiteHeader />
@@ -124,7 +127,7 @@ function Conversation({
   sessionUserId,
   onSend,
 }: {
-  messages: Message[]
+  messages: FollowUpMessage[]
   reportId: string
   sending: boolean
   sessionUserId: string

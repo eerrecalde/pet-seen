@@ -102,7 +102,7 @@ export function HomePage() {
             <button
               className="secondary-button"
               type="button"
-              onClick={() => setShowMap(!showMap)}
+              onClick={() => setShowMap((current) => !current)}
               aria-expanded={showMap}
             >
               {showMap ? (

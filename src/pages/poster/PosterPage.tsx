@@ -15,7 +15,7 @@ export function PosterPage() {
   const { t, i18n } = useTranslation()
   const { slug } = useParams()
   const { data: caseData, isError, isPending } = usePublicCaseQuery(slug)
-  if (!caseData)
+  if (!caseData) {
     return (
       <main className="poster-page">
         <PublicCaseNotice
@@ -36,6 +36,8 @@ export function PosterPage() {
         />
       </main>
     )
+  }
+
   return (
     <Poster caseData={caseData} locale={i18n.resolvedLanguage as AppLocale} />
   )

@@ -13,13 +13,15 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'sent' | 'error'>('idle')
   const [error, setError] = useState('')
-  if (!isLoading && session)
+  if (!isLoading && session) {
     return (
       <Navigate
         replace
         to={localisedPath('/dashboard', i18n.resolvedLanguage)}
       />
     )
+  }
+
   async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!supabase) {

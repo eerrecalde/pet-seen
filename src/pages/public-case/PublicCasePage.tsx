@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router'
 import { PublicLocationMap } from '../../components/maps/PublicLocationMap'
@@ -19,36 +19,48 @@ export function PublicCasePage() {
   const location = useLocation()
   const { slug } = useParams()
   const { data: caseData, isError, isPending } = usePublicCaseQuery(slug)
+
   useEffect(() => {
     const token = new URLSearchParams(location.search).get('via')
-    if (supabase && slug && token && /^[0-9a-f-]{36}$/i.test(token))
+    if (supabase && slug && token && /^[0-9a-f-]{36}$/i.test(token)) {
       void supabase.rpc('record_share_attribution', {
         case_slug: slug,
         share_token: token,
       })
+    }
   }, [location.search, slug])
 
-  const content = isPending ? (
-    <PublicCaseNotice
-      title={t('publicCase.loadingTitle')}
-      body={t('publicCase.loadingBody')}
-    />
-  ) : isError ? (
-    <PublicCaseNotice
-      title={t('publicCase.unavailableTitle')}
-      body={t('publicCase.unavailableBody')}
-    />
-  ) : !caseData ? (
-    <PublicCaseNotice
-      title={t('publicCase.notFoundTitle')}
-      body={t('publicCase.notFoundBody')}
-    />
-  ) : (
-    <PublicCaseContent
-      caseData={caseData}
-      locale={i18n.resolvedLanguage as AppLocale}
-    />
-  )
+  let content: ReactNode
+
+  if (isPending) {
+    content = (
+      <PublicCaseNotice
+        title={t('publicCase.loadingTitle')}
+        body={t('publicCase.loadingBody')}
+      />
+    )
+  } else if (isError) {
+    content = (
+      <PublicCaseNotice
+        title={t('publicCase.unavailableTitle')}
+        body={t('publicCase.unavailableBody')}
+      />
+    )
+  } else if (!caseData) {
+    content = (
+      <PublicCaseNotice
+        title={t('publicCase.notFoundTitle')}
+        body={t('publicCase.notFoundBody')}
+      />
+    )
+  } else {
+    content = (
+      <PublicCaseContent
+        caseData={caseData}
+        locale={i18n.resolvedLanguage as AppLocale}
+      />
+    )
+  }
 
   return (
     <div className="public-shell">
@@ -174,7 +186,10 @@ function ShareCasePanel({
   async function attributedUrl(
     channel: 'copy' | 'web_share' | 'whatsapp' | 'poster',
   ) {
-    if (!supabase) return baseUrl
+    if (!supabase) {
+      return baseUrl
+    }
+
     const { data, error } = await supabase.rpc('create_share_attribution', {
       case_slug: caseData.public_slug,
       share_channel: channel,
@@ -190,8 +205,9 @@ function ShareCasePanel({
       })
       setStatus(t('publicCase.shared'))
     } catch (error) {
-      if ((error as DOMException).name !== 'AbortError')
+      if ((error as DOMException).name !== 'AbortError') {
         setStatus(t('publicCase.shareError'))
+      }
     }
   }
   async function copy() {
@@ -305,7 +321,7 @@ function ContentReportForm({ caseSlug }: { caseSlug: string }) {
     setState(error ? 'error' : 'success')
   }
 
-  if (state === 'success')
+  if (state === 'success') {
     return (
       <section className="content-report confirmation" role="status">
         <Icon name="check-line" />
@@ -315,6 +331,8 @@ function ContentReportForm({ caseSlug }: { caseSlug: string }) {
         </div>
       </section>
     )
+  }
+
   return (
     <section className="content-report">
       <button

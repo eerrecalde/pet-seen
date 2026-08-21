@@ -187,13 +187,15 @@ export function ModerationPage() {
       setHousekeeping('error')
     }
   }
-  if (isLoading || access === 'checking')
+  if (isLoading || access === 'checking') {
     return (
       <main className="moderation-shell">
         <p>{t('moderation.checking')}</p>
       </main>
     )
-  if (access === 'denied')
+  }
+
+  if (access === 'denied') {
     return (
       <main className="moderation-shell">
         <section className="auth-card">
@@ -207,6 +209,7 @@ export function ModerationPage() {
         </section>
       </main>
     )
+  }
   return (
     <div className="moderation-page">
       <SiteHeader />

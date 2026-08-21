@@ -19,7 +19,9 @@ const sightingDraftStorageKey = 'pet-seen:sighting-draft:v1'
 function readSightingDraft(): SightingDraft | null {
   try {
     const stored = window.localStorage.getItem(sightingDraftStorageKey)
-    if (!stored) return null
+    if (!stored) {
+      return null
+    }
     const draft = JSON.parse(stored) as SightingDraft
     return draft?.location && typeof draft.submissionToken === 'string'
       ? draft
@@ -65,7 +67,9 @@ export function SightingPage() {
 
   useEffect(() => {
     const draft = readSightingDraft()
-    if (!draft) return
+    if (!draft) {
+      return
+    }
     dispatch({ type: 'restore_draft', draft })
     submissionToken.current = draft.submissionToken
   }, [])
@@ -125,8 +129,8 @@ export function SightingPage() {
 
   async function submit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault()
-    const latitude = Number(workflow.location.latitude),
-      longitude = Number(workflow.location.longitude)
+    const latitude = Number(workflow.location.latitude)
+    const longitude = Number(workflow.location.longitude)
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
@@ -179,7 +183,7 @@ export function SightingPage() {
     dispatch({ type: 'submission_succeeded' })
   }
 
-  if (workflow.submission === 'success')
+  if (workflow.submission === 'success') {
     return (
       <div className="form-shell">
         <SimpleHeader />
@@ -197,6 +201,7 @@ export function SightingPage() {
         </main>
       </div>
     )
+  }
 
   return (
     <div className="form-shell">
