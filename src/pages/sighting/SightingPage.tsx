@@ -67,10 +67,8 @@ export function SightingPage() {
     if (!supabase) { setError(t('sighting.unavailable')); return }
     if (!navigator.onLine) { saveDraft(); setState('offline'); return }
     setState('saving'); setError('')
-    const { data: sightingId, error: submitError } = await supabase.rpc('submit_sighting', { selected_case_slug: selectedCase || null, latitude, longitude, sighted_at: new Date(location.seenAt).toISOString(), place_description: location.label, sighting_details: location.details, submission_token: submissionToken.current })
+    const { error: submitError } = await supabase.functions.invoke('submit-workflow', { body: { kind: 'sighting', payload: { selected_case_slug: selectedCase || null, latitude, longitude, sighted_at: new Date(location.seenAt).toISOString(), place_description: location.label, sighting_details: location.details, submission_token: submissionToken.current } } })
     if (submitError) { saveDraft(); setState('error'); setError(submitError.message || t('sighting.submitError')); return }
-    if (selectedCase && sightingId) void supabase.functions.invoke('send-sighting-owner-email', { body: { sightingId } })
-    if (sightingId) void supabase.functions.invoke('send-watch-notifications', { body: { sightingId } })
     window.localStorage.removeItem(sightingDraftStorageKey)
     setState('success')
   }

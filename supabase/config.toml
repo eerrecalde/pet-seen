@@ -392,6 +392,15 @@ verify_jwt = false
 [functions.process-pet-photo]
 verify_jwt = false
 
+# This worker is called by a server-side scheduler with a service-role JWT.
+# It is deliberately not callable by the public browser client.
+[functions.deliver-workflow-outbox]
+verify_jwt = true
+
+# This is the browser-facing boundary for the three multi-write submissions.
+[functions.submit-workflow]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

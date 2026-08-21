@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocationPicker } from '../../components/maps/LocationPicker'
 import { useAuth } from '../../auth/useAuth'
@@ -7,6 +7,7 @@ import { PetPhotoUploadField } from '../../components/PetPhotoUploadField'
 import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
 import { usePetPhotoSelection } from '../../hooks/usePetPhotoSelection'
 import { supabase } from '../../lib/supabase'
+import { photoPayload } from '../../lib/photo-payload'
 
 export function MissingCasePage() {
   const { t } = useTranslation()
@@ -23,50 +24,18 @@ export function MissingCasePage() {
   async function savePet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!supabase || !session) return
-    const client = supabase
-    const userId = session.user.id
     const fields = new FormData(event.currentTarget)
     const petName = String(fields.get('name') ?? '').trim()
     setError(''); setState('saving')
-    const { data: pet, error: petError } = await client.from('pets').insert({ owner_id: userId, name: petName, species, breed: String(fields.get('breed') ?? '').trim() || null, colour: String(fields.get('colour') ?? '').trim() || null, description: String(fields.get('description') ?? '').trim() || null }).select('id').single()
-    if (petError || !pet) { setError(petError?.message ?? t('missingCase.saveError')); setState('error'); return }
-    const petId = pet.id
-    async function discardPetAfterPhotoFailure(sourceObjectPath?: string, photoId?: string) {
-      if (photoId) await client.from('pet_photos').delete().eq('id', photoId).eq('owner_id', userId)
-      if (sourceObjectPath) await client.storage.from('pet-photos').remove([sourceObjectPath])
-      await client.from('pets').delete().eq('id', petId).eq('owner_id', userId)
-    }
-    if (photo) {
-      const sourceObjectPath = `${userId}/source/${crypto.randomUUID()}.jpg`
-      const { error: uploadError } = await client.storage.from('pet-photos').upload(sourceObjectPath, photo, { contentType: photo.type, upsert: false })
-      if (uploadError) { await discardPetAfterPhotoFailure(); setError(uploadError.message); setState('error'); return }
-      const { data: photoRecord, error: photoInsertError } = await client.from('pet_photos').insert({ pet_id: petId, owner_id: userId, source_object_path: sourceObjectPath }).select('id').single()
-      if (photoInsertError || !photoRecord) { await discardPetAfterPhotoFailure(sourceObjectPath); setError(photoInsertError?.message ?? t('missingCase.photoProcessError')); setState('error'); return }
-      const { error: processError } = await client.functions.invoke('process-pet-photo', { body: { photoId: photoRecord.id } })
-      if (processError) { await discardPetAfterPhotoFailure(sourceObjectPath, photoRecord.id); setError(t('missingCase.photoProcessError')); setState('error'); return }
-    }
-    const { data: caseDraft, error: caseError } = await client.from('missing_cases').insert({ owner_id: session.user.id, pet_id: pet.id, status: 'draft', title: `${petName} is missing` }).select('id').single()
-    if (caseError || !caseDraft) { setError(caseError?.message ?? t('missingCase.saveError')); setState('error'); return }
-    setDraft({ id: caseDraft.id, petId: pet.id, petName }); setState('idle'); setStage('location')
+    const { data, error: saveError } = await supabase.functions.invoke<{ id: string, petId: string }>('submit-workflow', { body: { kind: 'missing_case_draft', payload: { pet_name: petName, pet_species: species, pet_breed: String(fields.get('breed') ?? ''), pet_colour: String(fields.get('colour') ?? ''), pet_description: String(fields.get('description') ?? '') }, photo: await photoPayload(photo) } })
+    if (saveError || !data) { setError(saveError?.message ?? t('missingCase.saveError')); setState('error'); return }
+    setDraft({ id: data.id, petId: data.petId, petName }); setState('idle'); setStage('location')
   }
 
   const discardDraft = useCallback(async (caseDraft: { id: string, petId: string } | null = draft) => {
     if (!supabase || !session || !caseDraft) return true
-
-    const { data: photos, error: photosError } = await supabase.from('pet_photos').select('source_object_path,display_object_path').eq('pet_id', caseDraft.petId).eq('owner_id', session.user.id)
-    if (photosError) { setError(photosError.message); setState('error'); return false }
-
-    const { error: caseError } = await supabase.from('missing_cases').delete().eq('id', caseDraft.id).eq('owner_id', session.user.id)
-    if (caseError) { setError(caseError.message); setState('error'); return false }
-
-    const { error: petError } = await supabase.from('pets').delete().eq('id', caseDraft.petId).eq('owner_id', session.user.id)
-    if (petError) { setError(petError.message); setState('error'); return false }
-
-    const photoPaths = (photos ?? []).flatMap((photo) => [photo.source_object_path, photo.display_object_path].filter((path): path is string => Boolean(path)))
-    if (photoPaths.length > 0) {
-      const { error: storageError } = await supabase.storage.from('pet-photos').remove(photoPaths)
-      if (storageError) console.error('Could not remove discarded pet photo files', storageError)
-    }
+    const { error } = await supabase.functions.invoke('submit-workflow', { body: { kind: 'missing_case_discard', caseId: caseDraft.id } })
+    if (error) { setError(error.message); setState('error'); return false }
     return true
   }, [draft, session])
 
@@ -77,13 +46,6 @@ export function MissingCasePage() {
     discardOnExit.current = false
     return true
   }
-
-  useEffect(() => {
-    if (!draft) return
-    return () => {
-      if (discardOnExit.current) void discardDraft(draft)
-    }
-  }, [discardDraft, draft])
 
   function useCurrentLocation() {
     if (!navigator.geolocation) { setError('Your browser cannot provide a location. Move the pin on the map to set the last-seen location.'); return }

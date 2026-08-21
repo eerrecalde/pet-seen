@@ -6,6 +6,7 @@ import { PetPhotoUploadField } from '../../components/PetPhotoUploadField'
 import { PetAttributeSuggestions } from '../../components/PetAttributeSuggestions'
 import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
 import { usePetPhotoSelection } from '../../hooks/usePetPhotoSelection'
+import { photoPayload } from '../../lib/photo-payload'
 import { supabase } from '../../lib/supabase'
 
 type CustodyStatus = 'with_reporter' | 'with_vet_or_rescue' | 'not_in_custody'
@@ -39,7 +40,7 @@ export function FoundPetPage() {
     if (!supabase) { setError(t('found.unavailable')); return }
     const fields = new FormData(event.currentTarget)
     setError(''); setState('saving')
-    const { data: reportId, error: submitError } = await supabase.rpc('submit_found_pet_report', {
+    const payload = {
       found_species: species,
       found_breed: String(fields.get('breed') ?? ''),
       found_colour: String(fields.get('colour') ?? ''),
@@ -52,20 +53,9 @@ export function FoundPetPage() {
       custody_information: String(fields.get('custodyDetails') ?? ''),
       submission_token: submissionToken.current,
       follow_up_email: followUpEmail.trim() || null,
-    })
-    if (submitError || !reportId) { setState('error'); setError(submitError?.message || t('found.submitError')); return }
-    if (photo) {
-      const sourcePath = `source/${reportId}.jpg`
-      const { error: uploadError } = await supabase.storage.from('found-pet-photos').upload(sourcePath, photo, { contentType: 'image/jpeg', upsert: false })
-      if (uploadError) { setState('error'); setError(t('found.photoUploadError')); return }
-      const { data: photoId, error: attachError } = await supabase.rpc('attach_found_pet_photo', { target_report_id: reportId, submission_token: submissionToken.current })
-      if (attachError || !photoId) { setState('error'); setError(t('found.photoUploadError')); return }
-      const { error: processError } = await supabase.functions.invoke('process-pet-photo', { body: { foundPhotoId: photoId, foundSubmissionToken: submissionToken.current } })
-      if (processError) { setState('error'); setError(t('found.photoProcessError')); return }
     }
-    // Screening failure deliberately does not expose the report: it remains in
-    // the private pending queue, while the person submitting it gets a receipt.
-    await supabase.functions.invoke('screen-found-pet-report', { body: { reportId, submissionToken: submissionToken.current } })
+    const { error: submitError } = await supabase.functions.invoke('submit-workflow', { body: { kind: 'found', payload, photo: await photoPayload(photo) } })
+    if (submitError) { setState('error'); setError(submitError.message || t('found.submitError')); return }
     if (followUpEmail.trim()) {
       await supabase.auth.signInWithOtp({ email: followUpEmail.trim(), options: { emailRedirectTo: `${window.location.origin}/found/follow-up` } })
     }
