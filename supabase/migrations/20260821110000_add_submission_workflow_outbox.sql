@@ -1,8 +1,15 @@
 -- PS-419: submissions must survive after the browser has received its receipt.
 -- The outbox is the durable hand-off between the transaction that creates a
 -- sighting and the separate, fallible notification providers.
-create type public.workflow_outbox_status as enum ('pending', 'processing', 'delivered', 'failed');
-create type public.workflow_outbox_kind as enum ('owner_sighting_email', 'watch_sighting_alert');
+do $$ begin
+  create type public.workflow_outbox_status as enum ('pending', 'processing', 'delivered', 'failed');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.workflow_outbox_kind as enum ('owner_sighting_email', 'watch_sighting_alert');
+exception when duplicate_object then null;
+end $$;
 
 create table public.workflow_outbox (
   id uuid primary key default gen_random_uuid(),
