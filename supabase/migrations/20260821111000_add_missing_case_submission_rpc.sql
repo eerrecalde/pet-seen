@@ -1,6 +1,6 @@
 -- The first missing-case screen creates the pet and the draft case together.
 -- A network failure can therefore never leave an owner with an orphan pet.
-create function public.create_missing_case_draft(
+create or replace function public.create_missing_case_draft(
   pet_name text, pet_species public.pet_species, pet_breed text, pet_colour text, pet_description text
 ) returns table (case_id uuid, pet_id uuid)
 language plpgsql security definer set search_path = public as $$
@@ -18,7 +18,7 @@ begin
 end;
 $$;
 
-create function public.discard_missing_case_draft(target_case_id uuid)
+create or replace function public.discard_missing_case_draft(target_case_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare target_pet_id uuid;
 begin
