@@ -15,7 +15,8 @@ Deno.serve(async (request) => {
   const body = await request.json().catch(() => null) as Record<string, unknown> | null
   if (!body || typeof body.kind !== 'string') return response(request, 400, { error: 'A submission is required.' })
   const authorization = request.headers.get('authorization')
-  const userClient = createClient(url, anonKey, { global: { headers: { authorization: authorization ?? '' } } })
+  const accessToken = authorization?.replace(/^Bearer\s+/i, '') ?? ''
+  const userClient = createClient(url, anonKey, { global: { headers: { Authorization: accessToken ? `Bearer ${accessToken}` : '' } } })
   const admin = createClient(url, serviceKey)
   try {
     if (body.kind === 'sighting') {
@@ -53,7 +54,7 @@ Deno.serve(async (request) => {
     }
     if (body.kind === 'missing_case_draft') {
       const payload = body.payload as Record<string, unknown>
-      const { data: auth } = await userClient.auth.getUser()
+      const { data: auth } = accessToken ? await userClient.auth.getUser(accessToken) : { data: { user: null } }
       if (!auth.user) return response(request, 401, { error: 'Sign in is required.' })
       const { data: draft, error } = await userClient.rpc('create_missing_case_draft', payload)
       const row = Array.isArray(draft) ? draft[0] : draft
@@ -77,7 +78,7 @@ Deno.serve(async (request) => {
     }
     if (body.kind === 'missing_case_discard') {
       const caseId = String(body.caseId ?? '')
-      const { data: auth } = await userClient.auth.getUser()
+      const { data: auth } = accessToken ? await userClient.auth.getUser(accessToken) : { data: { user: null } }
       if (!auth.user || !caseId) return response(request, 401, { error: 'Sign in is required.' })
       const { data: caseRow } = await admin.from('missing_cases').select('pet_id').eq('id', caseId).eq('owner_id', auth.user.id).eq('status', 'draft').maybeSingle<{ pet_id: string }>()
       if (!caseRow) return response(request, 404, { error: 'Draft case not found.' })
