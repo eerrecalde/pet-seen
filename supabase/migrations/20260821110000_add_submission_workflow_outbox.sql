@@ -11,7 +11,7 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
-create table public.workflow_outbox (
+create table if not exists public.workflow_outbox (
   id uuid primary key default gen_random_uuid(),
   kind public.workflow_outbox_kind not null,
   aggregate_id uuid not null references public.sightings (id) on delete cascade,
@@ -30,9 +30,10 @@ create table public.workflow_outbox (
   )
 );
 
-create index workflow_outbox_ready_idx on public.workflow_outbox (status, available_at, created_at);
+create index if not exists workflow_outbox_ready_idx on public.workflow_outbox (status, available_at, created_at);
 alter table public.workflow_outbox enable row level security;
 revoke all on table public.workflow_outbox from public;
+drop trigger if exists workflow_outbox_set_updated_at on public.workflow_outbox;
 create trigger workflow_outbox_set_updated_at before update on public.workflow_outbox
   for each row execute procedure public.set_record_updated_at();
 
@@ -51,6 +52,7 @@ begin
 end;
 $$;
 
+drop trigger if exists sightings_queue_workflow_outbox on public.sightings;
 create trigger sightings_queue_workflow_outbox
   after insert on public.sightings for each row execute procedure public.queue_sighting_workflow_outbox();
 
