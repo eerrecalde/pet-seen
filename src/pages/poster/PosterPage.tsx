@@ -8,14 +8,15 @@ import { PublicCaseNotice } from '../../components/PublicCaseNotice'
 import { Link, PetSeenMark } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
-import { usePublicCase, type PublicCase } from '../../hooks/usePublicCase'
+import { usePublicCaseQuery } from '../../features/public-cases/queries'
+import type { PublicCase } from '../../features/public-cases/types'
 import { publicCaseUrl } from '../../lib/public-case'
 
 export function PosterPage() {
   const { t, i18n } = useTranslation()
   const { slug } = useParams()
-  const { caseData, state } = usePublicCase(slug)
-  if (state !== 'ready' || !caseData) return <main className="poster-page"><PublicCaseNotice title={state === 'not-found' ? t('publicCase.notFoundTitle') : t('publicCase.loadingTitle')} body={state === 'not-found' ? t('publicCase.notFoundBody') : t('publicCase.loadingBody')} /></main>
+  const { data: caseData, isError, isPending } = usePublicCaseQuery(slug)
+  if (!caseData) return <main className="poster-page"><PublicCaseNotice title={isPending ? t('publicCase.loadingTitle') : isError ? t('publicCase.unavailableTitle') : t('publicCase.notFoundTitle')} body={isPending ? t('publicCase.loadingBody') : isError ? t('publicCase.unavailableBody') : t('publicCase.notFoundBody')} /></main>
   return <Poster caseData={caseData} locale={i18n.resolvedLanguage as AppLocale} />
 }
 

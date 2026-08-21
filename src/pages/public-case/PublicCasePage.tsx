@@ -8,7 +8,8 @@ import { PublicCaseNotice } from '../../components/PublicCaseNotice'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
-import { type PublicCase, usePublicCase } from '../../hooks/usePublicCase'
+import { usePublicCaseQuery } from '../../features/public-cases/queries'
+import type { PublicCase } from '../../features/public-cases/types'
 import { CaseMetadata } from '../../lib/metadata'
 import { publicCaseUrl, socialCardUrl } from '../../lib/public-case'
 import { supabase } from '../../lib/supabase'
@@ -16,13 +17,13 @@ import { supabase } from '../../lib/supabase'
 export function PublicCasePage() {
   const { t, i18n } = useTranslation(); const location = useLocation()
   const { slug } = useParams()
-  const { caseData, state } = usePublicCase(slug)
+  const { data: caseData, isError, isPending } = usePublicCaseQuery(slug)
   useEffect(() => { const token = new URLSearchParams(location.search).get('via'); if (supabase && slug && token && /^[0-9a-f-]{36}$/i.test(token)) void supabase.rpc('record_share_attribution', { case_slug: slug, share_token: token }) }, [location.search, slug])
 
-  const content = state === 'loading' ? <PublicCaseNotice title={t('publicCase.loadingTitle')} body={t('publicCase.loadingBody')} />
-    : state === 'not-found' ? <PublicCaseNotice title={t('publicCase.notFoundTitle')} body={t('publicCase.notFoundBody')} />
-      : state === 'error' ? <PublicCaseNotice title={t('publicCase.unavailableTitle')} body={t('publicCase.unavailableBody')} />
-        : caseData ? <PublicCaseContent caseData={caseData} locale={i18n.resolvedLanguage as AppLocale} /> : null
+  const content = isPending ? <PublicCaseNotice title={t('publicCase.loadingTitle')} body={t('publicCase.loadingBody')} />
+    : isError ? <PublicCaseNotice title={t('publicCase.unavailableTitle')} body={t('publicCase.unavailableBody')} />
+      : !caseData ? <PublicCaseNotice title={t('publicCase.notFoundTitle')} body={t('publicCase.notFoundBody')} />
+        : <PublicCaseContent caseData={caseData} locale={i18n.resolvedLanguage as AppLocale} />
 
   return <div className="public-shell"><SiteHeader /><main className="public-case"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToCases')}</Link>{content}</main><SiteFooter /></div>
 }
