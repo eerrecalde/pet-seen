@@ -37,7 +37,7 @@ drop trigger if exists workflow_outbox_set_updated_at on public.workflow_outbox;
 create trigger workflow_outbox_set_updated_at before update on public.workflow_outbox
   for each row execute procedure public.set_record_updated_at();
 
-create function public.queue_sighting_workflow_outbox()
+create or replace function public.queue_sighting_workflow_outbox()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.case_id is not null then
@@ -60,7 +60,7 @@ revoke all on function public.queue_sighting_workflow_outbox() from public;
 
 -- Claiming is atomic so independently triggered workers cannot send the same
 -- notification twice. A stale lock is made available again for retry.
-create function public.claim_workflow_outbox(target_limit integer default 20)
+create or replace function public.claim_workflow_outbox(target_limit integer default 20)
 returns table (id uuid, kind public.workflow_outbox_kind, aggregate_id uuid, attempts integer)
 language plpgsql security definer set search_path = public as $$
 begin
@@ -79,7 +79,7 @@ begin
 end;
 $$;
 
-create function public.complete_workflow_outbox(target_id uuid, succeeded boolean, failure_reason text default null)
+create or replace function public.complete_workflow_outbox(target_id uuid, succeeded boolean, failure_reason text default null)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   update public.workflow_outbox
