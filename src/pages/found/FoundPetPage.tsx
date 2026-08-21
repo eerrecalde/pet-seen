@@ -8,6 +8,7 @@ import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
 import { usePetPhotoSelection } from '../../hooks/usePetPhotoSelection'
 import { photoPayload } from '../../lib/photo-payload'
 import { supabase } from '../../lib/supabase'
+import { getCurrentCoordinates } from '../../lib/geolocation'
 import { foundPetWorkflowReducer, initialFoundPetWorkflow } from '../../features/found-pet/workflow'
 
 type CustodyStatus = 'with_reporter' | 'with_vet_or_rescue' | 'not_in_custody'
@@ -23,14 +24,11 @@ export function FoundPetPage() {
   const { choosePhoto, photo, photoError } = usePetPhotoSelection({ invalidMessage: t('found.invalidPhoto'), prepareErrorMessage: t('found.preparePhotoError'), maxBytes: 5 * 1024 * 1024 })
   const coordinates = location.latitude !== '' && location.longitude !== '' ? { latitude: Number(location.latitude), longitude: Number(location.longitude) } : null
 
-  function useCurrentLocation() {
-    if (!navigator.geolocation) { dispatch({ type: 'validation_failed', error: t('found.locationUnavailable') }); return }
+  async function useCurrentLocation() {
     dispatch({ type: 'clear_error' })
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => setLocation((current) => ({ ...current, latitude: coords.latitude.toFixed(6), longitude: coords.longitude.toFixed(6) })),
-      () => dispatch({ type: 'validation_failed', error: t('found.locationDenied') }),
-      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
-    )
+    const result = await getCurrentCoordinates({ enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 })
+    if (!result.ok) { dispatch({ type: 'validation_failed', error: t(result.reason === 'unavailable' ? 'found.locationUnavailable' : 'found.locationDenied') }); return }
+    setLocation((current) => ({ ...current, latitude: result.coordinates.latitude.toFixed(6), longitude: result.coordinates.longitude.toFixed(6) }))
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {

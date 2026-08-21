@@ -20,18 +20,19 @@ const fallbackStyle = {
 export function PublicLocationMap({ latitude, longitude, label }: PublicLocationMapProps) {
   const container = useRef<HTMLDivElement | null>(null)
   const map = useRef<Map | null>(null)
+  const initialPosition = useRef({ latitude, longitude })
 
   useEffect(() => {
     if (!container.current || map.current) return
     const instance = new maplibregl.Map({
       container: container.current,
-      center: [longitude, latitude],
+      center: [initialPosition.current.longitude, initialPosition.current.latitude],
       zoom: 16,
       interactive: false,
       style: import.meta.env.VITE_MAP_STYLE_URL || fallbackStyle,
     })
     instance.on('load', () => {
-      const area = approximateArea(latitude, longitude)
+      const area = approximateArea(initialPosition.current.latitude, initialPosition.current.longitude)
       instance.addSource('approximate-area', {
         type: 'geojson',
         data: area.data,
@@ -52,6 +53,14 @@ export function PublicLocationMap({ latitude, longitude, label }: PublicLocation
     })
     map.current = instance
     return () => { instance.remove(); map.current = null }
+  }, [])
+
+  useEffect(() => {
+    const instance = map.current
+    if (!instance?.getSource('approximate-area')) return
+    const area = approximateArea(latitude, longitude)
+    ;(instance.getSource('approximate-area') as maplibregl.GeoJSONSource).setData(area.data)
+    instance.fitBounds(area.bounds, { padding: 48, maxZoom: 16, duration: 0 })
   }, [latitude, longitude])
 
   return <div className="public-location-map" ref={container} role="img" aria-label={label} />

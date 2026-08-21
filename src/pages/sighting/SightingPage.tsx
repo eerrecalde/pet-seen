@@ -7,6 +7,7 @@ import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
 import { usePublicCaseOptionsQuery } from '../../features/public-cases/queries'
 import type { PublicCaseOption } from '../../features/public-cases/types'
 import { supabase } from '../../lib/supabase'
+import { getCurrentCoordinates } from '../../lib/geolocation'
 import { createInitialSightingWorkflow, sightingWorkflowReducer, type SightingDraft } from '../../features/sighting/workflow'
 
 const sightingDraftStorageKey = 'pet-seen:sighting-draft:v1'
@@ -44,14 +45,11 @@ export function SightingPage() {
   function saveDraft() { window.localStorage.setItem(sightingDraftStorageKey, JSON.stringify({ selectedCase: workflow.selectedCase, location: workflow.location, submissionToken: submissionToken.current } satisfies SightingDraft)) }
   function chooseCase(caseSlug: string) { dispatch({ type: 'choose_case', caseSlug }) }
 
-  function useCurrentLocation() {
-    if (!navigator.geolocation) { dispatch({ type: 'validation_failed', error: t('sighting.locationUnavailable') }); return }
+  async function useCurrentLocation() {
     dispatch({ type: 'clear_error' })
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => dispatch({ type: 'update_location', location: { ...workflow.location, latitude: coords.latitude.toFixed(6), longitude: coords.longitude.toFixed(6) } }),
-      () => dispatch({ type: 'validation_failed', error: t('sighting.locationDenied') }),
-      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
-    )
+    const result = await getCurrentCoordinates({ enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 })
+    if (!result.ok) { dispatch({ type: 'validation_failed', error: t(result.reason === 'unavailable' ? 'sighting.locationUnavailable' : 'sighting.locationDenied') }); return }
+    dispatch({ type: 'update_location', location: { ...workflow.location, latitude: result.coordinates.latitude.toFixed(6), longitude: result.coordinates.longitude.toFixed(6) } })
   }
 
   async function submit(event?: FormEvent<HTMLFormElement>) {
