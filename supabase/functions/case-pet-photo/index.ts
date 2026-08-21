@@ -7,11 +7,13 @@ const slugPattern = /^[a-z0-9]{10,32}$/
 
 Deno.serve(async (request) => {
   const slug = new URL(request.url).searchParams.get('slug')
-  if (!slug || !slugPattern.test(slug)) return new Response('Not found', { status: 404 })
+  if (!slug || !slugPattern.test(slug))
+    return new Response('Not found', { status: 404 })
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!supabaseUrl || !serviceRoleKey) return new Response('Photo delivery is unavailable.', { status: 500 })
+  if (!supabaseUrl || !serviceRoleKey)
+    return new Response('Photo delivery is unavailable.', { status: 500 })
   const admin = createClient(supabaseUrl, serviceRoleKey)
 
   const { data: publicCase } = await admin
@@ -38,9 +40,13 @@ Deno.serve(async (request) => {
     .order('processed_at', { ascending: false })
     .limit(1)
     .maybeSingle<{ display_object_path: string }>()
-  if (!photo?.display_object_path) return new Response('Not found', { status: 404 })
+  if (!photo?.display_object_path)
+    return new Response('Not found', { status: 404 })
 
-  const { data: signed, error } = await admin.storage.from('pet-photos').createSignedUrl(photo.display_object_path, 60 * 60)
-  if (error || !signed?.signedUrl) return new Response('Photo delivery is unavailable.', { status: 500 })
+  const { data: signed, error } = await admin.storage
+    .from('pet-photos')
+    .createSignedUrl(photo.display_object_path, 60 * 60)
+  if (error || !signed?.signedUrl)
+    return new Response('Photo delivery is unavailable.', { status: 500 })
   return Response.redirect(signed.signedUrl, 302)
 })

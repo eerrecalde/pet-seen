@@ -17,8 +17,11 @@ export const queryKeys = {
     contentReports: () => ['moderation', 'content-reports'] as const,
     foundPetReports: () => ['moderation', 'found-pet-reports'] as const,
     unlinkedSightings: () => ['moderation', 'unlinked-sightings'] as const,
-    foundPetCandidates: (reportId: string) => ['moderation', 'found-pet-candidates', reportId] as const,
-    sightingCandidates: (sightingId: string) => ['moderation', 'sighting-candidates', sightingId] as const,
+    foundPetCandidates: (reportId: string) =>
+      ['moderation', 'found-pet-candidates', reportId] as const,
+    sightingCandidates: (sightingId: string) =>
+      ['moderation', 'sighting-candidates', sightingId] as const,
   },
-  signedStorageUrl: (bucket: string, path: string) => ['signed-storage-url', bucket, path] as const,
+  signedStorageUrl: (bucket: string, path: string) =>
+    ['signed-storage-url', bucket, path] as const,
 } as const

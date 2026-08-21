@@ -12,7 +12,17 @@ export type PublicCase = {
   public_longitude: number
 }
 
-export type NearbyCase = Pick<PublicCase, 'public_slug' | 'pet_name' | 'species' | 'breed' | 'colour' | 'last_seen_description' | 'public_latitude' | 'public_longitude'> & {
+export type NearbyCase = Pick<
+  PublicCase,
+  | 'public_slug'
+  | 'pet_name'
+  | 'species'
+  | 'breed'
+  | 'colour'
+  | 'last_seen_description'
+  | 'public_latitude'
+  | 'public_longitude'
+> & {
   published_at: string
 }
 
@@ -22,7 +32,15 @@ export type NearbySighting = {
   public_longitude: number
 }
 
-export type PublicCaseOption = Pick<PublicCase, 'public_slug' | 'pet_name' | 'species' | 'breed' | 'colour' | 'last_seen_description'>
+export type PublicCaseOption = Pick<
+  PublicCase,
+  | 'public_slug'
+  | 'pet_name'
+  | 'species'
+  | 'breed'
+  | 'colour'
+  | 'last_seen_description'
+>
 
 export type ShareChannel = 'copy' | 'web_share' | 'whatsapp' | 'poster'
 export type ContentReportReason = 'incorrect' | 'harmful' | 'scam' | 'other'

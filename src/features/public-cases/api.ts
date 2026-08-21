@@ -1,43 +1,115 @@
-import { getSupabaseClient, unwrapSupabaseResult } from '../../lib/supabase-error'
-import type { ContentReportReason, NearbyCase, NearbySighting, PublicCase, PublicCaseOption, ShareChannel } from './types'
+import {
+  getSupabaseClient,
+  unwrapSupabaseResult,
+} from '../../lib/supabase-error'
+import type {
+  ContentReportReason,
+  NearbyCase,
+  NearbySighting,
+  PublicCase,
+  PublicCaseOption,
+  ShareChannel,
+} from './types'
 
-const publicCaseFields = 'public_slug,title,last_seen_at,last_seen_description,pet_name,species,breed,colour,pet_description,public_latitude,public_longitude'
+const publicCaseFields =
+  'public_slug,title,last_seen_at,last_seen_description,pet_name,species,breed,colour,pet_description,public_latitude,public_longitude'
 
 /** Only public-safe views are selected by this feature boundary. */
-export async function fetchPublicCase(slug: string): Promise<PublicCase | null> {
+export async function fetchPublicCase(
+  slug: string,
+): Promise<PublicCase | null> {
   const client = getSupabaseClient()
   return unwrapSupabaseResult(
-    client.from('public_missing_cases').select(publicCaseFields).eq('public_slug', slug).maybeSingle(),
+    client
+      .from('public_missing_cases')
+      .select(publicCaseFields)
+      .eq('public_slug', slug)
+      .maybeSingle(),
     'We could not load this case.',
   ) as Promise<PublicCase | null>
 }
 
-export async function fetchNearbyDiscovery(): Promise<{ cases: NearbyCase[], sightings: NearbySighting[] }> {
+export async function fetchNearbyDiscovery(): Promise<{
+  cases: NearbyCase[]
+  sightings: NearbySighting[]
+}> {
   const client = getSupabaseClient()
   const [cases, sightings] = await Promise.all([
-    unwrapSupabaseResult(client.from('public_missing_cases').select('public_slug,pet_name,species,breed,colour,last_seen_description,published_at,public_latitude,public_longitude').order('published_at', { ascending: false }).limit(12), 'We could not load nearby cases.'),
-    unwrapSupabaseResult(client.from('public_nearby_sightings').select('sighting_id,public_latitude,public_longitude').order('seen_at', { ascending: false }).limit(24), 'We could not load nearby sightings.'),
+    unwrapSupabaseResult(
+      client
+        .from('public_missing_cases')
+        .select(
+          'public_slug,pet_name,species,breed,colour,last_seen_description,published_at,public_latitude,public_longitude',
+        )
+        .order('published_at', { ascending: false })
+        .limit(12),
+      'We could not load nearby cases.',
+    ),
+    unwrapSupabaseResult(
+      client
+        .from('public_nearby_sightings')
+        .select('sighting_id,public_latitude,public_longitude')
+        .order('seen_at', { ascending: false })
+        .limit(24),
+      'We could not load nearby sightings.',
+    ),
   ])
-  return { cases: (cases ?? []) as NearbyCase[], sightings: (sightings ?? []) as NearbySighting[] }
+  return {
+    cases: (cases ?? []) as NearbyCase[],
+    sightings: (sightings ?? []) as NearbySighting[],
+  }
 }
 
 export async function fetchPublicCaseOptions(): Promise<PublicCaseOption[]> {
   const client = getSupabaseClient()
-  const data = await unwrapSupabaseResult(client.from('public_missing_cases').select('public_slug,pet_name,species,breed,colour,last_seen_description').order('published_at', { ascending: false }).limit(50), 'We could not load missing-pet cases.')
+  const data = await unwrapSupabaseResult(
+    client
+      .from('public_missing_cases')
+      .select('public_slug,pet_name,species,breed,colour,last_seen_description')
+      .order('published_at', { ascending: false })
+      .limit(50),
+    'We could not load missing-pet cases.',
+  )
   return (data ?? []) as PublicCaseOption[]
 }
 
 export async function recordShareAttribution(slug: string, token: string) {
   const client = getSupabaseClient()
-  await unwrapSupabaseResult(client.rpc('record_share_attribution', { case_slug: slug, share_token: token }), 'We could not record this share.')
+  await unwrapSupabaseResult(
+    client.rpc('record_share_attribution', {
+      case_slug: slug,
+      share_token: token,
+    }),
+    'We could not record this share.',
+  )
 }
 
-export async function createShareAttribution(slug: string, channel: ShareChannel): Promise<string | null> {
+export async function createShareAttribution(
+  slug: string,
+  channel: ShareChannel,
+): Promise<string | null> {
   const client = getSupabaseClient()
-  return unwrapSupabaseResult(client.rpc('create_share_attribution', { case_slug: slug, share_channel: channel }), 'We could not create a share link.')
+  return unwrapSupabaseResult(
+    client.rpc('create_share_attribution', {
+      case_slug: slug,
+      share_channel: channel,
+    }),
+    'We could not create a share link.',
+  )
 }
 
-export async function submitContentReport(input: { slug: string, reason: ContentReportReason, details: string }) {
+export async function submitContentReport(input: {
+  slug: string
+  reason: ContentReportReason
+  details: string
+}) {
   const client = getSupabaseClient()
-  await unwrapSupabaseResult(client.rpc('submit_content_report', { case_slug: input.slug, report_reason: input.reason, report_details: input.details || null }), 'We could not send your report.')
+  await unwrapSupabaseResult(
+    client.rpc('submit_content_report', {
+      case_slug: input.slug,
+      report_reason: input.reason,
+      report_details: input.details || null,
+    }),
+    'We could not send your report.',
+  )
 }

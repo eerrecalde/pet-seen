@@ -10,7 +10,9 @@ import 'remixicon/fonts/remixicon.css'
 import './styles/index.css'
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { void navigator.serviceWorker.register('/service-worker.js') })
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/service-worker.js')
+  })
 }
 
 const rootElement = document.getElementById('root')
@@ -23,7 +25,9 @@ createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider><App /></AuthProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

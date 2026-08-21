@@ -7,10 +7,10 @@ PS-305 deploys `main` to the separate Cloudflare Pages project
 
 ## Hosted project identifiers
 
-| Environment | Supabase project | Project ref |
-| --- | --- | --- |
-| Staging | `petseen-staging` | `anaafdoeddfpylybwlzu` |
-| Production | `petseen` | `xjuvcbthkqrfdkwbxfpa` |
+| Environment | Supabase project  | Project ref            |
+| ----------- | ----------------- | ---------------------- |
+| Staging     | `petseen-staging` | `anaafdoeddfpylybwlzu` |
+| Production  | `petseen`         | `xjuvcbthkqrfdkwbxfpa` |
 
 These identifiers are safe to commit. Database passwords, access tokens,
 service-role keys, and function secrets must remain in the relevant provider's
@@ -52,8 +52,8 @@ client-side routes working when opened directly.
    - `STAGING_VAPID_PUBLIC_KEY` — the browser-safe VAPID public key for
      staging push subscriptions
    - `STAGING_SUPABASE_SERVICE_ROLE_KEY` — used only by the post-deployment
-    Playwright job to create and remove its isolated test owner; never expose
-    this key to the browser or frontend build
+     Playwright job to create and remove its isolated test owner; never expose
+     this key to the browser or frontend build
 
 6. Run **Deploy staging** manually once, confirm the generated Pages URL, and
    exercise a magic-link sign-in and a case social-card request. After that,
@@ -78,16 +78,16 @@ trail. Staff can also run the same function from a protected maintenance job.
 The GitHub `staging` environment holds these eight secrets. Their values are not
 committed and must never be printed in workflow logs:
 
-| Secret | Purpose |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Account-scoped token with Cloudflare Pages Edit permission |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account containing `petseen-staging` |
-| `STAGING_SUPABASE_URL` | `https://anaafdoeddfpylybwlzu.supabase.co` |
-| `STAGING_SUPABASE_ANON_KEY` | Browser publishable/anon key for the staging project |
-| `STAGING_SOCIAL_CARD_URL` | Staging `case-social-card` function URL |
-| `STAGING_MAP_STYLE_URL` | MapTiler URL whose key is restricted to `petseen-staging.pages.dev` |
-| `STAGING_VAPID_PUBLIC_KEY` | Browser-safe VAPID public key used when building staging |
-| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | Server-only key for disposable Playwright users and cleanup |
+| Secret                              | Purpose                                                             |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`              | Account-scoped token with Cloudflare Pages Edit permission          |
+| `CLOUDFLARE_ACCOUNT_ID`             | Cloudflare account containing `petseen-staging`                     |
+| `STAGING_SUPABASE_URL`              | `https://anaafdoeddfpylybwlzu.supabase.co`                          |
+| `STAGING_SUPABASE_ANON_KEY`         | Browser publishable/anon key for the staging project                |
+| `STAGING_SOCIAL_CARD_URL`           | Staging `case-social-card` function URL                             |
+| `STAGING_MAP_STYLE_URL`             | MapTiler URL whose key is restricted to `petseen-staging.pages.dev` |
+| `STAGING_VAPID_PUBLIC_KEY`          | Browser-safe VAPID public key used when building staging            |
+| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | Server-only key for disposable Playwright users and cleanup         |
 
 No environment protection rules are needed for staging: the workflow itself
 deploys only pushes to `main` and serialized deployments through its
@@ -155,6 +155,7 @@ Review and commit the generated files under
 manually when you want to compare snapshots. The container creates
 `*-chromium-linux.png` files; remove the macOS-only `*-chromium-darwin.png`
 files once the Linux baselines are reviewed.
+
 - `case-social-card` and `case-pet-photo` are public and must be deployed with
   `--no-verify-jwt`. `case-pet-photo` returns only a short-lived URL for a
   processed image on a published case. The photo-processing and sighting-email

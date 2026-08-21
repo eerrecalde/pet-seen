@@ -40,5 +40,34 @@ export function App() {
     if (location.hash !== '#main-content') main.focus({ preventScroll: true })
   }, [location.hash, location.pathname])
 
-  return <><a className="skip-link" href="#main-content">{t('common.skipToContent')}</a><>{justSignedIn && <div className="sign-in-toast" role="status"><Icon name="check-line" />{t('auth.toast')}</div>}</><Routes><Route path="/:locale?" element={<LocaleLayout />}><Route index element={<HomePage />} /><Route path="lost/new" element={<MissingCasePage />} /><Route path="dashboard" element={<OwnerDashboardPage />} /><Route path="moderation" element={<ModerationPage />} /><Route path="sighting/new" element={<SightingPage />} /><Route path="find/:slug/poster" element={<PosterPage />} /><Route path="find/:slug" element={<PublicCasePage />} /><Route path="auth" element={<AuthPage />} /><Route path="found/new" element={<FoundPetPage />} /><Route path="found/follow-up" element={<FoundPetFollowUpPage />} /><Route path="*" element={<NotFoundPage />} /></Route></Routes></>
+  return (
+    <>
+      <a className="skip-link" href="#main-content">
+        {t('common.skipToContent')}
+      </a>
+      <>
+        {justSignedIn && (
+          <div className="sign-in-toast" role="status">
+            <Icon name="check-line" />
+            {t('auth.toast')}
+          </div>
+        )}
+      </>
+      <Routes>
+        <Route path="/:locale?" element={<LocaleLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="lost/new" element={<MissingCasePage />} />
+          <Route path="dashboard" element={<OwnerDashboardPage />} />
+          <Route path="moderation" element={<ModerationPage />} />
+          <Route path="sighting/new" element={<SightingPage />} />
+          <Route path="find/:slug/poster" element={<PosterPage />} />
+          <Route path="find/:slug" element={<PublicCasePage />} />
+          <Route path="auth" element={<AuthPage />} />
+          <Route path="found/new" element={<FoundPetPage />} />
+          <Route path="found/follow-up" element={<FoundPetFollowUpPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </>
+  )
 }

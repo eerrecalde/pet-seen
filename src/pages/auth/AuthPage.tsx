@@ -7,4 +7,97 @@ import { Link } from '../../components/SiteChrome'
 import { localisedPath } from '../../lib/routing'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
-export function AuthPage() { const { t, i18n } = useTranslation(); const { isLoading, session } = useAuth(); const [email, setEmail] = useState(''); const [state, setState] = useState<'idle' | 'sent' | 'error'>('idle'); const [error, setError] = useState(''); if (!isLoading && session) return <Navigate replace to={localisedPath('/dashboard', i18n.resolvedLanguage)} />; async function sendMagicLink(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!supabase) { setError(t('auth.notConfigured')); setState('error'); return }; setError(''); const redirectTo = `${window.location.origin}${localisedPath('/auth', i18n.resolvedLanguage)}`; const { error: signInError } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } }); if (signInError) { setError(signInError.message); setState('error'); return }; setState('sent') } return <main className="auth-page"><Link className="back-link" to="/"><Icon name="arrow-left" />{t('common.backToHome')}</Link><section className="auth-card" aria-labelledby="auth-heading"><p className="eyebrow">{t('auth.eyebrow')}</p>{isLoading ? <p>{t('auth.loading')}</p> : <><h1 id="auth-heading">{t('auth.title')}</h1><p>{t('auth.intro')}</p>{state === 'sent' ? <div className="auth-notice" role="status"><Icon name="mail-check" /><div><strong>{t('auth.sentTitle')}</strong><span>{t('auth.sentBody', { email })}</span></div></div> : <form className="auth-form" onSubmit={(event) => void sendMagicLink(event)}><label htmlFor="email">{t('auth.emailLabel')}<input id="email" autoComplete="email" inputMode="email" onChange={(event) => setEmail(event.target.value)} placeholder={t('auth.emailHint')} required type="email" value={email} /></label>{state === 'error' && <p className="form-error" role="alert">{error}</p>}<button className="primary-cta" type="submit">{t('auth.sendLink')}<Icon name="arrow-right" /></button></form>}<p className="auth-note"><Icon name="shield-check" />{isSupabaseConfigured ? t('auth.privacy') : t('auth.setupNote')}</p></>}</section></main> }
+export function AuthPage() {
+  const { t, i18n } = useTranslation()
+  const { isLoading, session } = useAuth()
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState<'idle' | 'sent' | 'error'>('idle')
+  const [error, setError] = useState('')
+  if (!isLoading && session)
+    return (
+      <Navigate
+        replace
+        to={localisedPath('/dashboard', i18n.resolvedLanguage)}
+      />
+    )
+  async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!supabase) {
+      setError(t('auth.notConfigured'))
+      setState('error')
+      return
+    }
+    setError('')
+    const redirectTo = `${window.location.origin}${localisedPath('/auth', i18n.resolvedLanguage)}`
+    const { error: signInError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo },
+    })
+    if (signInError) {
+      setError(signInError.message)
+      setState('error')
+      return
+    }
+    setState('sent')
+  }
+  return (
+    <main className="auth-page">
+      <Link className="back-link" to="/">
+        <Icon name="arrow-left" />
+        {t('common.backToHome')}
+      </Link>
+      <section className="auth-card" aria-labelledby="auth-heading">
+        <p className="eyebrow">{t('auth.eyebrow')}</p>
+        {isLoading ? (
+          <p>{t('auth.loading')}</p>
+        ) : (
+          <>
+            <h1 id="auth-heading">{t('auth.title')}</h1>
+            <p>{t('auth.intro')}</p>
+            {state === 'sent' ? (
+              <div className="auth-notice" role="status">
+                <Icon name="mail-check" />
+                <div>
+                  <strong>{t('auth.sentTitle')}</strong>
+                  <span>{t('auth.sentBody', { email })}</span>
+                </div>
+              </div>
+            ) : (
+              <form
+                className="auth-form"
+                onSubmit={(event) => void sendMagicLink(event)}
+              >
+                <label htmlFor="email">
+                  {t('auth.emailLabel')}
+                  <input
+                    id="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder={t('auth.emailHint')}
+                    required
+                    type="email"
+                    value={email}
+                  />
+                </label>
+                {state === 'error' && (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button className="primary-cta" type="submit">
+                  {t('auth.sendLink')}
+                  <Icon name="arrow-right" />
+                </button>
+              </form>
+            )}
+            <p className="auth-note">
+              <Icon name="shield-check" />
+              {isSupabaseConfigured ? t('auth.privacy') : t('auth.setupNote')}
+            </p>
+          </>
+        )}
+      </section>
+    </main>
+  )
+}

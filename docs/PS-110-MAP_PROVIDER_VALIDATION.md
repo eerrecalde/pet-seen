@@ -23,13 +23,13 @@ so production requires an appropriate paid plan.
 The following checks ran on 12 August 2026 with a restricted MapTiler API key.
 The recorded labels and coordinates are public test locations, not user data.
 
-| Scenario | Forward lookup | Reverse lookup | Outcome |
-| --- | --- | --- | --- |
-| Postcode | `E9 5EG` → `E9 5EG, United Kingdom` (200) | `12 Cadogan Terrace, Greater London E9 5EG, United Kingdom` (200) | Pass — postcode and neighbourhood context are correct. |
-| Street | `Milsom Street, Bath` → Bath BA1 1DN (200) | `6 Quiet Street, Bath ... BA1 1DN, United Kingdom` (200) | Pass — street and local authority context are useful. |
-| Park | `Victoria Park, Hackney` → `Victoria Park Industrial Centre ... E9 5HD` (200) | Same nearby industrial-centre label (200) | Accept with caveat — place search is nearby but not the park itself; the existing movable pin/manual-coordinate flow remains required. |
-| Town | `Keswick, Cumbria` → `Keswick, Cumberland, United Kingdom` (200) | `18 Market Square, Keswick ... CA12 5JH, United Kingdom` (200) | Pass — the returned modern authority name is still intelligible. |
-| Rural | `SY10 0NB` → `SY10 0NB, United Kingdom` (200) | `Llanwddyn13, United Kingdom` (200) | Pass — reverse label is sparse but usable; saving coordinates must remain valid without it. |
+| Scenario | Forward lookup                                                                | Reverse lookup                                                    | Outcome                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Postcode | `E9 5EG` → `E9 5EG, United Kingdom` (200)                                     | `12 Cadogan Terrace, Greater London E9 5EG, United Kingdom` (200) | Pass — postcode and neighbourhood context are correct.                                                                                 |
+| Street   | `Milsom Street, Bath` → Bath BA1 1DN (200)                                    | `6 Quiet Street, Bath ... BA1 1DN, United Kingdom` (200)          | Pass — street and local authority context are useful.                                                                                  |
+| Park     | `Victoria Park, Hackney` → `Victoria Park Industrial Centre ... E9 5HD` (200) | Same nearby industrial-centre label (200)                         | Accept with caveat — place search is nearby but not the park itself; the existing movable pin/manual-coordinate flow remains required. |
+| Town     | `Keswick, Cumbria` → `Keswick, Cumberland, United Kingdom` (200)              | `18 Market Square, Keswick ... CA12 5JH, United Kingdom` (200)    | Pass — the returned modern authority name is still intelligible.                                                                       |
+| Rural    | `SY10 0NB` → `SY10 0NB, United Kingdom` (200)                                 | `Llanwddyn13, United Kingdom` (200)                               | Pass — reverse label is sparse but usable; saving coordinates must remain valid without it.                                            |
 
 The configured Streets v2 style returned HTTP 200 with the style name `Streets`.
 The running application was also checked at desktop width and a 390 px mobile

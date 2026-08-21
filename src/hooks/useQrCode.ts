@@ -7,10 +7,20 @@ export function useQrCode(url: string) {
   useEffect(() => {
     let cancelled = false
     setQrCode('')
-    void QRCode.toDataURL(url, { errorCorrectionLevel: 'M', margin: 1, width: 360 })
-      .then((dataUrl) => { if (!cancelled) setQrCode(dataUrl) })
-      .catch(() => { if (!cancelled) setQrCode('') })
-    return () => { cancelled = true }
+    void QRCode.toDataURL(url, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 360,
+    })
+      .then((dataUrl) => {
+        if (!cancelled) setQrCode(dataUrl)
+      })
+      .catch(() => {
+        if (!cancelled) setQrCode('')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [url])
   return qrCode
 }

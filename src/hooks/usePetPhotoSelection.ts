@@ -7,7 +7,11 @@ type PhotoSelectionOptions = {
   maxBytes?: number
 }
 
-export function usePetPhotoSelection({ invalidMessage, prepareErrorMessage, maxBytes }: PhotoSelectionOptions) {
+export function usePetPhotoSelection({
+  invalidMessage,
+  prepareErrorMessage,
+  maxBytes,
+}: PhotoSelectionOptions) {
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoError, setPhotoError] = useState('')
 
@@ -18,7 +22,9 @@ export function usePetPhotoSelection({ invalidMessage, prepareErrorMessage, maxB
     try {
       setPhoto(await preparePetPhoto(file, maxBytes))
     } catch (cause) {
-      setPhotoError(cause instanceof PetPhotoError ? invalidMessage : prepareErrorMessage)
+      setPhotoError(
+        cause instanceof PetPhotoError ? invalidMessage : prepareErrorMessage,
+      )
     }
   }
 

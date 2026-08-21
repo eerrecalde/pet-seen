@@ -6,5 +6,12 @@
   "display": "standalone",
   "background_color": "#fffaf4",
   "theme_color": "#fff7ed",
-  "icons": [{ "src": "/pet-seen-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "icons": [
+    {
+      "src": "/pet-seen-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }

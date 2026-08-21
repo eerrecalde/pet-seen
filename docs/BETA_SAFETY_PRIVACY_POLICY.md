@@ -34,14 +34,14 @@ The beta is limited to dogs and cats in the United Kingdom and begins in one def
 
 Collect only information needed to run the missing-case and sighting loop: account email and authentication records, pet and case details, uploaded photos, approximate and exact locations, sighting details, and limited technical/security logs.
 
-| Data | Who can access it | Public treatment |
-| --- | --- | --- |
-| Pet name, species, photo, descriptive details and case status | Public when the owner publishes the case; administrators | Removed from public view when the case is closed, reunited, removed or expires |
-| Exact last-seen location and exact sighting location | Case owner for their case; authorised administrators | Never public |
-| Approximate location | Public for an active published case; administrators | Broad area only; no reversible precision in map, URL or metadata |
-| Owner email and account data | The owner; authorised administrators where needed | Never public |
-| Reporter identity or contact details | Authorised administrators; the reporter where applicable | Not collected by default for anonymous sightings and never shown to owners in beta |
-| Reports, moderation notes and audit records | Authorised administrators | Never public |
+| Data                                                          | Who can access it                                        | Public treatment                                                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Pet name, species, photo, descriptive details and case status | Public when the owner publishes the case; administrators | Removed from public view when the case is closed, reunited, removed or expires     |
+| Exact last-seen location and exact sighting location          | Case owner for their case; authorised administrators     | Never public                                                                       |
+| Approximate location                                          | Public for an active published case; administrators      | Broad area only; no reversible precision in map, URL or metadata                   |
+| Owner email and account data                                  | The owner; authorised administrators where needed        | Never public                                                                       |
+| Reporter identity or contact details                          | Authorised administrators; the reporter where applicable | Not collected by default for anonymous sightings and never shown to owners in beta |
+| Reports, moderation notes and audit records                   | Authorised administrators                                | Never public                                                                       |
 
 ### Product controls
 
@@ -60,16 +60,16 @@ Before real-user beta launch, publish a privacy notice identifying the data cont
 
 The default retention period is one year. Retention starts from the latest relevant activity or closure event unless the table says otherwise. Data is deleted or irreversibly anonymised at the end of its period, including from live systems and according to the backup expiry schedule.
 
-| Data type | Retention | Disposal rule |
-| --- | --- | --- |
-| Draft cases not published | 30 days after last activity | Delete draft, photos and precise location data |
-| Active published cases | Until closed, reunited, removed, or one year after last activity | Remove from public view immediately at closure; begin closed-case retention |
-| Closed, reunited, expired or removed cases and their photos | 90 days after closure/removal | Delete photos, case content and locations; retain only anonymised service metrics |
-| Anonymous sightings, including exact location | 90 days after submission or linked-case closure, whichever is later | Delete sighting content and location unless a legal hold applies |
-| Account and profile data | One year after account closure or last activity | Delete or anonymise, except minimum records required for legal claims or abuse prevention |
-| Moderation reports, decisions and access audit trail | One year after final decision | Delete identifying content where no longer necessary; retain aggregated operational counts |
-| Security logs and rate-limit records | 90 days | Delete or aggregate |
-| Backups | Maximum 35 days | Expire automatically; deleted data is not restored except for a documented recovery incident |
+| Data type                                                   | Retention                                                           | Disposal rule                                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Draft cases not published                                   | 30 days after last activity                                         | Delete draft, photos and precise location data                                               |
+| Active published cases                                      | Until closed, reunited, removed, or one year after last activity    | Remove from public view immediately at closure; begin closed-case retention                  |
+| Closed, reunited, expired or removed cases and their photos | 90 days after closure/removal                                       | Delete photos, case content and locations; retain only anonymised service metrics            |
+| Anonymous sightings, including exact location               | 90 days after submission or linked-case closure, whichever is later | Delete sighting content and location unless a legal hold applies                             |
+| Account and profile data                                    | One year after account closure or last activity                     | Delete or anonymise, except minimum records required for legal claims or abuse prevention    |
+| Moderation reports, decisions and access audit trail        | One year after final decision                                       | Delete identifying content where no longer necessary; retain aggregated operational counts   |
+| Security logs and rate-limit records                        | 90 days                                                             | Delete or aggregate                                                                          |
+| Backups                                                     | Maximum 35 days                                                     | Expire automatically; deleted data is not restored except for a documented recovery incident |
 
 Legal obligations, fraud prevention, active investigations, and valid legal claims may require a documented, time-limited hold. A hold is authorised by the policy owner, reviewed every 90 days, and released as soon as the reason ends.
 
@@ -87,11 +87,11 @@ Every public case and sighting flow must provide a clear report route. Moderator
 
 ### Triage and decisions
 
-| Priority | Examples | Initial action and target |
-| --- | --- | --- |
+| Priority | Examples                                                                                                                | Initial action and target                                                                                                                                         |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Critical | Immediate risk, credible threat, suspected crime, child-safety concern, animal cruelty, extortion, exposed home address | Hide from public view immediately, preserve evidence, escalate to the on-call safety owner; consider emergency services or police where there is an imminent risk |
-| High | Doxxing, harassment, scam/payment request, false or harmful case | Restrict or hide within 4 hours during staffed beta coverage; investigate and record the decision |
-| Standard | Spam, duplicate, inaccurate, off-topic or low-risk policy breach | Review within 2 business days; correct, remove or leave with a recorded reason |
+| High     | Doxxing, harassment, scam/payment request, false or harmful case                                                        | Restrict or hide within 4 hours during staffed beta coverage; investigate and record the decision                                                                 |
+| Standard | Spam, duplicate, inaccurate, off-topic or low-risk policy breach                                                        | Review within 2 business days; correct, remove or leave with a recorded reason                                                                                    |
 
 Moderators do not investigate disputes or verify ownership claims beyond what is necessary to enforce the policy. They do not disclose a reporter's identity, exact locations, private moderation notes, or another user's account information. Two authorised team members review permanent account restrictions where practical; urgent protective actions do not wait for a second review.
 

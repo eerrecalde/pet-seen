@@ -8,4 +8,9 @@ export type AuthContextValue = {
   session: Session | null
 }
 
-export const AuthContext = createContext<AuthContextValue>({ acknowledgeSignIn: () => undefined, isLoading: true, justSignedIn: false, session: null })
+export const AuthContext = createContext<AuthContextValue>({
+  acknowledgeSignIn: () => undefined,
+  isLoading: true,
+  justSignedIn: false,
+  session: null,
+})

@@ -6,7 +6,10 @@ export class SupabaseRequestError extends Error {
   readonly details?: string
   readonly hint?: string
 
-  constructor(message: string, options: { code?: string, details?: string, hint?: string } = {}) {
+  constructor(
+    message: string,
+    options: { code?: string; details?: string; hint?: string } = {},
+  ) {
     super(message)
     this.name = 'SupabaseRequestError'
     this.code = options.code
@@ -15,9 +18,13 @@ export class SupabaseRequestError extends Error {
   }
 }
 
-export function normalizeSupabaseError(error: unknown, fallback = 'We could not complete that request. Please try again.') {
+export function normalizeSupabaseError(
+  error: unknown,
+  fallback = 'We could not complete that request. Please try again.',
+) {
   if (error instanceof SupabaseRequestError) return error
-  if (error instanceof Error) return new SupabaseRequestError(error.message || fallback)
+  if (error instanceof Error)
+    return new SupabaseRequestError(error.message || fallback)
 
   const response = error as Partial<PostgrestError> | null | undefined
   return new SupabaseRequestError(response?.message || fallback, {
@@ -31,11 +38,16 @@ export function normalizeSupabaseError(error: unknown, fallback = 'We could not 
 export function getSupabaseClient() {
   if (supabase) return supabase
   throw new SupabaseRequestError(
-    isSupabaseConfigured ? 'The Pet Seen service is temporarily unavailable.' : 'Pet Seen is not configured yet.',
+    isSupabaseConfigured
+      ? 'The Pet Seen service is temporarily unavailable.'
+      : 'Pet Seen is not configured yet.',
   )
 }
 
-export async function unwrapSupabaseResult<T>(result: PromiseLike<{ data: T, error: unknown }>, fallback?: string) {
+export async function unwrapSupabaseResult<T>(
+  result: PromiseLike<{ data: T; error: unknown }>,
+  fallback?: string,
+) {
   const { data, error } = await result
   if (error) throw normalizeSupabaseError(error, fallback)
   return data
