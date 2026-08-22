@@ -17,6 +17,8 @@ For task verification that needs an authenticated owner or staff member, use the
 
 Use these stable local test accounts where their existing data is useful: `owner@petseen.org:owner` for owner flows, and `moderator@petseen.org:moderator` for moderation flows. They are local development accounts only.
 
+For a normal magic-link sign-in, local Auth delivers all messages to Mailpit at `http://127.0.0.1:54324`; neither test account has a real inbox. Any made-up email address can be used for local user testing, then its magic link can be opened from Mailpit.
+
 The bypass only works with a Vite development build connected to the local Supabase stack. Never use it against a hosted environment, and do not deploy the `dev-auth-bypass` Edge Function.
 
 ## Task tracking

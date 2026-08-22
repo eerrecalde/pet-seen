@@ -35,7 +35,9 @@ cp .env.example .env.local
 npm run supabase:status
 ```
 
-Magic links return to `/auth`; the local email inbox is available at `http://127.0.0.1:54324`.
+Magic links return to `/auth`. Local Auth sends every email to Mailpit rather than a real inbox; open `http://127.0.0.1:54324`, select the newest message, and use its magic link. This makes it safe to sign in with any made-up email address during local testing.
+
+For the two repeatable local identities, use `owner@petseen.org` for owner flows and `moderator@petseen.org` for moderation flows. They are local-only test accounts, not real email addresses, and their magic links are retrieved from Mailpit in the same way.
 
 #### Local development auth bypass
 
@@ -55,7 +57,7 @@ The app provisions that user in the local Supabase stack and signs in with the s
 
 Use this bypass when verifying authenticated work locally: choose `owner` for owner case flows, and `moderator` or `administrator` for staff-only pages such as `/moderation`.
 
-For repeatable local testing, use `owner@petseen.org:owner` for owner flows and `moderator@petseen.org:moderator` for moderation flows. These accounts exist only in the local Supabase stack.
+For repeatable bypass testing, use `owner@petseen.org:owner` for owner flows and `moderator@petseen.org:moderator` for moderation flows. These accounts exist only in the local Supabase stack.
 
 Photo processing and social cards run in Edge Functions. Start them alongside the local stack when testing an authenticated upload or Open Graph image:
 

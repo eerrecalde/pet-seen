@@ -19,15 +19,16 @@ flowchart TB
 
   Global["Global header\nHome · Nearby · language"]:::neutral
   Home["Home / nearby list or map\nDone · PS-303"]:::done
-  Auth["Magic-link sign in\nIn progress · PS-101"]:::progress
+  Auth["Magic-link sign in\nDone · PS-101"]:::done
   Dashboard["Owner dashboard\nDone · PS-108"]:::done
-  Missing["Create missing case\nIn progress · PS-105"]:::progress
-  MissingLocation["Set GPS / move pin / manual location\nIn progress · PS-105"]:::progress
+  Missing["Create missing case\nDone · PS-105"]:::done
+  MissingLocation["Set GPS / move pin / manual location\nDone · PS-105"]:::done
   Public["Public missing-case page\nDone · PS-106–107"]:::done
   Poster["Poster + QR / print\nDone · PS-301"]:::done
   Share["Copy, Web Share or WhatsApp\nDone · PS-302"]:::done
   ReportContent["Report public-case content\nDone · PS-109"]:::done
   Sighting["Anonymous sighting form\nDone · PS-201, PS-207"]:::done
+  ReportLocation["Confirm report location\nNot started · PS-422"]:::planned
   Picker["Optional case picker\nDone · PS-202"]:::done
   SightingSuccess["Sighting receipt\nDone"]:::done
   Draft["Offline draft / restore / retry\nDone · PS-207"]:::done
@@ -70,7 +71,9 @@ flowchart TB
   Poster -->|"QR or back"| Public
   Share -->|"Recipient opens link"| Public
   ReportContent -->|"Staff review"| Moderation
-  Sighting -->|"Choose a case"| Picker
+  Sighting -.->|"Search postcode/address or confirm pin"| ReportLocation
+  ReportLocation -.->|"Choose a case"| Picker
+  ReportLocation -.->|"Continue report"| Sighting
   Picker -->|"Select case or no match"| Sighting
   Sighting -->|"Offline or failed submit"| Draft
   Draft -->|"Reconnect and retry"| Sighting
@@ -81,6 +84,7 @@ flowchart TB
   Timeline -->|"Confirm or dismiss"| Dashboard
   Dashboard -->|"Mark reunited / close / edit / remove"| Reunite
   Reunite --> Dashboard
+  Found -.->|"Search postcode/address or confirm pin"| ReportLocation
   Found -->|"Submit"| FoundReceipt
   FoundReceipt -->|"Private screening"| Moderation
   Moderation -->|"Approve report"| Match
