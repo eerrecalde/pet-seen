@@ -61,28 +61,33 @@ export function LocationPicker({ coordinates, onChange }: LocationPickerProps) {
       zoom: startsAtPreciseLocation.current ? 15 : 11,
       style: import.meta.env.VITE_MAP_STYLE_URL || fallbackStyle,
     })
-    const nextMarker = new maplibregl.Marker({
-      color: '#d76f4e',
-      draggable: true,
-    })
-      .setLngLat([
-        initialCoordinates.current.longitude,
+    function setMarker(latitude: number, longitude: number) {
+      if (!marker.current) {
+        const nextMarker = new maplibregl.Marker({
+          color: '#d76f4e',
+          draggable: true,
+        }).addTo(instance)
+        nextMarker.on('dragend', () => {
+          const point = nextMarker.getLngLat()
+          onChangeRef.current({ latitude: point.lat, longitude: point.lng })
+        })
+        marker.current = nextMarker
+      }
+      marker.current.setLngLat([longitude, latitude])
+    }
+    if (startsAtPreciseLocation.current)
+      setMarker(
         initialCoordinates.current.latitude,
-      ])
-      .addTo(instance)
-    nextMarker.on('dragend', () => {
-      const point = nextMarker.getLngLat()
-      onChangeRef.current({ latitude: point.lat, longitude: point.lng })
-    })
+        initialCoordinates.current.longitude,
+      )
     instance.on('click', (event: MapMouseEvent) => {
-      nextMarker.setLngLat(event.lngLat)
+      setMarker(event.lngLat.lat, event.lngLat.lng)
       onChangeRef.current({
         latitude: event.lngLat.lat,
         longitude: event.lngLat.lng,
       })
     })
     map.current = instance
-    marker.current = nextMarker
     return () => {
       instance.remove()
       map.current = null
@@ -93,14 +98,25 @@ export function LocationPicker({ coordinates, onChange }: LocationPickerProps) {
   useEffect(() => {
     if (
       !map.current ||
-      !marker.current ||
       latitude === undefined ||
       longitude === undefined ||
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude)
     )
       return
-    marker.current.setLngLat([longitude, latitude])
+    if (!marker.current) {
+      const nextMarker = new maplibregl.Marker({
+        color: '#d76f4e',
+        draggable: true,
+      })
+        .setLngLat([longitude, latitude])
+        .addTo(map.current)
+      nextMarker.on('dragend', () => {
+        const point = nextMarker.getLngLat()
+        onChangeRef.current({ latitude: point.lat, longitude: point.lng })
+      })
+      marker.current = nextMarker
+    } else marker.current.setLngLat([longitude, latitude])
     map.current.easeTo({ center: [longitude, latitude], duration: 350 })
   }, [latitude, longitude])
 

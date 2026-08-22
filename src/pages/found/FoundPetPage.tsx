@@ -2,6 +2,7 @@ import { useReducer, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../components/Icon'
 import { LocationPicker } from '../../components/maps/LocationPicker'
+import { LocationSearch } from '../../components/maps/LocationSearch'
 import { PetPhotoUploadField } from '../../components/PetPhotoUploadField'
 import { PetAttributeSuggestions } from '../../components/PetAttributeSuggestions'
 import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
@@ -312,6 +313,24 @@ export function FoundPetPage() {
               <Icon name="navigation" />
               {t('found.useLocation')}
             </button>
+            <LocationSearch
+              onSelect={({ label, latitude, longitude }) =>
+                setLocation((current) => ({
+                  ...current,
+                  label,
+                  latitude: latitude.toFixed(6),
+                  longitude: longitude.toFixed(6),
+                }))
+              }
+              strings={{
+                label: t('found.searchLocation'),
+                placeholder: t('found.searchLocationHint'),
+                search: t('found.search'),
+                searching: t('found.searching'),
+                noResults: t('found.searchNoResults'),
+                error: t('found.searchError'),
+              }}
+            />
             {workflow.error && (
               <p className="location-error" role="alert">
                 {workflow.error}
@@ -329,7 +348,7 @@ export function FoundPetPage() {
             />
             <p className="pin-note">
               <Icon name="map-pin-2" />
-              {t('found.pinNote')}
+              {coordinates ? t('found.pinConfirmed') : t('found.pinNote')}
             </p>
             <label>
               {t('found.where')}

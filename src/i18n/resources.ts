@@ -364,10 +364,21 @@ export const resources = {
         photoHint: 'Optional, but helpful if it is safe to take one.',
         privacy:
           'Your exact location is shared only with the linked case owner and Pet Seen administrators.',
-        locationHelp: 'Use your current location or place the pin on the map.',
+        locationHelp:
+          'Use your current location, search by postcode or place, or choose a point on the map.',
         useLocation: 'Use my location',
+        searchLocation: 'Search by postcode or place',
+        searchLocationHint: 'For example, SW1A 1AA or Hyde Park',
+        search: 'Search',
+        searching: 'Searching…',
+        searchNoResults:
+          'No places matched that search. Try a more specific postcode or place name.',
+        searchError:
+          'We could not search for that place. You can still choose a point on the map.',
         pinNote:
-          'Move the pin or tap the map to confirm the exact place you saw the pet.',
+          'Tap the map or drag a pin to confirm the exact place you saw the pet.',
+        pinConfirmed:
+          'Location selected. Drag the pin or tap the map to adjust it.',
         latitude: 'Latitude',
         longitude: 'Longitude',
         locationUnavailable:
@@ -437,10 +448,21 @@ export const resources = {
         where: 'Where did you find the pet?',
         whereHint: 'Street, park or landmark',
         when: 'When did you find them?',
-        locationHelp: 'Use your current location or place the pin on the map.',
+        locationHelp:
+          'Use your current location, search by postcode or place, or choose a point on the map.',
         useLocation: 'Use my location',
+        searchLocation: 'Search by postcode or place',
+        searchLocationHint: 'For example, SW1A 1AA or Hyde Park',
+        search: 'Search',
+        searching: 'Searching…',
+        searchNoResults:
+          'No places matched that search. Try a more specific postcode or place name.',
+        searchError:
+          'We could not search for that place. You can still choose a point on the map.',
         pinNote:
-          'Move the pin or tap the map to confirm where the pet was found.',
+          'Tap the map or drag a pin to confirm where the pet was found.',
+        pinConfirmed:
+          'Location selected. Drag the pin or tap the map to adjust it.',
         locationUnavailable:
           'Your browser cannot provide a location. Place the pin on the map instead.',
         locationDenied:
@@ -896,10 +918,21 @@ export const resources = {
         photoHint: 'Es opcional, pero ayuda si puedes tomarla sin riesgo.',
         privacy:
           'Tu ubicación exacta se comparte solo con la persona dueña del caso vinculado y las personas administradoras de Pet Seen.',
-        locationHelp: 'Usa tu ubicación actual o coloca el pin en el mapa.',
+        locationHelp:
+          'Usa tu ubicación actual, busca por código postal o lugar, o elige un punto en el mapa.',
         useLocation: 'Usar mi ubicación',
+        searchLocation: 'Buscar por código postal o lugar',
+        searchLocationHint: 'Por ejemplo, SW1A 1AA o Hyde Park',
+        search: 'Buscar',
+        searching: 'Buscando…',
+        searchNoResults:
+          'No encontramos lugares con esa búsqueda. Prueba con un código postal o lugar más específico.',
+        searchError:
+          'No pudimos buscar ese lugar. Aún puedes elegir un punto en el mapa.',
         pinNote:
-          'Mueve el pin o toca el mapa para confirmar el lugar exacto donde viste a la mascota.',
+          'Toca el mapa o arrastra un pin para confirmar el lugar exacto donde viste a la mascota.',
+        pinConfirmed:
+          'Ubicación seleccionada. Arrastra el pin o toca el mapa para ajustarla.',
         latitude: 'Latitud',
         longitude: 'Longitud',
         locationUnavailable:
@@ -959,10 +992,21 @@ export const resources = {
         where: '¿Dónde encontraste la mascota?',
         whereHint: 'Calle, parque o punto de referencia',
         when: '¿Cuándo la encontraste?',
-        locationHelp: 'Usa tu ubicación actual o coloca el pin en el mapa.',
+        locationHelp:
+          'Usa tu ubicación actual, busca por código postal o lugar, o elige un punto en el mapa.',
         useLocation: 'Usar mi ubicación',
+        searchLocation: 'Buscar por código postal o lugar',
+        searchLocationHint: 'Por ejemplo, SW1A 1AA o Hyde Park',
+        search: 'Buscar',
+        searching: 'Buscando…',
+        searchNoResults:
+          'No encontramos lugares con esa búsqueda. Prueba con un código postal o lugar más específico.',
+        searchError:
+          'No pudimos buscar ese lugar. Aún puedes elegir un punto en el mapa.',
         pinNote:
-          'Mueve el pin o toca el mapa para confirmar dónde encontraste la mascota.',
+          'Toca el mapa o arrastra un pin para confirmar dónde encontraste la mascota.',
+        pinConfirmed:
+          'Ubicación seleccionada. Arrastra el pin o toca el mapa para ajustarla.',
         locationUnavailable:
           'Tu navegador no puede proporcionar una ubicación. Coloca el pin en el mapa.',
         locationDenied:

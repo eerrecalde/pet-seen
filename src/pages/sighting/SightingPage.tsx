@@ -2,6 +2,7 @@ import { useEffect, useReducer, useRef, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../components/Icon'
 import { LocationPicker } from '../../components/maps/LocationPicker'
+import { LocationSearch } from '../../components/maps/LocationSearch'
 import { PetImage } from '../../components/PetImage'
 import { Link, Progress, SimpleHeader } from '../../components/SiteChrome'
 import { usePublicCaseOptionsQuery } from '../../features/public-cases/queries'
@@ -262,6 +263,27 @@ export function SightingPage() {
               <Icon name="navigation" />
               {t('sighting.useLocation')}
             </button>
+            <LocationSearch
+              onSelect={({ label, latitude, longitude }) =>
+                dispatch({
+                  type: 'update_location',
+                  location: {
+                    ...workflow.location,
+                    label,
+                    latitude: latitude.toFixed(6),
+                    longitude: longitude.toFixed(6),
+                  },
+                })
+              }
+              strings={{
+                label: t('sighting.searchLocation'),
+                placeholder: t('sighting.searchLocationHint'),
+                search: t('sighting.search'),
+                searching: t('sighting.searching'),
+                noResults: t('sighting.searchNoResults'),
+                error: t('sighting.searchError'),
+              }}
+            />
             {workflow.error && (
               <p className="location-error" role="alert">
                 {workflow.error}
@@ -282,7 +304,7 @@ export function SightingPage() {
             />
             <p className="pin-note">
               <Icon name="map-pin-2" />
-              {t('sighting.pinNote')}
+              {coordinates ? t('sighting.pinConfirmed') : t('sighting.pinNote')}
             </p>
             <label>
               {t('sighting.where')}
