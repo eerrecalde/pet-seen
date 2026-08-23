@@ -1647,7 +1647,17 @@ footer {
   margin-top: 7px;
 }
 .location-search-row input {
+  background: #fffdf9;
+  border: 1px solid #d9c5ad;
+  border-radius: 10px;
+  color: #3d2b21;
+  min-height: 46px;
   min-width: 0;
+  padding: 10px 12px;
+}
+.location-search-row input:focus {
+  border-color: #9b553a;
+  box-shadow: 0 0 0 3px #f4dfd3;
 }
 .location-search-row .secondary-button {
   flex: 0 0 auto;
