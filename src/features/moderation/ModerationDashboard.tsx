@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
 import { Modal } from '../../components/Modal'
+import { PhotoPreviewHint } from '../../components/PhotoPreviewHint'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
@@ -721,6 +722,7 @@ function FoundPetMatches({
                     src={photoUrls[report.id] ?? ''}
                     alt={t('moderation.photo')}
                   />
+                  <PhotoPreviewHint label={t('common.viewFullPhoto')} />
                 </button>
               ) : photoUrls[report.id] === null ? (
                 <p>{t('moderation.photoUnavailable')}</p>

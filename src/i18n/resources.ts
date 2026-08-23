@@ -24,6 +24,7 @@ export const resources = {
         young: 'Young',
         adult: 'Adult',
         senior: 'Senior',
+        viewFullPhoto: 'View full photo',
         photoAdjustment: {
           title: 'Adjust photo',
           help: 'Drag to position the pet. Pinch or use the slider to zoom.',
@@ -596,6 +597,7 @@ export const resources = {
         young: 'Joven',
         adult: 'Adulto',
         senior: 'Mayor',
+        viewFullPhoto: 'Ver foto completa',
         photoAdjustment: {
           title: 'Ajusta la foto',
           help: 'Arrastra para colocar a la mascota. Pellizca o usa el control para acercar.',

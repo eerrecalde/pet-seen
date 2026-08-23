@@ -56,6 +56,9 @@ test.describe.serial('core beta loop on staging', () => {
     const photoTrigger = page.getByRole('button', {
       name: `View full photo of ${petName}`,
     })
+    await expect(photoTrigger.locator('.photo-preview-hint')).toHaveText(
+      'View full photo',
+    )
     await photoTrigger.click()
 
     const dialog = page.getByRole('dialog', { name: petName })

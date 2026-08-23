@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
 import { ExpandablePetImage } from '../../components/ExpandablePetImage'
 import { Modal } from '../../components/Modal'
+import { PhotoPreviewHint } from '../../components/PhotoPreviewHint'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
@@ -520,6 +521,7 @@ function FoundMatchReview({
                   type="button"
                 >
                   <img src={photoUrl} alt="Private photo of the found pet" />
+                  <PhotoPreviewHint label={t('common.viewFullPhoto')} />
                 </button>
               ) : (
                 <div className="found-owner-match-no-photo">

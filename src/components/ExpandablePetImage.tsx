@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from './Modal'
 import { PetImage, type PetImageProps } from './PetImage'
+import { PhotoPreviewHint } from './PhotoPreviewHint'
 
 type ExpandablePetImageProps = PetImageProps
 
 /** Shows a compact pet image first, with a full image available on demand. */
 export function ExpandablePetImage(props: ExpandablePetImageProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [resolvedSourceUrl, setResolvedSourceUrl] = useState<string>()
   const { petName } = props
@@ -20,6 +23,7 @@ export function ExpandablePetImage(props: ExpandablePetImageProps) {
         type="button"
       >
         <PetImage {...props} onSourceChange={setResolvedSourceUrl} />
+        <PhotoPreviewHint label={t('common.viewFullPhoto')} />
       </button>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={petName}>
         <PetImage
