@@ -24,6 +24,18 @@ export const resources = {
         young: 'Young',
         adult: 'Adult',
         senior: 'Senior',
+        photoAdjustment: {
+          title: 'Adjust photo',
+          help: 'Drag to position the pet. Pinch or use the slider to zoom.',
+          cropArea:
+            'Photo crop area. Drag to reposition. Use arrow keys to move the photo.',
+          selectedPhoto: 'Selected pet',
+          zoom: 'Zoom',
+          reset: 'Reset',
+          skip: 'Skip',
+          replace: 'Replace',
+          usePhoto: 'Use this photo',
+        },
       },
       home: {
         eyebrow: 'Helping pets get home',
@@ -584,6 +596,18 @@ export const resources = {
         young: 'Joven',
         adult: 'Adulto',
         senior: 'Mayor',
+        photoAdjustment: {
+          title: 'Ajusta la foto',
+          help: 'Arrastra para colocar a la mascota. Pellizca o usa el control para acercar.',
+          cropArea:
+            'Área para recortar la foto. Arrastra para cambiar la posición. Usa las flechas para mover la foto.',
+          selectedPhoto: 'Mascota seleccionada',
+          zoom: 'Acercar',
+          reset: 'Restablecer',
+          skip: 'Omitir',
+          replace: 'Reemplazar',
+          usePhoto: 'Usar esta foto',
+        },
       },
       home: {
         eyebrow: 'Ayudamos a que las mascotas vuelvan a casa',

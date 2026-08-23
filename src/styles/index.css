@@ -490,6 +490,85 @@ footer {
 .upload-field.compact {
   margin-top: 14px;
 }
+.photo-adjustment {
+  background: #fffaf6;
+  border: 1px solid #d9c5ad;
+  border-radius: 16px;
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 18px;
+}
+.photo-adjustment-heading {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.photo-adjustment h2,
+.photo-adjustment p {
+  margin: 0;
+}
+.photo-adjustment p {
+  color: #725e50;
+  margin-top: 4px;
+}
+.photo-crop-area {
+  align-items: center;
+  aspect-ratio: 4 / 3;
+  background: #332c28;
+  border-radius: 10px;
+  cursor: grab;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+}
+.photo-crop-area:active {
+  cursor: grabbing;
+}
+.photo-crop-area img {
+  max-width: none;
+  transform-origin: center;
+}
+.photo-crop-area img.wide {
+  height: 100%;
+  width: auto;
+}
+.photo-crop-area img.tall {
+  height: auto;
+  width: 100%;
+}
+.photo-zoom {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  font-weight: 700;
+}
+.photo-zoom input {
+  flex: 1;
+}
+.photo-adjustment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.photo-adjustment-actions .secondary-button,
+.photo-adjustment-actions .primary-cta {
+  margin: 0;
+}
+@media (max-width: 520px) {
+  .photo-adjustment {
+    padding: 14px;
+  }
+  .photo-adjustment-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .photo-adjustment-actions > button {
+    width: 100%;
+  }
+}
 .form-submit {
   justify-self: stretch;
   margin-top: 6px;

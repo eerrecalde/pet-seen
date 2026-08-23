@@ -41,11 +41,8 @@ export function FoundPetPage() {
   )
   const [followUpEmail, setFollowUpEmail] = useState('')
   const submissionToken = useRef(crypto.randomUUID())
-  const { choosePhoto, photo, photoError } = usePetPhotoSelection({
-    invalidMessage: t('found.invalidPhoto'),
-    prepareErrorMessage: t('found.preparePhotoError'),
-    maxBytes: 5 * 1024 * 1024,
-  })
+  const { photo, photoError, setPhotoError, setPreparedPhoto } =
+    usePetPhotoSelection()
   const coordinates =
     location.latitude !== '' && location.longitude !== ''
       ? {
@@ -239,8 +236,12 @@ export function FoundPetPage() {
               addLabel={t('found.addPhoto')}
               error={photoError}
               hint={t('found.photoHint')}
-              onChange={choosePhoto}
+              invalidMessage={t('found.invalidPhoto')}
+              maxBytes={5 * 1024 * 1024}
+              onChange={setPreparedPhoto}
+              onError={setPhotoError}
               photo={photo}
+              prepareErrorMessage={t('found.preparePhotoError')}
             />
           </fieldset>
           <fieldset>

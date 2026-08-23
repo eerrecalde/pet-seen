@@ -41,10 +41,8 @@ export function MissingCasePage() {
     longitude: '',
     seenAt: new Date().toISOString().slice(0, 16),
   })
-  const { choosePhoto, photo, photoError } = usePetPhotoSelection({
-    invalidMessage: t('missingCase.invalidPhoto'),
-    prepareErrorMessage: t('missingCase.preparePhotoError'),
-  })
+  const { photo, photoError, setPhotoError, setPreparedPhoto } =
+    usePetPhotoSelection()
 
   async function savePet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -385,8 +383,11 @@ export function MissingCasePage() {
                 addLabel={t('missingCase.addPhoto')}
                 error={photoError}
                 hint={t('missingCase.photoHint')}
-                onChange={choosePhoto}
+                invalidMessage={t('missingCase.invalidPhoto')}
+                onChange={setPreparedPhoto}
+                onError={setPhotoError}
                 photo={photo}
+                prepareErrorMessage={t('missingCase.preparePhotoError')}
               />
             </fieldset>
             {workflow.submission === 'error' && (

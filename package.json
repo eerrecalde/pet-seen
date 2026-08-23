@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test:e2e": "playwright test tests/e2e/core-beta.spec.ts tests/e2e/found-pet-lifecycle.spec.ts tests/e2e/location-reporting.spec.ts",
+    "test:e2e": "playwright test tests/e2e/core-beta.spec.ts tests/e2e/found-pet-lifecycle.spec.ts tests/e2e/location-reporting.spec.ts tests/e2e/photo-adjustment.spec.ts",
     "test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
     "test:e2e:visual:update": "playwright test tests/e2e/visual-regression.spec.ts --update-snapshots",
     "test:e2e:update": "npm run test:e2e:visual:update",
