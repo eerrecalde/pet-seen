@@ -2,7 +2,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 type OutboxItem = {
   id: string
-  kind: 'owner_sighting_email' | 'watch_sighting_alert'
+  kind:
+    | 'owner_sighting_email'
+    | 'owner_found_pet_match_email'
+    | 'watch_sighting_alert'
   aggregate_id: string
   attempts: number
 }
@@ -19,24 +22,38 @@ async function invokeDelivery(
   serviceKey: string,
   item: OutboxItem,
 ) {
-  const functionName =
+  const deliveryTarget =
     item.kind === 'owner_sighting_email'
-      ? 'send-sighting-owner-email'
-      : 'send-watch-notifications'
-  const delivery = await fetch(`${url}/functions/v1/${functionName}`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${serviceKey}`,
-      apikey: serviceKey,
-      'content-type': 'application/json',
-      'x-petseen-internal': serviceKey,
+      ? {
+          functionName: 'send-sighting-owner-email',
+          body: { sightingId: item.aggregate_id },
+        }
+      : item.kind === 'owner_found_pet_match_email'
+        ? {
+            functionName: 'send-found-pet-match-owner-email',
+            body: { notificationId: item.aggregate_id },
+          }
+        : {
+            functionName: 'send-watch-notifications',
+            body: { sightingId: item.aggregate_id },
+          }
+  const delivery = await fetch(
+    `${url}/functions/v1/${deliveryTarget.functionName}`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+        'content-type': 'application/json',
+        'x-petseen-internal': serviceKey,
+      },
+      body: JSON.stringify(deliveryTarget.body),
     },
-    body: JSON.stringify({ sightingId: item.aggregate_id }),
-  })
+  )
   if (!delivery.ok)
     throw new Error(
       (await delivery.text()).slice(0, 500) ||
-        `${functionName} returned ${delivery.status}`,
+        `${deliveryTarget.functionName} returned ${delivery.status}`,
     )
 }
 

@@ -91,7 +91,7 @@ Complete this release before PS-401 so the refactor is protected by a deployed r
 | PS-405 | Watch areas, PWA push notifications and email fallback                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Done        |
 | PS-406 | Expiry/reopen lifecycle and staff data housekeeping: provide a protected staff queue for pending and approved found-pet reports; let staff resolve, expire or delete test, duplicate, rejected and stale reports; safely remove associated source/display files while retaining only the minimal moderation audit trail; automatically expire unlinked reports and enforce the one-year retention policy, with a deliberate reopen path where appropriate                                                                                     | Done        |
 | PS-407 | Accessibility and security hardening for development and staging: keyboard skip navigation and route focus handling, reduced-motion and visible-focus support, and Cloudflare Pages browser security headers                                                                                                                                                                                                                                                                                                                                  | Done        |
-| PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review; automatically create a provisional owner-review link for the highest combined-score candidate of a safely approved found-pet report when its deterministic and combined scores are both at least 80 and AI confidence is medium or high; and let staff decide whether to link any listed candidate and notify its owner | In progress |
+| PS-408 | AI-assisted candidate scoring for unlinked sightings and found-pet reports: supplement the deterministic baseline with photo and description analysis; retain the score, confidence and explanation for staff review; automatically create a provisional owner-review link for the highest combined-score candidate of a safely approved found-pet report when its deterministic and combined scores are both at least 80 and AI confidence is medium or high; and let staff decide whether to link any listed candidate and notify its owner | Done        |
 | PS-409 | Add a public list of confirmed, approximate sightings alongside the missing-pet list; make the two content types clearly distinct, never expose exact locations or reporter details, and link a sighting to its case only where that is safe and useful                                                                                                                                                                                                                                                                                       | Not started |
 | PS-410 | Optional found-pet photo: accept a photo of the found pet only, validate and remove EXIF, and generate a private display derivative; never request or expose a reporter portrait                                                                                                                                                                                                                                                                                                                                                              | Done        |
 | PS-411 | Trust and safety moderation for found-pet reports: screen submitted text and photos server-side before they are shown to an owner; quarantine unsafe, abusive, scam or irrelevant content; fail closed to staff review when checks are uncertain; expose only approved private content, rate-limit abuse, and promptly delete rejected files while retaining minimal audit data                                                                                                                                                               | Done        |
@@ -127,6 +127,26 @@ owner can confirm or decline that link.
 Found-pet scoring now provides the processed found-pet image and each available
 candidate case image to the model, so the AI score can compare the animals rather
 than relying on report text alone.
+
+PS-408 audit note (2026-08-23): implementation review found that the later
+durable-notification migration restores a high-confidence priority-score gate
+for staff linking an unlinked sighting, contradicting the task decision that
+staff may link any conservative-shortlist candidate. The automatic found-pet
+link helper also selects the highest _qualifying_ candidate rather than first
+requiring the overall highest combined-score candidate to meet the thresholds;
+repeated scoring can create additional pending owner-review links. Regression
+coverage now protects both scoring paths and the threshold/linking rules.
+
+PS-408 maintenance note (2026-08-23): restored the staff override for an
+unlinked sighting. Staff may now link any case returned by the conservative
+deterministic shortlist; the durable owner-email outbox handoff remains in
+place. A database regression contract protects that rule.
+
+PS-408 maintenance note (2026-08-23): a provisional found-pet match now goes
+only to the overall highest combined-score candidate when it satisfies all
+thresholds. Reruns cannot create another active owner-review link. Each new
+provisional match queues a privacy-safe owner email through the durable
+workflow outbox.
 
 ## Decisions already made
 
