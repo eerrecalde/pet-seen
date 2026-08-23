@@ -19,6 +19,7 @@ flowchart TB
 
   Global["Global header\nHome · Nearby · language"]:::neutral
   Home["Home / choose area, then nearby list or map\nDone · PS-303"]:::done
+  NearbyRange["Expand nearby search area\nNot started · PS-423"]:::planned
   Auth["Magic-link sign in\nDone · PS-101"]:::done
   Dashboard["Owner dashboard\nDone · PS-108"]:::done
   Missing["Create missing case\nDone · PS-105"]:::done
@@ -57,6 +58,8 @@ flowchart TB
   Home -->|"I saw a pet"| Sighting
   Home -->|"I found a pet"| Found
   Home -->|"Open nearby case"| Public
+  Home -.->|"Search a wider area"| NearbyRange
+  NearbyRange -.->|"Update radius"| Home
   Home -->|"Sign in"| Auth
   Auth -->|"Signed in"| Dashboard
   Dashboard -->|"New case"| Missing

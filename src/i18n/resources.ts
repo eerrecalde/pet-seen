@@ -70,13 +70,13 @@ export const resources = {
         searchError: 'We could not search for that place. Please try again.',
         chooseLocation:
           'Choose a postcode, place or your current location to see missing pets nearby.',
-        resultsFor: 'Showing active cases within 10 miles of {{location}}.',
+        resultsFor: 'Showing active cases within 1 mile of {{location}}.',
         showMap: 'Show map',
         showList: 'Show list',
         loading: 'Loading nearby cases…',
         unavailable: 'Nearby discovery is unavailable right now.',
         empty:
-          'There are no active missing-pet cases within 10 miles of this location.',
+          'There are no active missing-pet cases within 1 mile of this location.',
         missingLabel: 'Missing pet',
         missingLegend: 'Missing-pet case',
         sightingLegend: 'Confirmed, approximate sighting',
@@ -631,13 +631,14 @@ export const resources = {
         searchError: 'No pudimos buscar ese lugar. Inténtalo de nuevo.',
         chooseLocation:
           'Elige un código postal, lugar o tu ubicación actual para ver las mascotas perdidas cercanas.',
-        resultsFor: 'Mostramos casos activos a menos de 16 km de {{location}}.',
+        resultsFor:
+          'Mostramos casos activos a menos de 1,6 km de {{location}}.',
         showMap: 'Ver mapa',
         showList: 'Ver lista',
         loading: 'Cargando casos cercanos…',
         unavailable: 'La búsqueda cercana no está disponible ahora.',
         empty:
-          'No hay casos activos de mascotas perdidas a menos de 16 km de esta ubicación.',
+          'No hay casos activos de mascotas perdidas a menos de 1,6 km de esta ubicación.',
         missingLabel: 'Mascota perdida',
         missingLegend: 'Caso de mascota perdida',
         sightingLegend: 'Avistamiento confirmado y aproximado',
