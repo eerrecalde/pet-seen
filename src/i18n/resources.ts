@@ -51,15 +51,32 @@ export const resources = {
         neighboursBody: 'Every public case has a simple sighting form.',
       },
       nearby: {
-        eyebrow: 'Nearby',
-        title: 'Missing pets in the area',
+        eyebrow: 'Search your area',
+        title: 'Missing pets near you',
         intro:
-          'Browse active cases first, then switch to the map for a broader view.',
+          'Enter any postcode or place, or use your location to see active cases nearby.',
+        locationHelp: 'Choose the area you want to search.',
+        useLocation: 'Use my location',
+        locationUnavailable:
+          'Your browser cannot provide a location. Search by postcode or place instead.',
+        locationDenied:
+          'We could not access your location. Search by postcode or place instead.',
+        searchLocation: 'Postcode or place',
+        searchLocationHint: 'For example, SW1A 1AA or Hyde Park',
+        search: 'Search',
+        searching: 'Searching…',
+        searchNoResults:
+          'No places matched that search. Try a more specific postcode or place name.',
+        searchError: 'We could not search for that place. Please try again.',
+        chooseLocation:
+          'Choose a postcode, place or your current location to see missing pets nearby.',
+        resultsFor: 'Showing active cases within 10 miles of {{location}}.',
         showMap: 'Show map',
         showList: 'Show list',
         loading: 'Loading nearby cases…',
         unavailable: 'Nearby discovery is unavailable right now.',
-        empty: 'There are no active missing-pet cases nearby yet.',
+        empty:
+          'There are no active missing-pet cases within 10 miles of this location.',
         missingLabel: 'Missing pet',
         missingLegend: 'Missing-pet case',
         sightingLegend: 'Confirmed, approximate sighting',
@@ -595,15 +612,32 @@ export const resources = {
           'Cada caso público tiene un formulario sencillo para reportar avistamientos.',
       },
       nearby: {
-        eyebrow: 'Cerca',
-        title: 'Mascotas perdidas en la zona',
+        eyebrow: 'Busca en tu zona',
+        title: 'Mascotas perdidas cerca de ti',
         intro:
-          'Primero revisa los casos activos; luego cambia al mapa para una vista más amplia.',
+          'Ingresa cualquier código postal o lugar, o usa tu ubicación para ver los casos activos cercanos.',
+        locationHelp: 'Elige la zona donde quieres buscar.',
+        useLocation: 'Usar mi ubicación',
+        locationUnavailable:
+          'Tu navegador no puede proporcionar una ubicación. Busca por código postal o lugar.',
+        locationDenied:
+          'No pudimos acceder a tu ubicación. Busca por código postal o lugar.',
+        searchLocation: 'Código postal o lugar',
+        searchLocationHint: 'Por ejemplo, SW1A 1AA o Hyde Park',
+        search: 'Buscar',
+        searching: 'Buscando…',
+        searchNoResults:
+          'No encontramos lugares con esa búsqueda. Prueba con un código postal o lugar más específico.',
+        searchError: 'No pudimos buscar ese lugar. Inténtalo de nuevo.',
+        chooseLocation:
+          'Elige un código postal, lugar o tu ubicación actual para ver las mascotas perdidas cercanas.',
+        resultsFor: 'Mostramos casos activos a menos de 16 km de {{location}}.',
         showMap: 'Ver mapa',
         showList: 'Ver lista',
         loading: 'Cargando casos cercanos…',
         unavailable: 'La búsqueda cercana no está disponible ahora.',
-        empty: 'Aún no hay casos activos de mascotas perdidas cerca.',
+        empty:
+          'No hay casos activos de mascotas perdidas a menos de 16 km de esta ubicación.',
         missingLabel: 'Mascota perdida',
         missingLegend: 'Caso de mascota perdida',
         sightingLegend: 'Avistamiento confirmado y aproximado',

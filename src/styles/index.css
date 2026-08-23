@@ -1100,6 +1100,30 @@ footer {
   flex: 0 0 auto;
   margin: 0;
 }
+.nearby-location-search {
+  margin-top: 24px;
+  max-width: 620px;
+}
+.nearby-location-search > p {
+  color: #725e50;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.nearby-location-search .location-search {
+  margin-top: 12px;
+}
+.nearby-results-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+.nearby-results-heading > p {
+  color: #536d4d;
+  font-weight: 800;
+  margin: 0;
+}
 .nearby-message {
   color: #725e50;
   margin: 32px 0 0;
@@ -1260,6 +1284,10 @@ footer {
   }
   .nearby-heading .secondary-button {
     align-self: flex-start;
+  }
+  .nearby-results-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .nearby-list {
     grid-template-columns: 1fr;

@@ -12,10 +12,10 @@ export const publicCaseQuery = (slug: string) =>
     queryFn: () => fetchPublicCase(slug),
   })
 
-export const nearbyDiscoveryQuery = () =>
+export const nearbyDiscoveryQuery = (latitude: number, longitude: number) =>
   queryOptions({
-    queryKey: queryKeys.publicCases.nearbyDiscovery(),
-    queryFn: fetchNearbyDiscovery,
+    queryKey: queryKeys.publicCases.nearbyDiscovery(latitude, longitude),
+    queryFn: () => fetchNearbyDiscovery(latitude, longitude),
     staleTime: 60_000,
   })
 
@@ -30,8 +30,16 @@ export function usePublicCaseQuery(slug: string | undefined) {
   return useQuery({ ...publicCaseQuery(slug ?? ''), enabled: Boolean(slug) })
 }
 
-export function useNearbyDiscoveryQuery() {
-  return useQuery(nearbyDiscoveryQuery())
+export function useNearbyDiscoveryQuery(
+  coordinates: { latitude: number; longitude: number } | null,
+) {
+  return useQuery({
+    ...nearbyDiscoveryQuery(
+      coordinates?.latitude ?? 0,
+      coordinates?.longitude ?? 0,
+    ),
+    enabled: Boolean(coordinates),
+  })
 }
 
 export function usePublicCaseOptionsQuery(enabled = true) {

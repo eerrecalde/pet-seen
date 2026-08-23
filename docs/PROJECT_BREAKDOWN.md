@@ -67,6 +67,8 @@ Public views show approximate locations. Exact sighting and last-seen locations 
 | PS-302 | Web Share, copied-link and WhatsApp sharing; Open Graph image and metadata generation; sharing attribution                          | Done   |
 | PS-303 | Nearby discovery with a list-first default and an optional map showing visually distinct missing-case and approximate sighting pins | Done   |
 
+PS-303 maintenance note (2026-08-23): nearby discovery now requires a visitor-selected postcode, place or browser location. Server-side PostGIS radius queries return at most 12 public missing cases and 24 approximate sightings within 10 miles, rather than loading a global latest-post feed. The public search reuses the reporting flows’ location search and geolocation helper.
+
 Follow-up: WhatsApp currently reads the generic app description because per-case Open Graph tags are set client-side. Revisit PS-302 when server-rendered or prerendered metadata is introduced, so previews can use the individual case description.
 
 ## Release 3.5 — Delivery safeguards

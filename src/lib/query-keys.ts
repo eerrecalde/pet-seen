@@ -6,7 +6,8 @@ export const queryKeys = {
   publicCases: {
     all: ['public-cases'] as const,
     detail: (slug: string) => ['public-cases', 'detail', slug] as const,
-    nearbyDiscovery: () => ['public-cases', 'nearby-discovery'] as const,
+    nearbyDiscovery: (latitude: number, longitude: number) =>
+      ['public-cases', 'nearby-discovery', latitude, longitude] as const,
     options: () => ['public-cases', 'options'] as const,
   },
   ownerDashboard: (userId: string) => ['owner-dashboard', userId] as const,

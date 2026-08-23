@@ -29,28 +29,27 @@ export async function fetchPublicCase(
   ) as Promise<PublicCase | null>
 }
 
-export async function fetchNearbyDiscovery(): Promise<{
+export async function fetchNearbyDiscovery(
+  latitude: number,
+  longitude: number,
+): Promise<{
   cases: NearbyCase[]
   sightings: NearbySighting[]
 }> {
   const client = getSupabaseClient()
   const [cases, sightings] = await Promise.all([
     unwrapSupabaseResult(
-      client
-        .from('public_missing_cases')
-        .select(
-          'public_slug,pet_name,species,breed,colour,last_seen_description,published_at,public_latitude,public_longitude',
-        )
-        .order('published_at', { ascending: false })
-        .limit(12),
+      client.rpc('find_public_nearby_cases', {
+        search_latitude: latitude,
+        search_longitude: longitude,
+      }),
       'We could not load nearby cases.',
     ),
     unwrapSupabaseResult(
-      client
-        .from('public_nearby_sightings')
-        .select('sighting_id,public_latitude,public_longitude')
-        .order('seen_at', { ascending: false })
-        .limit(24),
+      client.rpc('find_public_nearby_sightings', {
+        search_latitude: latitude,
+        search_longitude: longitude,
+      }),
       'We could not load nearby sightings.',
     ),
   ])

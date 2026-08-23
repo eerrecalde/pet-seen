@@ -18,7 +18,7 @@ flowchart TB
   classDef neutral fill:#f8f9fb,stroke:#a9b1bd,color:#303743
 
   Global["Global header\nHome · Nearby · language"]:::neutral
-  Home["Home / nearby list or map\nDone · PS-303"]:::done
+  Home["Home / choose area, then nearby list or map\nDone · PS-303"]:::done
   Auth["Magic-link sign in\nDone · PS-101"]:::done
   Dashboard["Owner dashboard\nDone · PS-108"]:::done
   Missing["Create missing case\nDone · PS-105"]:::done
