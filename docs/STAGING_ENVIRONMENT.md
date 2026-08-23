@@ -121,11 +121,7 @@ deploys only pushes to `main` and serialized deployments through its
 Run the complete functional and visual suite in the pinned Linux container:
 
 ```sh
-docker run --rm --init --ipc=host --platform linux/amd64 \
-  --env-file .env.playwright.local \
-  -v "$PWD:/work" -v petseen-playwright-node-modules-v162:/work/node_modules -w /work \
-  mcr.microsoft.com/playwright:v1.62.1-noble \
-  bash -lc 'npm ci && npm run test:e2e:all'
+npm run test:e2e:linux
 ```
 
 ## Playwright visual baselines
@@ -143,11 +139,7 @@ Playwright Linux image. This ensures the baseline has a consistent Linux
 platform suffix and rendering environment:
 
 ```sh
-docker run --rm --init --ipc=host --platform linux/amd64 \
-  --env-file .env.playwright.local \
-  -v "$PWD:/work" -v petseen-playwright-node-modules-v162:/work/node_modules -w /work \
-  mcr.microsoft.com/playwright:v1.62.1-noble \
-  bash -lc 'npm ci && npm run test:e2e:visual:update'
+npm run test:e2e:visual:update:linux
 ```
 
 Review and commit the generated files under
