@@ -63,7 +63,9 @@ test.describe.serial('core beta loop on staging', () => {
 
     const dialog = page.getByRole('dialog', { name: petName })
     await expect(dialog).toBeVisible()
-    await expect(dialog.locator('.modal-photo')).toBeVisible()
+    const fullPhoto = dialog.locator('.modal-photo')
+    await expect(fullPhoto).toBeVisible()
+    await expect(fullPhoto).toHaveCSS('object-fit', 'contain')
     await expect(dialog.getByRole('heading', { name: petName })).toBeVisible()
 
     await page.keyboard.press('Escape')

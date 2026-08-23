@@ -25,7 +25,12 @@ export function ExpandablePetImage(props: ExpandablePetImageProps) {
         <PetImage {...props} onSourceChange={setResolvedSourceUrl} />
         <PhotoPreviewHint label={t('common.viewFullPhoto')} />
       </button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={petName}>
+      <Modal
+        contentClassName="modal-photo-content"
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title={petName}
+      >
         <PetImage
           {...props}
           className="modal-photo"

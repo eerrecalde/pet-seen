@@ -5,6 +5,7 @@ import { Icon } from './Icon'
 type ModalProps = {
   ariaLabel?: string
   children: ReactNode
+  contentClassName?: string
   isOpen: boolean
   onClose: () => void
   title?: string
@@ -14,6 +15,7 @@ type ModalProps = {
 export function Modal({
   ariaLabel,
   children,
+  contentClassName,
   isOpen,
   onClose,
   title,
@@ -63,7 +65,9 @@ export function Modal({
             <Icon name="close" />
           </button>
         </div>
-        <div className="modal-content">{children}</div>
+        <div className={`modal-content ${contentClassName ?? ''}`.trim()}>
+          {children}
+        </div>
       </section>
     </div>,
     document.body,

@@ -152,13 +152,24 @@ a {
 .modal-content {
   padding: 0 18px 18px;
 }
+.modal-photo-content {
+  align-items: center;
+  background: #f4eee5;
+  display: flex;
+  justify-content: center;
+  min-height: min(420px, calc(100vh - 150px));
+}
 .modal-photo {
   border-radius: 12px;
   display: block;
   height: auto;
   max-height: calc(100vh - 150px);
+  max-width: 100%;
   object-fit: contain;
-  width: 100%;
+  width: auto;
+}
+.modal-photo-content .modal-photo {
+  width: auto;
 }
 button:focus-visible,
 a:focus-visible,

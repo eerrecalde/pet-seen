@@ -573,6 +573,7 @@ function FoundMatchReview({
           </article>
           <Modal
             ariaLabel="Private photo of the found pet"
+            contentClassName="modal-photo-content"
             isOpen={photoOpen}
             onClose={() => setPhotoOpen(false)}
           >

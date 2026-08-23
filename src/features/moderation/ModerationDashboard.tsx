@@ -734,6 +734,7 @@ function FoundPetMatches({
         </div>
         <Modal
           ariaLabel={t('moderation.photo')}
+          contentClassName="modal-photo-content"
           isOpen={openPhotoId === report.id}
           onClose={() => setOpenPhotoId(null)}
         >
