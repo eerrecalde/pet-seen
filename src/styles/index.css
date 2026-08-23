@@ -50,6 +50,79 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+.photo-preview-button {
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+  display: block;
+  padding: 0;
+  text-align: inherit;
+  width: 100%;
+}
+.photo-preview-button > img {
+  display: block;
+  width: 100%;
+}
+.modal-backdrop {
+  align-items: center;
+  background: #241810c7;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 50;
+}
+.modal {
+  background: #fffaf4;
+  border: 1px solid #eadfce;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px #24181059;
+  max-height: calc(100vh - 48px);
+  max-width: min(920px, 100%);
+  overflow: auto;
+  width: 100%;
+}
+.modal-header {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+}
+.modal-header h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.modal-header-close-only {
+  justify-content: flex-end;
+}
+.modal-close {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dfcdb8;
+  border-radius: 50%;
+  color: #3d2b21;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1.2rem;
+  height: 38px;
+  justify-content: center;
+  padding: 0;
+  width: 38px;
+}
+.modal-content {
+  padding: 0 18px 18px;
+}
+.modal-photo {
+  border-radius: 12px;
+  display: block;
+  height: auto;
+  max-height: calc(100vh - 150px);
+  object-fit: contain;
+  width: 100%;
+}
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -596,6 +669,13 @@ footer {
   grid-template-columns: 0.92fr 1.08fr;
   margin-bottom: 76px;
 }
+.case-grid > .photo-preview-button {
+  border-radius: 26px 0 0 26px;
+  overflow: hidden;
+}
+.case-grid > .photo-preview-button > .pet-photo {
+  height: 100%;
+}
 .pet-photo {
   border-radius: 26px 0 0 26px;
   min-height: 500px;
@@ -985,6 +1065,9 @@ footer {
   .pet-photo {
     border-radius: 22px 22px 0 0;
     min-height: 310px;
+  }
+  .case-grid > .photo-preview-button {
+    border-radius: 22px 22px 0 0;
   }
   .case-summary {
     border-radius: 0 0 22px 22px;
@@ -1727,6 +1810,12 @@ footer {
 .owner-case-photo {
   min-height: 100%;
 }
+.owner-case > .photo-preview-button {
+  overflow: hidden;
+}
+.owner-case > .photo-preview-button > .owner-case-photo {
+  height: 100%;
+}
 .owner-case-body {
   padding: 26px;
 }
@@ -1903,6 +1992,9 @@ footer {
   background: #eef5e9;
   min-height: 390px;
 }
+.found-owner-match-photo > .photo-preview-button {
+  height: 100%;
+}
 .found-owner-match-photo img {
   display: block;
   height: 100%;
@@ -1998,6 +2090,9 @@ footer {
     grid-template-columns: 1fr;
   }
   .owner-case-photo {
+    min-height: 160px;
+  }
+  .owner-case > .photo-preview-button {
     min-height: 160px;
   }
   .owner-case-body {
@@ -2762,6 +2857,9 @@ footer {
   max-height: 360px;
   object-fit: contain;
   width: 100%;
+}
+.found-photo-review .photo-preview-button {
+  border-radius: 12px;
 }
 .found-match-actions {
   display: flex;

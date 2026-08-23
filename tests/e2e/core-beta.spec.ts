@@ -47,6 +47,31 @@ test.describe.serial('core beta loop on staging', () => {
     await new PublicCasePage(page).open(slug, petName)
   })
 
+  test('a visitor can view the full pet photo and close the dialog', async ({
+    page,
+  }) => {
+    await useFixedTime(page)
+    await new PublicCasePage(page).open(slug, petName)
+
+    const photoTrigger = page.getByRole('button', {
+      name: `View full photo of ${petName}`,
+    })
+    await photoTrigger.click()
+
+    const dialog = page.getByRole('dialog', { name: petName })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('.modal-photo')).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: petName })).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect(photoTrigger).toBeFocused()
+
+    await photoTrigger.click()
+    await dialog.getByRole('button', { name: 'Close dialog' }).click()
+    await expect(dialog).toHaveCount(0)
+  })
+
   test('neighbour can submit a linked sighting', async ({ page }) => {
     await useFixedTime(page)
     await new SightingPage(page).submit(petName)

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { OwnerSightingMap } from '../../components/maps/OwnerSightingMap'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
-import { PetImage } from '../../components/PetImage'
+import { ExpandablePetImage } from '../../components/ExpandablePetImage'
+import { Modal } from '../../components/Modal'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
@@ -489,6 +490,7 @@ function FoundMatchReview({
     enabled: Boolean(path),
   })
   const photoUrl = photo.data ?? ''
+  const [photoOpen, setPhotoOpen] = useState(false)
   const reportSummary =
     [match.report?.colour, match.report?.breed].filter(Boolean).join(' · ') ||
     'Found pet'
@@ -511,7 +513,14 @@ function FoundMatchReview({
           <article className="found-owner-match-card">
             <div className="found-owner-match-photo">
               {photoUrl ? (
-                <img src={photoUrl} alt="Private photo of the found pet" />
+                <button
+                  aria-label="View full private photo of the found pet"
+                  className="photo-preview-button"
+                  onClick={() => setPhotoOpen(true)}
+                  type="button"
+                >
+                  <img src={photoUrl} alt="Private photo of the found pet" />
+                </button>
               ) : (
                 <div className="found-owner-match-no-photo">
                   <Icon name="image-line" />
@@ -560,6 +569,17 @@ function FoundMatchReview({
               </div>
             </div>
           </article>
+          <Modal
+            ariaLabel="Private photo of the found pet"
+            isOpen={photoOpen}
+            onClose={() => setPhotoOpen(false)}
+          >
+            <img
+              className="modal-photo"
+              src={photoUrl}
+              alt="Private photo of the found pet"
+            />
+          </Modal>
           <Link className="text-button found-owner-match-back" to="/dashboard">
             {t('dashboard.title')}
           </Link>
@@ -642,7 +662,7 @@ function OwnerCaseCard({
   }
   return (
     <article className={`owner-case ${caseData.status}`}>
-      <PetImage
+      <ExpandablePetImage
         className="owner-case-photo"
         petName={pet.name}
         species={pet.species}

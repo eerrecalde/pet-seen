@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 
-type PetImageProps = {
+export type PetImageProps = {
   className: string
   petName: string
   species: 'dog' | 'cat'
   publicSlug?: string
   sourceUrl?: string | null
+  onSourceChange?: (source: string) => void
 }
 
 /** Uses the public photo endpoint when available and safely falls back to a species image. */
@@ -15,6 +16,7 @@ export function PetImage({
   species,
   publicSlug,
   sourceUrl,
+  onSourceChange,
 }: PetImageProps) {
   const fallback = `/images/generic-${species}.jpg`
   const publicUrl =
@@ -32,6 +34,9 @@ export function PetImage({
       className={`${className} pet-placeholder`}
       src={src}
       alt={`Photo of ${petName}`}
+      onLoad={(event) =>
+        onSourceChange?.(event.currentTarget.currentSrc || src)
+      }
       onError={() => setSrc(fallback)}
     />
   )

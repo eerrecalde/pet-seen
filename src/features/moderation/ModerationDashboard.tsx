@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
+import { Modal } from '../../components/Modal'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
@@ -570,6 +571,7 @@ function FoundPetMatches({
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const [analysingId, setAnalysingId] = useState<string | null>(null)
   const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [openPhotoId, setOpenPhotoId] = useState<string | null>(null)
   const photoUrls = useSignedPhotoUrls(
     reports.map((report) => ({
       id: report.id,
@@ -709,10 +711,17 @@ function FoundPetMatches({
           {report.photo && (
             <figure className="found-photo-review">
               {photoUrls[report.id] ? (
-                <img
-                  src={photoUrls[report.id] ?? ''}
-                  alt={t('moderation.photo')}
-                />
+                <button
+                  aria-label={`View full ${t('moderation.photo').toLowerCase()}`}
+                  className="photo-preview-button"
+                  onClick={() => setOpenPhotoId(report.id)}
+                  type="button"
+                >
+                  <img
+                    src={photoUrls[report.id] ?? ''}
+                    alt={t('moderation.photo')}
+                  />
+                </button>
               ) : photoUrls[report.id] === null ? (
                 <p>{t('moderation.photoUnavailable')}</p>
               ) : (
@@ -721,6 +730,17 @@ function FoundPetMatches({
             </figure>
           )}
         </div>
+        <Modal
+          ariaLabel={t('moderation.photo')}
+          isOpen={openPhotoId === report.id}
+          onClose={() => setOpenPhotoId(null)}
+        >
+          <img
+            className="modal-photo"
+            src={photoUrls[report.id] ?? ''}
+            alt={t('moderation.photo')}
+          />
+        </Modal>
         {report.lifecycle_status === 'active' &&
           report.moderation_status === 'pending' && (
             <div className="found-match-actions">

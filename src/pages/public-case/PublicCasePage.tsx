@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router'
 import { PublicLocationMap } from '../../components/maps/PublicLocationMap'
 import { Icon } from '../../components/Icon'
-import { PetImage } from '../../components/PetImage'
+import { ExpandablePetImage } from '../../components/ExpandablePetImage'
 import { PublicCaseNotice } from '../../components/PublicCaseNotice'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
@@ -103,7 +103,7 @@ function PublicCaseContent({
         imageUrl={socialCardUrl(caseData.public_slug)}
       />
       <div className="case-grid">
-        <PetImage
+        <ExpandablePetImage
           className="pet-photo"
           petName={caseData.pet_name}
           species={caseData.species}
