@@ -69,7 +69,7 @@ For a hosted project, deploy `process-pet-photo`, `screen-found-pet-report`, `mo
 
 ### AI scoring limits
 
-Run `process-found-pet-ai-scoring-queue` on a protected schedule (for example, every minute). Approval and staff requests only create an idempotent queue entry; the worker is the sole caller of the provider. The database defaults are a £10/day and £200/month provider budget, 10 runs/hour, three shortlist candidates and three candidate images, with a 1.5 MB maximum per image. Operations may change the single `ai_provider_budget_guardrails` row after approving a cost change. Budget, rate, stale-version and shortlist skips remain in the staff queue for review; the run audit stores only aggregate token counts, latency, outcome and estimated cost—never prompts or images.
+Run `process-found-pet-ai-scoring-queue` on a protected schedule every minute, with a service-role JWT. Approval and staff requests only create an idempotent queue entry; the worker is the sole caller of the provider. The database defaults are a $10/day and $200/month provider budget, 10 runs/hour, three shortlist candidates and three candidate images, with a 1.5 MB and 1600 px maximum per image. Operations may change the single `ai_provider_budget_guardrails` row after approving a cost change. Alert the on-call team when a queue item is skipped or fails, or when daily spend exceeds 80% of the configured limit. Budget, rate, stale-version and shortlist skips remain visible to staff for manual review; the run audit stores only aggregate token counts, latency, outcome and estimated cost—never prompts or images.
 
 ### Watch-alert delivery limits
 

@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 const model = 'gpt-4.1-mini'
+const maxImageBytes = 1_500_000
+const maxImageDimension = 1600
 const allowedOrigins = new Set([
   'https://petseen-staging.pages.dev',
   'http://127.0.0.1:5173',
@@ -35,6 +37,33 @@ function base64(bytes: Uint8Array) {
   for (let start = 0; start < bytes.length; start += 0x8000)
     binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000))
   return btoa(binary)
+}
+function jpegDimensions(bytes: Uint8Array) {
+  for (let index = 2; index + 9 < bytes.length;) {
+    if (bytes[index] !== 0xff) return null
+    const marker = bytes[index + 1]
+    const length = (bytes[index + 2] << 8) | bytes[index + 3]
+    if (length < 2) return null
+    if (marker >= 0xc0 && marker <= 0xc3)
+      return {
+        height: (bytes[index + 5] << 8) | bytes[index + 6],
+        width: (bytes[index + 7] << 8) | bytes[index + 8],
+      }
+    index += length + 2
+  }
+  return null
+}
+async function boundedJpegDataUrl(blob: Blob) {
+  if (blob.size > maxImageBytes) return undefined
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const dimensions = jpegDimensions(bytes)
+  if (
+    !dimensions ||
+    dimensions.width > maxImageDimension ||
+    dimensions.height > maxImageDimension
+  )
+    return undefined
+  return `data:image/jpeg;base64,${base64(bytes)}`
 }
 
 type Candidate = {
@@ -196,8 +225,7 @@ Deno.serve(async (request) => {
       const { data, error } = await admin.storage
         .from('found-pet-photos')
         .download(photo.display_object_path)
-      if (!error && data && data.size <= 1_500_000)
-        imageDataUrl = `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}`
+      if (!error && data) imageDataUrl = await boundedJpegDataUrl(data)
     }
     const { data: candidateCases } = await admin
       .from('missing_cases')
@@ -236,11 +264,10 @@ Deno.serve(async (request) => {
         const { data, error } = await admin.storage
           .from('pet-photos')
           .download(path)
-        if (!error && data && data.size <= 1_500_000)
-          candidateImageDataUrls.set(
-            candidate.case_id,
-            `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}`,
-          )
+        if (!error && data) {
+          const dataUrl = await boundedJpegDataUrl(data)
+          if (dataUrl) candidateImageDataUrls.set(candidate.case_id, dataUrl)
+        }
       }),
     )
     const candidateText = shortlist.map((candidate) => ({

@@ -397,6 +397,10 @@ verify_jwt = false
 [functions.deliver-workflow-outbox]
 verify_jwt = true
 
+# PS-426: invoke this protected worker from the hosted scheduler every minute.
+[functions.process-found-pet-ai-scoring-queue]
+verify_jwt = true
+
 # This is the browser-facing boundary for the three multi-write submissions.
 [functions.submit-workflow]
 verify_jwt = false

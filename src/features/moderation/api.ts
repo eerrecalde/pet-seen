@@ -26,7 +26,7 @@ export const moderationApi = {
         client
           .from('found_pet_reports')
           .select(
-            'id,species,breed,colour,details,custody_status,location_description,found_at,created_at,moderation_status,lifecycle_status,lifecycle_reason,automated_screening_note,photo:found_pet_photos(source_object_path,display_object_path),link:found_pet_case_links(case_id,status,case:missing_cases(public_slug,pet:pets(name))),ai_scores:ai_found_pet_match_scores(case_id,deterministic_score,ai_similarity_score,combined_score,confidence,explanation,priority_review,created_at)',
+            'id,species,breed,colour,details,custody_status,location_description,found_at,created_at,moderation_status,lifecycle_status,lifecycle_reason,automated_screening_note,photo:found_pet_photos(source_object_path,display_object_path),link:found_pet_case_links(case_id,status,case:missing_cases(public_slug,pet:pets(name))),ai_scores:ai_found_pet_match_scores(case_id,deterministic_score,ai_similarity_score,combined_score,confidence,explanation,priority_review,created_at),ai_queue:ai_found_pet_scoring_queue(status,attempts,last_error,created_at,completed_at)',
           )
           .order('created_at', { ascending: false }),
         'We could not load found-pet reports.',

@@ -33,6 +33,13 @@ type AiCandidateScore = {
   priority_review: boolean
   created_at: string
 }
+type AiScoringQueueItem = {
+  status: 'pending' | 'running' | 'completed' | 'skipped' | 'failed'
+  attempts: number
+  last_error: string | null
+  created_at: string
+  completed_at: string | null
+}
 type FoundPetReport = {
   id: string
   species: 'dog' | 'cat'
@@ -57,6 +64,7 @@ type FoundPetReport = {
     case: { public_slug: string; pet: { name: string } | null } | null
   } | null
   ai_scores: AiCandidateScore[]
+  ai_queue: AiScoringQueueItem[]
 }
 type UnlinkedSighting = {
   id: string
@@ -127,6 +135,9 @@ export function ModerationPage() {
             ...report,
             photo,
             ai_scores: (report.ai_scores ?? []).sort((a, b) =>
+              b.created_at.localeCompare(a.created_at),
+            ),
+            ai_queue: (report.ai_queue ?? []).sort((a, b) =>
               b.created_at.localeCompare(a.created_at),
             ),
             link: link
@@ -661,6 +672,27 @@ function FoundPetMatches({
   const closedReports = reports.filter(
     (report) => report.lifecycle_status !== 'active',
   )
+  function queueStatus(report: FoundPetReport) {
+    const job = report.ai_queue[0]
+    if (!job || job.status === 'completed') return null
+    const message =
+      job.status === 'pending'
+        ? 'AI matching is queued. You can review and link nearby cases now.'
+        : job.status === 'running'
+          ? 'AI matching is in progress. You can review and link nearby cases now.'
+          : job.status === 'skipped'
+            ? 'AI matching was skipped to stay within safety or cost limits. Review nearby cases manually.'
+            : `AI matching could not complete after ${job.attempts} attempts. Review nearby cases manually.`
+    return (
+      <p
+        className="ai-review-note"
+        role={job.status === 'failed' ? 'alert' : undefined}
+      >
+        {message}
+        {job.last_error && job.status === 'failed' ? ` ${job.last_error}` : ''}
+      </p>
+    )
+  }
   function card(report: FoundPetReport) {
     const matched = report.link?.case
     return (
@@ -696,6 +728,7 @@ function FoundPetMatches({
                 })}
               </p>
             )}
+            {queueStatus(report)}
             <dl>
               <div>
                 <dt>{t('moderation.custody')}</dt>
