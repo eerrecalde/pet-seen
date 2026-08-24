@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
 export type PlaceResult = {
   label: string
@@ -18,7 +19,7 @@ type LocationSearchProps = {
   }
 }
 
-type NominatimPlace = { display_name: string; lat: string; lon: string }
+type SearchResponse = { results?: PlaceResult[] }
 
 export function LocationSearch({ onSelect, strings }: LocationSearchProps) {
   const [query, setQuery] = useState('')
@@ -26,34 +27,62 @@ export function LocationSearch({ onSelect, strings }: LocationSearchProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'empty' | 'error'>(
     'idle',
   )
+  const controller = useRef<AbortController | null>(null)
+  const latestSearch = useRef(0)
 
-  async function search() {
+  const search = useCallback(async () => {
     const trimmed = query.trim()
-    if (!trimmed) return
+    if (trimmed.length < 3) {
+      controller.current?.abort()
+      setResults([])
+      setStatus('idle')
+      return
+    }
+    if (!supabase || !isSupabaseConfigured) {
+      setStatus('error')
+      return
+    }
+
+    controller.current?.abort()
+    const nextController = new AbortController()
+    controller.current = nextController
+    const searchId = ++latestSearch.current
     setStatus('loading')
-    setResults([])
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(trimmed)}`,
+      const { data, error } = await supabase.functions.invoke<SearchResponse>(
+        'geocode-location',
+        { body: { query: trimmed }, signal: nextController.signal },
       )
-      if (!response.ok) throw new Error('Search failed')
-      const places = (await response.json()) as NominatimPlace[]
-      const nextResults = places
-        .map((place) => ({
-          label: place.display_name,
-          latitude: Number(place.lat),
-          longitude: Number(place.lon),
-        }))
-        .filter(
-          (place) =>
-            Number.isFinite(place.latitude) && Number.isFinite(place.longitude),
-        )
+      if (searchId !== latestSearch.current) return
+      if (error) throw error
+      const nextResults = (data?.results ?? []).filter(
+        (place) =>
+          typeof place.label === 'string' &&
+          Number.isFinite(place.latitude) &&
+          Number.isFinite(place.longitude),
+      )
       setResults(nextResults)
       setStatus(nextResults.length ? 'idle' : 'empty')
     } catch {
+      if (nextController.signal.aborted || searchId !== latestSearch.current)
+        return
+      setResults([])
       setStatus('error')
     }
-  }
+  }, [query])
+
+  useEffect(() => {
+    if (query.trim().length < 3) return
+    const timeout = window.setTimeout(() => void search(), 400)
+    return () => window.clearTimeout(timeout)
+  }, [query, search])
+
+  useEffect(
+    () => () => {
+      controller.current?.abort()
+    },
+    [],
+  )
 
   return (
     <div className="location-search">
@@ -61,6 +90,7 @@ export function LocationSearch({ onSelect, strings }: LocationSearchProps) {
         {strings.label}
         <span className="location-search-row">
           <input
+            aria-busy={status === 'loading'}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {

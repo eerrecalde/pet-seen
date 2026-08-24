@@ -1,17 +1,16 @@
 import { expect, test } from '@playwright/test'
 
 const searchedPlace = {
-  display_name:
-    'SW1A 1AA, City of Westminster, Greater London, England, United Kingdom',
-  lat: '51.501009',
-  lon: '-0.141588',
+  label: 'SW1A 1AA, Westminster, Greater London, United Kingdom',
+  latitude: 51.501009,
+  longitude: -0.141588,
 }
 
 async function mockPlaceSearch(page: import('@playwright/test').Page) {
-  await page.route('https://nominatim.openstreetmap.org/search**', (route) =>
+  await page.route('**/functions/v1/geocode-location', (route) =>
     route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify([searchedPlace]),
+      body: JSON.stringify({ results: [searchedPlace] }),
     }),
   )
 }
@@ -21,7 +20,7 @@ async function choosePostcodeResult(page: import('@playwright/test').Page) {
     .getByRole('searchbox', { name: /Search by postcode or place/ })
     .fill('SW1A 1AA')
   await page.getByRole('button', { name: 'Search', exact: true }).click()
-  await page.getByRole('button', { name: searchedPlace.display_name }).click()
+  await page.getByRole('button', { name: searchedPlace.label }).click()
 }
 
 test.describe('report locations', () => {
@@ -47,7 +46,7 @@ test.describe('report locations', () => {
       ),
     ).toBeVisible()
     await expect(page.getByLabel('Where did you see the pet?')).toHaveValue(
-      searchedPlace.display_name,
+      searchedPlace.label,
     )
   })
 
@@ -72,7 +71,7 @@ test.describe('report locations', () => {
 
     await expect(page.locator('.maplibregl-marker')).toHaveCount(1)
     await expect(page.getByLabel('Where did you find the pet?')).toHaveValue(
-      searchedPlace.display_name,
+      searchedPlace.label,
     )
   })
 })

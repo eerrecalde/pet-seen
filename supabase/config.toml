@@ -405,6 +405,11 @@ verify_jwt = true
 [functions.submit-workflow]
 verify_jwt = false
 
+# PS-427: anonymous postcode/place search is protected by CORS, server-side
+# throttles and an Edge Function-held MapTiler key.
+[functions.geocode-location]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

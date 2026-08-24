@@ -29,7 +29,7 @@ flowchart TB
   Share["Copy, Web Share or WhatsApp\nDone · PS-302"]:::done
   ReportContent["Report public-case content\nDone · PS-109"]:::done
   Sighting["Anonymous sighting form\nDone · PS-201, PS-207"]:::done
-  ReportLocation["Confirm report location\nNot started · PS-422"]:::planned
+  ReportLocation["Confirm report location\nDone · PS-422, PS-427"]:::done
   Picker["Optional case picker\nDone · PS-202"]:::done
   SightingSuccess["Sighting receipt\nDone"]:::done
   Draft["Offline draft / restore / retry\nDone · PS-207"]:::done
@@ -74,9 +74,9 @@ flowchart TB
   Poster -->|"QR or back"| Public
   Share -->|"Recipient opens link"| Public
   ReportContent -->|"Staff review"| Moderation
-  Sighting -.->|"Search postcode/address or confirm pin"| ReportLocation
-  ReportLocation -.->|"Choose a case"| Picker
-  ReportLocation -.->|"Continue report"| Sighting
+  Sighting -->|"Search postcode/address or confirm pin"| ReportLocation
+  ReportLocation -->|"Choose a case"| Picker
+  ReportLocation -->|"Continue report"| Sighting
   Picker -->|"Select case or no match"| Sighting
   Sighting -->|"Offline or failed submit"| Draft
   Draft -->|"Reconnect and retry"| Sighting
@@ -87,7 +87,7 @@ flowchart TB
   Timeline -->|"Confirm or dismiss"| Dashboard
   Dashboard -->|"Mark reunited / close / edit / remove"| Reunite
   Reunite --> Dashboard
-  Found -.->|"Search postcode/address or confirm pin"| ReportLocation
+  Found -->|"Search postcode/address or confirm pin"| ReportLocation
   Found -->|"Submit"| FoundReceipt
   FoundReceipt -->|"Private screening"| Moderation
   Moderation -->|"Approve report"| Match

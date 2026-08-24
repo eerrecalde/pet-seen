@@ -48,9 +48,11 @@ repository.
   for local development.
 - Keep MapLibre attribution enabled. Do not obscure provider or source
   attribution supplied by the style.
-- Call geocoding only after a deliberate search or on confirmation, not on each
-  keystroke. A failed or empty geocoding result must never prevent manual
-  coordinate entry or pin correction.
+- Place search uses the `geocode-location` Edge Function, not a direct
+  provider request. It debounces input, cancels stale searches, normalises and
+  caches public results for 24 hours, and enforces 20 uncached requests per
+  client and 300 globally per five-minute window. A failed or empty result must
+  never prevent manual pin correction.
 - Set a paid-plan spend limit/alert in the provider dashboard before beta;
   review usage weekly during the launch period and rotate a key immediately if
   misuse is detected.
