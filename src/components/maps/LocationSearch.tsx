@@ -71,12 +71,6 @@ export function LocationSearch({ onSelect, strings }: LocationSearchProps) {
     }
   }, [query])
 
-  useEffect(() => {
-    if (query.trim().length < 3) return
-    const timeout = window.setTimeout(() => void search(), 400)
-    return () => window.clearTimeout(timeout)
-  }, [query, search])
-
   useEffect(
     () => () => {
       controller.current?.abort()
