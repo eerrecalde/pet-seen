@@ -10,13 +10,16 @@ export const publicCaseQuery = (slug: string) =>
   queryOptions({
     queryKey: queryKeys.publicCases.detail(slug),
     queryFn: () => fetchPublicCase(slug),
+    // Case details are session-cached. Mutations invalidate this family for
+    // the owner who changed a case; visitors refresh at a bounded interval.
+    staleTime: 5 * 60_000,
   })
 
 export const nearbyDiscoveryQuery = (latitude: number, longitude: number) =>
   queryOptions({
     queryKey: queryKeys.publicCases.nearbyDiscovery(latitude, longitude),
     queryFn: () => fetchNearbyDiscovery(latitude, longitude),
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   })
 
 export const publicCaseOptionsQuery = () =>

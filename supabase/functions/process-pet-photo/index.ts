@@ -8,6 +8,8 @@ import {
 const maxSourceBytes = 5 * 1024 * 1024
 const displayMaxDimension = 1600
 const displayQuality = 82
+const cardMaxDimension = 480
+const cardQuality = 76
 const foundPhotoLookupAttempts = 4
 const foundPhotoLookupDelayMs = 250
 const allowedOrigins = new Set([
@@ -133,6 +135,7 @@ Deno.serve(async (request) => {
   const isFoundPhoto = Boolean(foundPhotoId || foundReportId)
   let sourceObjectPath = ''
   let displayObjectPath = ''
+  let cardObjectPath = ''
   let targetPhotoId = photoId
   let targetReportId: string | null = null
   if (isFoundPhoto) {
@@ -208,6 +211,7 @@ Deno.serve(async (request) => {
     targetReportId = photo.found_pet_report_id
     sourceObjectPath = photo.source_object_path
     displayObjectPath = `display/${photo.id}.jpg`
+    cardObjectPath = `card/${photo.id}.jpg`
   } else {
     const { data: authData } = token
       ? await admin.auth.getUser(token)
@@ -225,6 +229,7 @@ Deno.serve(async (request) => {
       return response(request, 200, { status: 'processed' })
     sourceObjectPath = photo.source_object_path
     displayObjectPath = `${photo.owner_id}/display/${photo.id}.jpg`
+    cardObjectPath = `${photo.owner_id}/card/${photo.id}.jpg`
   }
 
   try {
@@ -261,21 +266,61 @@ Deno.serve(async (request) => {
       return image.write(MagickFormat.Jpeg, (data) => data)
     })
 
-    const { error: uploadError } = await admin.storage
+    const displayUpload = await admin.storage
       .from(bucket)
       .upload(displayObjectPath, displayBytes, {
         contentType: 'image/jpeg',
+        cacheControl: '31536000',
         upsert: true,
       })
-    if (uploadError) throw new Error('display upload failed')
+    if (displayUpload.error) throw new Error('display upload failed')
+
+    if (!isFoundPhoto) {
+      const cardBytes = ImageMagick.read(bytes, (image) => {
+        image.autoOrient()
+        const scale = Math.min(
+          1,
+          cardMaxDimension / image.width,
+          cardMaxDimension / image.height,
+        )
+        if (scale < 1)
+          image.resize(
+            Math.round(image.width * scale),
+            Math.round(image.height * scale),
+          )
+        image.strip()
+        image.quality = cardQuality
+        return image.write(MagickFormat.Jpeg, (data) => data)
+      })
+      const cardUpload = await admin.storage.from(bucket).upload(
+        cardObjectPath,
+        cardBytes,
+        {
+          contentType: 'image/jpeg',
+          cacheControl: '31536000',
+          upsert: true,
+        },
+      )
+      if (cardUpload.error) throw new Error('card upload failed')
+    }
     const { error: updateError } = await admin
       .from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos')
-      .update({
-        status: 'processed',
-        display_object_path: displayObjectPath,
-        processed_at: new Date().toISOString(),
-        processing_error: null,
-      })
+      .update(
+        isFoundPhoto
+          ? {
+              status: 'processed',
+              display_object_path: displayObjectPath,
+              processed_at: new Date().toISOString(),
+              processing_error: null,
+            }
+          : {
+              status: 'processed',
+              display_object_path: displayObjectPath,
+              card_object_path: cardObjectPath,
+              processed_at: new Date().toISOString(),
+              processing_error: null,
+            },
+      )
       .eq('id', targetPhotoId!)
     if (updateError) throw new Error('photo record update failed')
     await auditFoundPhotoProcessing(
@@ -289,12 +334,22 @@ Deno.serve(async (request) => {
     console.error('Pet photo processing failed', error)
     await admin
       .from(isFoundPhoto ? 'found_pet_photos' : 'pet_photos')
-      .update({
-        status: 'failed',
-        display_object_path: null,
-        processing_error:
-          'We could not process this photo. Please choose a different image.',
-      })
+      .update(
+        isFoundPhoto
+          ? {
+              status: 'failed',
+              display_object_path: null,
+              processing_error:
+                'We could not process this photo. Please choose a different image.',
+            }
+          : {
+              status: 'failed',
+              display_object_path: null,
+              card_object_path: null,
+              processing_error:
+                'We could not process this photo. Please choose a different image.',
+            },
+      )
       .eq('id', targetPhotoId!)
     await auditFoundPhotoProcessing(
       admin,

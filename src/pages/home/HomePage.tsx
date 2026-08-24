@@ -182,6 +182,8 @@ export function HomePage() {
                         petName={caseData.pet_name}
                         species={caseData.species}
                         publicSlug={caseData.public_slug}
+                        photoVersion={caseData.photo_version}
+                        variant="card"
                       />
                       <div>
                         <p>{t('nearby.missingLabel')}</p>

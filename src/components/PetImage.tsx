@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
+import {
+  publicPetPhotoUrl,
+  type PublicPetPhotoVariant,
+} from '../lib/public-pet-photo'
 
 export type PetImageProps = {
   className: string
   petName: string
   species: 'dog' | 'cat'
   publicSlug?: string
+  photoVersion?: string | null
+  variant?: PublicPetPhotoVariant
   sourceUrl?: string | null
   onSourceChange?: (source: string) => void
 }
@@ -15,14 +21,15 @@ export function PetImage({
   petName,
   species,
   publicSlug,
+  photoVersion,
+  variant,
   sourceUrl,
   onSourceChange,
 }: PetImageProps) {
   const fallback = `/images/generic-${species}.jpg`
-  const publicUrl =
-    publicSlug && import.meta.env.VITE_SUPABASE_URL
-      ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/case-pet-photo?slug=${encodeURIComponent(publicSlug)}`
-      : null
+  const publicUrl = publicSlug
+    ? publicPetPhotoUrl(publicSlug, photoVersion, variant)
+    : null
   const [src, setSrc] = useState(sourceUrl || publicUrl || fallback)
 
   useEffect(() => {

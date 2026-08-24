@@ -15,20 +15,32 @@ const invalidateOwner = (
   client: ReturnType<typeof useQueryClient>,
   userId: string,
 ) => client.invalidateQueries({ queryKey: queryKeys.ownerDashboard(userId) })
+
+const invalidatePublicCases = (client: ReturnType<typeof useQueryClient>) =>
+  client.invalidateQueries({ queryKey: queryKeys.publicCases.all })
 export function useOwnerMutations(userId: string) {
   const client = useQueryClient()
   return {
     updateCase: useMutation({
       mutationFn: updateOwnerCase,
-      onSuccess: () => invalidateOwner(client, userId),
+      onSuccess: () => {
+        void invalidateOwner(client, userId)
+        void invalidatePublicCases(client)
+      },
     }),
     setStatus: useMutation({
       mutationFn: setOwnerCaseStatus,
-      onSuccess: () => invalidateOwner(client, userId),
+      onSuccess: () => {
+        void invalidateOwner(client, userId)
+        void invalidatePublicCases(client)
+      },
     }),
     deleteCase: useMutation({
       mutationFn: deleteOwnerCase,
-      onSuccess: () => invalidateOwner(client, userId),
+      onSuccess: () => {
+        void invalidateOwner(client, userId)
+        void invalidatePublicCases(client)
+      },
     }),
     reviewSighting: useMutation({
       mutationFn: reviewOwnerSighting,

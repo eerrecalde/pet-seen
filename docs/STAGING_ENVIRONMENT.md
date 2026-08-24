@@ -149,9 +149,12 @@ manually when you want to compare snapshots. The container creates
 files once the Linux baselines are reviewed.
 
 - `case-social-card` and `case-pet-photo` are public and must be deployed with
-  `--no-verify-jwt`. `case-pet-photo` returns only a short-lived URL for a
-  processed image on a published case. The photo-processing and sighting-email
-  functions are invoked through the Supabase client and retain JWT verification.
+  `--no-verify-jwt`. `case-pet-photo` streams only versioned, processed private
+  derivatives for a currently published case; it never redirects to a signed
+  Storage URL. Its browser/CDN cache lifetime is five minutes with up to one
+  minute stale-while-revalidate, bounding stale access after a close or photo
+  change. The photo-processing and sighting-email functions are invoked through
+  the Supabase client and retain JWT verification.
 - The staging `send-sighting-owner-email` function needs its own
   `RESEND_API_KEY` and `SIGHTING_EMAIL_FROM` Supabase Function secrets before
   sighting-email delivery can be tested end-to-end.

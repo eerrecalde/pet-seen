@@ -12,7 +12,7 @@ import type {
 } from './types'
 
 const publicCaseFields =
-  'public_slug,title,last_seen_at,last_seen_description,pet_name,species,breed,colour,pet_description,public_latitude,public_longitude'
+  'public_slug,title,last_seen_at,last_seen_description,pet_name,species,breed,colour,pet_description,public_latitude,public_longitude,photo_version'
 
 /** Only public-safe views are selected by this feature boundary. */
 export async function fetchPublicCase(

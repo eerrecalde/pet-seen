@@ -108,6 +108,7 @@ function PublicCaseContent({
           petName={caseData.pet_name}
           species={caseData.species}
           publicSlug={caseData.public_slug}
+          photoVersion={caseData.photo_version}
         />
         <section className="case-summary">
           <p className="status-badge">

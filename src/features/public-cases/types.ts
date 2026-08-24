@@ -10,6 +10,8 @@ export type PublicCase = {
   pet_description: string | null
   public_latitude: number
   public_longitude: number
+  /** Processed image version only; never a Storage path or source-upload ID. */
+  photo_version: string | null
 }
 
 export type NearbyCase = Pick<
@@ -22,6 +24,7 @@ export type NearbyCase = Pick<
   | 'last_seen_description'
   | 'public_latitude'
   | 'public_longitude'
+  | 'photo_version'
 > & {
   published_at: string
 }

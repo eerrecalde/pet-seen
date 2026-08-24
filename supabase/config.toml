@@ -410,6 +410,12 @@ verify_jwt = false
 [functions.geocode-location]
 verify_jwt = false
 
+# Versioned public image requests enforce publication in the function. CDN and
+# browser cache entries are deliberately bounded to limit stale access after a
+# case closes or a photo changes.
+[functions.case-pet-photo]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
