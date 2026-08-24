@@ -84,8 +84,9 @@ Deno.serve(async (request) => {
     return response(request, 503, {
       error: 'AI candidate scoring is not configured.',
     })
-  const { reportId } = (await request.json().catch(() => ({}))) as {
+  const { reportId, queueId } = (await request.json().catch(() => ({}))) as {
     reportId?: string
+    queueId?: string
   }
   if (!reportId)
     return response(request, 400, { error: 'A found-pet report is required.' })
@@ -101,22 +102,48 @@ Deno.serve(async (request) => {
     return response(request, 403, {
       error: 'Only Pet Seen staff can run AI candidate scoring.',
     })
+  // Staff requests only enqueue work. Provider calls are accepted exclusively
+  // from the queue worker, so a browser cannot turn retries into provider spend.
+  if (!serviceCall) {
+    const { data: actor } = await admin.auth.getUser(token)
+    const { data: job, error } = await admin.rpc(
+      'enqueue_found_pet_ai_scoring',
+      {
+        target_report_id: reportId,
+        actor_id: actor.user?.id ?? null,
+      },
+    )
+    if (error || !job)
+      return response(request, 400, {
+        error: error?.message ?? 'Could not queue AI scoring.',
+      })
+    return response(request, 202, { status: 'queued', jobId: job })
+  }
+  if (!queueId)
+    return response(request, 400, { error: 'A queue job is required.' })
+  const { data: job } = await admin
+    .from('ai_found_pet_scoring_queue')
+    .select('id,report_version,requested_by,status')
+    .eq('id', queueId)
+    .eq('found_pet_report_id', reportId)
+    .eq('status', 'running')
+    .maybeSingle()
+  if (!job)
+    return response(request, 409, { error: 'AI scoring job is not claimable.' })
   const { data: candidates, error: candidatesError } = await (
     serviceCall ? admin : user
   ).rpc('found_pet_case_candidates', { target_report_id: reportId })
   if (candidatesError)
     return response(request, 400, { error: candidatesError.message })
-  const shortlist = (candidates ?? []) as Candidate[]
-  if (!shortlist.length) return response(request, 200, { scores: [] })
-  const { data: actor } = serviceCall
-    ? { data: { user: null } }
-    : await admin.auth.getUser(token)
-  if (!serviceCall && !actor.user)
-    return response(request, 401, { error: 'Sign in is required.' })
+  const shortlist = ((candidates ?? []) as Candidate[])
+    .filter((candidate) => candidate.match_score >= 70)
+    .slice(0, 3)
+  if (!shortlist.length)
+    return response(request, 200, { scores: [], outcome: 'skipped_shortlist' })
   const { data: report } = await admin
     .from('found_pet_reports')
     .select(
-      'species,breed,colour,details,photo:found_pet_photos(display_object_path)',
+      'species,breed,colour,details,ai_scoring_version,photo:found_pet_photos(display_object_path)',
     )
     .eq('id', reportId)
     .eq('moderation_status', 'approved')
@@ -126,13 +153,32 @@ Deno.serve(async (request) => {
     return response(request, 404, {
       error: 'This active approved report is not available for scoring.',
     })
+  if (report.ai_scoring_version !== job.report_version)
+    return response(request, 200, {
+      scores: [],
+      outcome: 'skipped_stale_version',
+    })
+  const { data: previous } = await admin
+    .from('ai_found_pet_match_runs')
+    .select('id')
+    .eq('found_pet_report_id', reportId)
+    .eq('report_version', job.report_version)
+    .eq('status', 'completed')
+    .maybeSingle()
+  if (previous)
+    return response(request, 200, { scores: [], outcome: 'skipped_idempotent' })
+  const startedAt = Date.now()
   const { data: run, error: runError } = await admin
     .from('ai_found_pet_match_runs')
     .insert({
       found_pet_report_id: reportId,
-      requested_by: actor.user?.id ?? null,
+      requested_by: job.requested_by,
       model,
       candidate_count: shortlist.length,
+      report_version: job.report_version,
+      queue_id: queueId,
+      outcome: 'failed',
+      estimated_cost_cents: 3,
       status: 'failed',
       failure_reason: 'Analysis did not complete.',
       completed_at: new Date().toISOString(),
@@ -150,7 +196,7 @@ Deno.serve(async (request) => {
       const { data, error } = await admin.storage
         .from('found-pet-photos')
         .download(photo.display_object_path)
-      if (!error && data)
+      if (!error && data && data.size <= 1_500_000)
         imageDataUrl = `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}`
     }
     const { data: candidateCases } = await admin
@@ -182,7 +228,7 @@ Deno.serve(async (request) => {
     )
     const candidateImageDataUrls = new Map<string, string>()
     await Promise.all(
-      shortlist.map(async (candidate) => {
+      shortlist.slice(0, 3).map(async (candidate) => {
         const path = photoPathByPetId.get(
           petIdByCaseId.get(candidate.case_id) ?? '',
         )
@@ -190,7 +236,7 @@ Deno.serve(async (request) => {
         const { data, error } = await admin.storage
           .from('pet-photos')
           .download(path)
-        if (!error && data)
+        if (!error && data && data.size <= 1_500_000)
           candidateImageDataUrls.set(
             candidate.case_id,
             `data:image/jpeg;base64,${base64(new Uint8Array(await data.arrayBuffer()))}`,
@@ -290,7 +336,9 @@ Deno.serve(async (request) => {
         `OpenAI request failed (${aiResponse.status}): ${detail || 'no detail returned'}`,
       )
     }
-    const payload = (await aiResponse.json()) as ResponsesPayload
+    const payload = (await aiResponse.json()) as ResponsesPayload & {
+      usage?: { input_tokens?: number; output_tokens?: number }
+    }
     const parsed = JSON.parse(outputText(payload) || '{}') as {
       scores?: AiResult[]
     }
@@ -343,8 +391,12 @@ Deno.serve(async (request) => {
       .from('ai_found_pet_match_runs')
       .update({
         status: 'completed',
+        outcome: 'completed',
         failure_reason: null,
         completed_at: new Date().toISOString(),
+        latency_ms: Date.now() - startedAt,
+        input_tokens: payload.usage?.input_tokens ?? null,
+        output_tokens: payload.usage?.output_tokens ?? null,
       })
       .eq('id', run.id)
     return response(request, 200, { scores: rows })
@@ -355,7 +407,9 @@ Deno.serve(async (request) => {
       .from('ai_found_pet_match_runs')
       .update({
         failure_reason: failureReason,
+        outcome: 'failed',
         completed_at: new Date().toISOString(),
+        latency_ms: Date.now() - startedAt,
       })
       .eq('id', run.id)
     return response(request, 502, {

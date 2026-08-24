@@ -41,16 +41,28 @@ async function scoreApprovedReport(
   serviceKey: string,
   reportId: string,
 ) {
-  const result = await fetch(`${url}/functions/v1/score-found-pet-candidates`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${serviceKey}`,
-      apikey: serviceKey,
-      'content-type': 'application/json',
-      'x-petseen-internal': serviceKey,
-    },
-    body: JSON.stringify({ reportId }),
+  const admin = createClient(url, serviceKey)
+  const { error } = await admin.rpc('enqueue_found_pet_ai_scoring', {
+    target_report_id: reportId,
+    actor_id: null,
   })
+  if (error) {
+    console.error('Could not queue automatic found-pet scoring', { reportId })
+    return
+  }
+  const result = await fetch(
+    `${url}/functions/v1/process-found-pet-ai-scoring-queue`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+        'content-type': 'application/json',
+        'x-petseen-internal': serviceKey,
+      },
+      body: '{}',
+    },
+  )
   if (!result.ok)
     console.error('Automatic found-pet scoring failed', {
       reportId,
