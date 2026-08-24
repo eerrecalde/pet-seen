@@ -1,18 +1,16 @@
 # PS-110 — map-provider validation
 
-**Decision:** use **MapTiler Cloud** as the initial hosted provider for both
-base-map tiles and forward/reverse geocoding. MapLibre GL JS remains the map
-renderer. Supabase/PostGIS remains the source of truth for all coordinates.
+**Decision:** use **MapTiler Cloud** for browser base-map tiles and
+**Geoapify** for server-owned forward geocoding. MapLibre GL JS remains the
+map renderer. Supabase/PostGIS remains the source of truth for all coordinates.
 
 ## Why this provider
 
-MapTiler supplies a MapLibre-compatible hosted style URL and documented forward
-and reverse-geocoding endpoints, allowing the beta to use one operational
-provider without tying the application to a proprietary map renderer. Its
-usage dashboard groups map and search activity into sessions when its SDK is
-used; this application uses MapLibre directly, so the launch budget must be
-based on the provider's displayed request and session limits rather than an
-assumption about a free allowance.
+MapTiler supplies the MapLibre-compatible hosted style URL without tying the
+application to a proprietary map renderer. Geoapify provides the separate
+server-side geocoding key required to keep browser map-key restrictions from
+being weakened by Edge Function searches. Its geocoding plan is reviewed
+separately from browser-map usage.
 
 The provider must be reviewed again before public beta: plan limits and prices
 can change. The MapTiler free plan is not licensed for commercial production,
@@ -49,13 +47,12 @@ repository.
 - Keep MapLibre attribution enabled. Do not obscure provider or source
   attribution supplied by the style.
 - Place search uses the `geocode-location` Edge Function, not a direct
-  provider request. It debounces input, cancels stale searches, normalises and
+  provider request. It runs only when Search or Enter is used, normalises and
   caches public results for 24 hours, and enforces 20 uncached requests per
   client and 300 globally per five-minute window. A failed or empty result must
   never prevent manual pin correction.
-- Set a paid-plan spend limit/alert in the provider dashboard before beta;
-  review usage weekly during the launch period and rotate a key immediately if
-  misuse is detected.
+- Set a Geoapify quota/spend alert before beta; review usage weekly during the
+  launch period and rotate the server key immediately if misuse is detected.
 - Browser map tiles must request MapTiler directly. Do not proxy or server-cache
   provider map content. Persist only the product's own coordinates and
   user-supplied place label in Supabase.
@@ -64,7 +61,9 @@ repository.
 
 ## Evidence reviewed — 12 August 2026
 
-- MapTiler documents the MapLibre GL JS style URL format and its Geocoding API.
+- MapTiler documents the MapLibre GL JS style URL format.
+- Geoapify documents country-filtered forward geocoding with `formatted`,
+  `lat`, and `lon` response fields.
 - MapTiler requires a protected production browser key with allowed HTTP origins;
   its default testing key must not be used publicly.
 - MapTiler Cloud terms permit displaying map content to end users, require
@@ -73,9 +72,9 @@ repository.
   to non-commercial use and commercial R&D.
 
 Primary references: [MapLibre integration](https://docs.maptiler.com/maplibre/),
-[API key protection](https://docs.maptiler.com/cloud/api/authentication-key/),
-[Cloud pricing](https://www.maptiler.com/cloud/pricing/), and
-[Cloud terms](https://www.maptiler.com/terms/cloud/).
+[MapTiler API-key protection](https://docs.maptiler.com/cloud/api/authentication-key/),
+[Geoapify Geocoding API](https://apidocs.geoapify.com/docs/geocoding/), and
+[Geoapify pricing](https://www.geoapify.com/pricing/).
 
 ## MapLibre/Vite integration
 

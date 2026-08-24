@@ -7,10 +7,10 @@ const allowedOrigins = new Set([
 ])
 const cacheTtlHours = 24
 
-type ProviderFeature = {
-  place_name?: string
-  text?: string
-  center?: unknown
+type ProviderResult = {
+  formatted?: string
+  lat?: unknown
+  lon?: unknown
 }
 type PlaceResult = { label: string; latitude: number; longitude: number }
 
@@ -54,18 +54,13 @@ function clientKey(request: Request) {
         .join(''),
     )
 }
-function resultsFrom(features: ProviderFeature[]): PlaceResult[] {
-  return features
-    .map((feature) => {
-      const [longitude, latitude] = Array.isArray(feature.center)
-        ? feature.center
-        : []
-      return {
-        label: feature.place_name || feature.text || '',
-        latitude: Number(latitude),
-        longitude: Number(longitude),
-      }
-    })
+function resultsFrom(results: ProviderResult[]): PlaceResult[] {
+  return results
+    .map((result) => ({
+      label: result.formatted || '',
+      latitude: Number(result.lat),
+      longitude: Number(result.lon),
+    }))
     .filter(
       (place) =>
         place.label &&
@@ -92,7 +87,7 @@ Deno.serve(async (request) => {
 
   const url = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const providerKey = Deno.env.get('MAPTILER_GEOCODING_API_KEY')
+  const providerKey = Deno.env.get('GEOAPIFY_GEOCODING_API_KEY')
   if (!url || !serviceRoleKey || !providerKey)
     return response(request, 503, {
       error: 'Place search is temporarily unavailable.',
@@ -122,15 +117,21 @@ Deno.serve(async (request) => {
     })
 
   try {
-    const providerResponse = await fetch(
-      `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${encodeURIComponent(providerKey)}&limit=5&country=gb`,
-    )
+    const providerUrl = new URL('https://api.geoapify.com/v1/geocode/search')
+    providerUrl.search = new URLSearchParams({
+      text: query,
+      limit: '5',
+      format: 'json',
+      filter: 'countrycode:gb',
+      apiKey: providerKey,
+    }).toString()
+    const providerResponse = await fetch(providerUrl)
     if (!providerResponse.ok)
-      throw new Error(`MapTiler returned ${providerResponse.status}`)
+      throw new Error(`Geoapify returned ${providerResponse.status}`)
     const payload = (await providerResponse.json()) as {
-      features?: ProviderFeature[]
+      results?: ProviderResult[]
     }
-    const results = resultsFrom(payload.features ?? [])
+    const results = resultsFrom(payload.results ?? [])
     const expiresAt = new Date(
       Date.now() + cacheTtlHours * 60 * 60 * 1000,
     ).toISOString()
@@ -146,7 +147,7 @@ Deno.serve(async (request) => {
       console.error('Could not cache geocoding result', cacheError)
     return response(request, 200, { results, cached: false })
   } catch (error) {
-    console.error('MapTiler geocoding failed', error)
+    console.error('Geoapify geocoding failed', error)
     return response(request, 502, {
       error:
         'We could not search for that place. You can still choose a point on the map.',
