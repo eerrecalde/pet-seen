@@ -21,7 +21,7 @@ async function invokeDelivery(
   url: string,
   serviceKey: string,
   item: OutboxItem,
-) {
+): Promise<{ deferMinutes: number | null }> {
   const deliveryTarget =
     item.kind === 'owner_sighting_email'
       ? {
@@ -50,11 +50,16 @@ async function invokeDelivery(
       body: JSON.stringify(deliveryTarget.body),
     },
   )
+  if (delivery.status === 202) {
+    const retryAfter = Number(delivery.headers.get('retry-after'))
+    return { deferMinutes: Number.isFinite(retryAfter) ? retryAfter : 30 }
+  }
   if (!delivery.ok)
     throw new Error(
       (await delivery.text()).slice(0, 500) ||
         `${deliveryTarget.functionName} returned ${delivery.status}`,
     )
+  return { deferMinutes: null }
 }
 
 Deno.serve(async (request) => {
@@ -75,7 +80,14 @@ Deno.serve(async (request) => {
   let delivered = 0
   for (const item of (data ?? []) as OutboxItem[]) {
     try {
-      await invokeDelivery(url, serviceKey, item)
+      const result = await invokeDelivery(url, serviceKey, item)
+      if (result.deferMinutes !== null) {
+        await admin.rpc('defer_workflow_outbox', {
+          target_id: item.id,
+          delay_minutes: result.deferMinutes,
+        })
+        continue
+      }
       await admin.rpc('complete_workflow_outbox', {
         target_id: item.id,
         succeeded: true,
