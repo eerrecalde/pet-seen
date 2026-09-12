@@ -4,6 +4,8 @@ Pet Seen is a mobile-first web application for helping people report missing dog
 
 ![Missing-pet case flow](./docs/screenshots/01-missing-case.png)
 
+![Pet Seen home](./docs/screenshots/01-home.webp)
+
 ## Why I built it
 
 Losing a pet is time-sensitive, emotionally difficult, and location-sensitive. I wanted to design a service that makes reporting and sharing fast without exposing the exact location of a missing animal publicly. The central product constraint is simple: public views are useful, but exact locations remain available only to the case owner and authorised staff.
@@ -46,7 +48,7 @@ The controlled-beta product is in active development. The delivery plan document
 
 ## Screenshots
 
-The checked-in image is a visual-regression reference for the missing-case flow. It uses fixture data and contains no real user information.
+The missing-case image is a visual-regression reference that uses fixture data. The home screen is captured from the authenticated staging build; the signed-in account identifier is redacted.
 
 ## Running the project
 
