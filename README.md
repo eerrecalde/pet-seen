@@ -54,6 +54,14 @@ The missing-case image is a visual-regression reference that uses fixture data. 
 
 ![Pet Seen home](./docs/screenshots/01-home.webp)
 
+### Nearby pets: list view
+
+![Missing pets near you in list view](./docs/screenshots/02-nearby-pets-list.webp)
+
+### Nearby pets: map view
+
+![Missing pets near you in map view](./docs/screenshots/03-nearby-pets-map.webp)
+
 ## Running the project
 
 See [HOW_TO_USE.md](./HOW_TO_USE.md) for the local Supabase setup, development authentication bypass, test commands, and deployment-related checks.
