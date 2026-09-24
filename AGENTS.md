@@ -21,6 +21,8 @@ For a normal magic-link sign-in, local Auth delivers all messages to Mailpit at 
 
 The bypass only works with a Vite development build connected to the local Supabase stack. Never use it against a hosted environment, and do not deploy the `dev-auth-bypass` Edge Function.
 
+Do not treat an initial local-auth failure as a reason to skip authenticated verification. If `npm run supabase:status` cannot reach Docker, start Docker Desktop and retry. If `dev-auth-bypass` returns `503`, start the local Edge Functions runtime with `npx supabase functions serve --no-verify-jwt`, then retry the bypass. The current Supabase CLI serves all local functions with that command; do not pass a function name as a positional argument. Confirm the app is running at `http://127.0.0.1:5173` before opening the protected route.
+
 ## Task tracking
 
 Treat [`docs/PROJECT_BREAKDOWN.md`](docs/PROJECT_BREAKDOWN.md) as the source of truth for project tasks. For any task-related request, review and update its matching entry there. Before pushing a commit that completes a task, mark that task's status as `Done` in the breakdown and include the update in the same commit.

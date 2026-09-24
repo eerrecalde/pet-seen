@@ -34,6 +34,22 @@ localStorage.removeItem('bypass')
 
 The bypass works only against local Supabase and must never be deployed.
 
+### Recovering the local auth setup
+
+An authenticated check is still required when the first attempt fails. Use this recovery sequence rather than falling back to an unauthenticated screen:
+
+1. Run `npm run supabase:status`. If it cannot connect to Docker, start Docker Desktop, wait for it to finish starting, then run the status command again.
+2. If the status output does not include `FUNCTIONS_URL`, or the bypass endpoint returns `503`, start the local Edge Functions runtime:
+
+   ```bash
+   npx supabase functions serve --no-verify-jwt
+   ```
+
+   This version of the Supabase CLI serves all functions with this command. Do not append `dev-auth-bypass` as a positional argument.
+3. Start Vite with `npm run dev`, verify `http://127.0.0.1:5173` loads, set the local-storage bypass value, and reload the protected route. For example, use `moderator@petseen.org:moderator` for `/moderation`.
+
+Never use this bypass with a hosted URL. Remove `bypass` from local storage after the check.
+
 ## Serve local Edge Functions
 
 When testing uploads, automated processing, or social cards, run the required functions alongside the local stack:
