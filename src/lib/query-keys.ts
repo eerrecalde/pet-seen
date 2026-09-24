@@ -15,6 +15,7 @@ export const queryKeys = {
   watchAreas: (userId: string) => ['watch-areas', userId] as const,
   moderation: {
     access: (userId: string) => ['moderation', 'access', userId] as const,
+    queue: () => ['moderation', 'queue'] as const,
     contentReports: () => ['moderation', 'content-reports'] as const,
     foundPetReports: () => ['moderation', 'found-pet-reports'] as const,
     unlinkedSightings: () => ['moderation', 'unlinked-sightings'] as const,

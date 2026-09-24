@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/useAuth'
 import { Icon } from '../../components/Icon'
@@ -7,8 +7,14 @@ import { PhotoPreviewHint } from '../../components/PhotoPreviewHint'
 import { Link, SiteFooter, SiteHeader } from '../../components/SiteChrome'
 import { formatDateTime } from '../../i18n/format'
 import type { AppLocale } from '../../i18n/resources'
-import { moderationApi } from '../../features/moderation/api'
 import { useSignedPhotoUrls } from '../../hooks/useSignedPhotoUrls'
+import {
+  useModerationAccessQuery,
+  useModerationCandidateLoader,
+  useModerationPhotoLoader,
+  useModerationQueueQuery,
+} from './queries'
+import { useModerationMutations } from './mutations'
 
 type ContentReportStatus = 'open' | 'reviewed' | 'dismissed' | 'actioned'
 type ModerationReport = {
@@ -85,122 +91,81 @@ type MatchCandidate = {
   match_reasons: string[]
 }
 
+function normaliseContentReports(content: unknown[] | null | undefined) {
+  return (content ?? []).map((report) => {
+    const item = report as { case?: unknown }
+    const caseData = Array.isArray(item.case)
+      ? (item.case[0] ?? null)
+      : item.case
+    const caseWithPet = caseData as { pet?: unknown } | null
+    return {
+      ...(report as object),
+      case: caseWithPet
+        ? {
+            ...caseWithPet,
+            pet: Array.isArray(caseWithPet.pet)
+              ? (caseWithPet.pet[0] ?? null)
+              : caseWithPet.pet,
+          }
+        : null,
+    }
+  }) as ModerationReport[]
+}
+
+function normaliseFoundPetReports(found: unknown[] | null | undefined) {
+  return (found ?? []).map((report) => {
+    const item = report as {
+      ai_queue?: AiScoringQueueItem[]
+      ai_scores?: AiCandidateScore[]
+      link?: unknown
+      photo?: unknown
+    }
+    const link = Array.isArray(item.link) ? (item.link[0] ?? null) : item.link
+    const linkWithCase = link as { case?: unknown } | null
+    return {
+      ...(report as object),
+      photo: Array.isArray(item.photo) ? (item.photo[0] ?? null) : item.photo,
+      ai_scores: [...(item.ai_scores ?? [])].sort((a, b) =>
+        b.created_at.localeCompare(a.created_at),
+      ),
+      ai_queue: [...(item.ai_queue ?? [])].sort((a, b) =>
+        b.created_at.localeCompare(a.created_at),
+      ),
+      link: linkWithCase
+        ? {
+            ...linkWithCase,
+            case: Array.isArray(linkWithCase.case)
+              ? (linkWithCase.case[0] ?? null)
+              : linkWithCase.case,
+          }
+        : null,
+    }
+  }) as FoundPetReport[]
+}
+
+function normaliseUnlinkedSightings(sightings: unknown[] | null | undefined) {
+  return (sightings ?? []).map((sighting) => {
+    const item = sighting as { ai_scores?: AiCandidateScore[] }
+    return {
+      ...(sighting as object),
+      ai_scores: [...(item.ai_scores ?? [])].sort((a, b) =>
+        b.created_at.localeCompare(a.created_at),
+      ),
+    }
+  }) as UnlinkedSighting[]
+}
+
 export function ModerationPage() {
   const { t, i18n } = useTranslation()
   const { isLoading, session } = useAuth()
-  const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>(
-    'checking',
-  )
-  const [reports, setReports] = useState<ModerationReport[]>([])
-  const [foundReports, setFoundReports] = useState<FoundPetReport[]>([])
-  const [unlinkedSightings, setUnlinkedSightings] = useState<
-    UnlinkedSighting[]
-  >([])
-  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [housekeeping, setHousekeeping] = useState<
-    'idle' | 'running' | 'error'
-  >('idle')
-  const loadReports = useCallback(async () => {
-    setState('loading')
-    try {
-      const data = await moderationApi.load()
-      setReports(
-        (data.content ?? []).map((report) => {
-          const caseData = Array.isArray(report.case)
-            ? (report.case[0] ?? null)
-            : report.case
-          return {
-            ...report,
-            case: caseData
-              ? {
-                  ...caseData,
-                  pet: Array.isArray(caseData.pet)
-                    ? (caseData.pet[0] ?? null)
-                    : caseData.pet,
-                }
-              : null,
-          }
-        }) as unknown as ModerationReport[],
-      )
-      setFoundReports(
-        (data.found ?? []).map((report) => {
-          const link = Array.isArray(report.link)
-            ? (report.link[0] ?? null)
-            : report.link
-          const photo = Array.isArray(report.photo)
-            ? (report.photo[0] ?? null)
-            : report.photo
-          return {
-            ...report,
-            photo,
-            ai_scores: (report.ai_scores ?? []).sort((a, b) =>
-              b.created_at.localeCompare(a.created_at),
-            ),
-            ai_queue: (report.ai_queue ?? []).sort((a, b) =>
-              b.created_at.localeCompare(a.created_at),
-            ),
-            link: link
-              ? {
-                  ...link,
-                  case: Array.isArray(link.case)
-                    ? (link.case[0] ?? null)
-                    : link.case,
-                }
-              : null,
-          }
-        }) as unknown as FoundPetReport[],
-      )
-      setUnlinkedSightings(
-        (data.sightings ?? []).map((sighting) => ({
-          ...sighting,
-          ai_scores: (sighting.ai_scores ?? []).sort((a, b) =>
-            b.created_at.localeCompare(a.created_at),
-          ),
-        })) as UnlinkedSighting[],
-      )
-      setState('ready')
-    } catch {
-      setState('error')
-    }
-  }, [])
-  useEffect(() => {
-    if (!session) {
-      setAccess('denied')
-      return
-    }
-    void moderationApi
-      .isAuthorized()
-      .then((data) => {
-        const allowed = data === true
-        setAccess(allowed ? 'allowed' : 'denied')
-        if (allowed) void loadReports()
-      })
-      .catch(() => setAccess('denied'))
-  }, [loadReports, session])
-  async function updateStatus(
-    report: ModerationReport,
-    status: ContentReportStatus,
-  ) {
-    setSavingId(report.id)
-    try {
-      await moderationApi.updateContentStatus(report.id, status)
-      await loadReports()
-    } finally {
-      setSavingId(null)
-    }
-  }
-  async function runHousekeeping() {
-    setHousekeeping('running')
-    try {
-      await moderationApi.housekeeping()
-      setHousekeeping('idle')
-      await loadReports()
-    } catch {
-      setHousekeeping('error')
-    }
-  }
-  if (isLoading || access === 'checking') {
+  const access = useModerationAccessQuery(session?.user.id)
+  const queue = useModerationQueueQuery(access.data === true)
+  const mutations = useModerationMutations()
+  const data = queue.data
+  const reports = normaliseContentReports(data?.content)
+  const foundReports = normaliseFoundPetReports(data?.found)
+  const unlinkedSightings = normaliseUnlinkedSightings(data?.sightings)
+  if (isLoading || (session && access.isPending)) {
     return (
       <main className="moderation-shell">
         <p>{t('moderation.checking')}</p>
@@ -208,7 +173,7 @@ export function ModerationPage() {
     )
   }
 
-  if (access === 'denied') {
+  if (!session || access.data !== true) {
     return (
       <main className="moderation-shell">
         <section className="auth-card">
@@ -234,32 +199,30 @@ export function ModerationPage() {
           <button
             className="secondary-button housekeeping-button"
             type="button"
-            disabled={housekeeping === 'running'}
-            onClick={() => void runHousekeeping()}
+            disabled={mutations.housekeeping.isPending}
+            onClick={() => mutations.housekeeping.mutate()}
           >
-            {housekeeping === 'running'
+            {mutations.housekeeping.isPending
               ? t('moderation.runningHousekeeping')
               : t('moderation.runHousekeeping')}
           </button>
-          {housekeeping === 'error' && (
+          {mutations.housekeeping.isError && (
             <p className="form-error">{t('moderation.housekeepingError')}</p>
           )}
         </section>
-        {state === 'loading' ? (
+        {queue.isPending ? (
           <p>{t('moderation.loading')}</p>
-        ) : state === 'error' ? (
+        ) : queue.isError ? (
           <p className="form-error">{t('moderation.error')}</p>
         ) : (
           <>
             <FoundPetMatches
               reports={foundReports}
               locale={i18n.resolvedLanguage as AppLocale}
-              onLinked={loadReports}
             />
             <UnlinkedSightingMatches
               sightings={unlinkedSightings}
               locale={i18n.resolvedLanguage as AppLocale}
-              onLinked={loadReports}
             />
             <section className="moderation-content-reports">
               <h2>{t('moderation.contentReports')}</h2>
@@ -308,13 +271,17 @@ export function ModerationPage() {
                         {t('moderation.statusLabel')}
                         <select
                           aria-label={t('moderation.statusLabel')}
-                          disabled={savingId === report.id}
+                          disabled={
+                            mutations.updateContentStatus.isPending &&
+                            mutations.updateContentStatus.variables?.id ===
+                              report.id
+                          }
                           value={report.status}
                           onChange={(event) =>
-                            void updateStatus(
-                              report,
-                              event.target.value as ContentReportStatus,
-                            )
+                            mutations.updateContentStatus.mutate({
+                              id: report.id,
+                              status: event.target.value as ContentReportStatus,
+                            })
                           }
                         >
                           <option value="open">
@@ -347,12 +314,12 @@ export function ModerationPage() {
 function UnlinkedSightingMatches({
   sightings,
   locale,
-  onLinked,
 }: {
   sightings: UnlinkedSighting[]
   locale: AppLocale
-  onLinked: () => Promise<void>
 }) {
+  const candidateLoader = useModerationCandidateLoader()
+  const mutations = useModerationMutations()
   const [candidates, setCandidates] = useState<
     Record<string, MatchCandidate[]>
   >({})
@@ -364,7 +331,7 @@ function UnlinkedSightingMatches({
     if (candidates[sightingId]) return
     setLoadingId(sightingId)
     try {
-      const result = await moderationApi.sightingCandidates(sightingId)
+      const result = await candidateLoader.loadSighting(sightingId)
       setCandidates((current) => ({
         ...current,
         [sightingId]: (result ?? []) as MatchCandidate[],
@@ -383,8 +350,7 @@ function UnlinkedSightingMatches({
     setAnalysingId(sightingId)
     setError('')
     try {
-      await moderationApi.scoreSighting(sightingId)
-      await onLinked()
+      await mutations.scoreSighting.mutateAsync(sightingId)
     } catch (error) {
       setError(
         error instanceof Error
@@ -398,8 +364,7 @@ function UnlinkedSightingMatches({
   async function link(sightingId: string, caseId: string) {
     setLinkingId(`${sightingId}-${caseId}`)
     try {
-      await moderationApi.linkSighting(sightingId, caseId)
-      await onLinked()
+      await mutations.linkSighting.mutateAsync({ sightingId, caseId })
     } catch (error) {
       setError(
         error instanceof Error
@@ -569,13 +534,13 @@ function SightingCandidateList({
 function FoundPetMatches({
   reports,
   locale,
-  onLinked,
 }: {
   reports: FoundPetReport[]
   locale: AppLocale
-  onLinked: () => Promise<void>
 }) {
   const { t } = useTranslation()
+  const candidateLoader = useModerationCandidateLoader()
+  const mutations = useModerationMutations()
   const [candidates, setCandidates] = useState<
     Record<string, MatchCandidate[]>
   >({})
@@ -592,14 +557,14 @@ function FoundPetMatches({
         report.photo?.source_object_path ??
         null,
     })),
-    moderationApi.signedPhoto,
+    useModerationPhotoLoader(),
   )
   const [error, setError] = useState('')
   async function showCandidates(reportId: string) {
     if (candidates[reportId]) return
     setLoadingId(reportId)
     try {
-      const result = await moderationApi.foundCandidates(reportId)
+      const result = await candidateLoader.loadFound(reportId)
       setCandidates((current) => ({
         ...current,
         [reportId]: (result ?? []) as MatchCandidate[],
@@ -617,8 +582,7 @@ function FoundPetMatches({
   async function link(reportId: string, caseId: string) {
     setLinkingId(`${reportId}-${caseId}`)
     try {
-      await moderationApi.linkFound(reportId, caseId)
-      await onLinked()
+      await mutations.linkFound.mutateAsync({ reportId, caseId })
     } catch (error) {
       setError(
         error instanceof Error
@@ -633,8 +597,7 @@ function FoundPetMatches({
     setAnalysingId(reportId)
     setError('')
     try {
-      await moderationApi.scoreFound(reportId)
-      await onLinked()
+      await mutations.scoreFound.mutateAsync(reportId)
     } catch (error) {
       setError(
         error instanceof Error
@@ -649,8 +612,7 @@ function FoundPetMatches({
     setReviewingId(reportId)
     setError('')
     try {
-      await moderationApi.reviewFound(reportId, decision)
-      await onLinked()
+      await mutations.reviewFound.mutateAsync({ reportId, decision })
     } catch (error) {
       setError(
         error instanceof Error
@@ -852,7 +814,7 @@ function FoundPetMatches({
               )}
             </div>
           ))}
-        <LifecycleActions report={report} onComplete={onLinked} />
+        <LifecycleActions report={report} />
       </article>
     )
   }
@@ -889,14 +851,9 @@ function FoundPetMatches({
   )
 }
 
-function LifecycleActions({
-  report,
-  onComplete,
-}: {
-  report: FoundPetReport
-  onComplete: () => Promise<void>
-}) {
+function LifecycleActions({ report }: { report: FoundPetReport }) {
   const { t } = useTranslation()
+  const mutations = useModerationMutations()
   const [reason, setReason] = useState('resolved')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -904,8 +861,11 @@ function LifecycleActions({
     setSaving(true)
     setError('')
     try {
-      await moderationApi.manageFound(report.id, action, reason)
-      await onComplete()
+      await mutations.manageFound.mutateAsync({
+        reportId: report.id,
+        action,
+        reason,
+      })
     } catch (error) {
       setError(
         error instanceof Error
