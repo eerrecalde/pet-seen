@@ -312,7 +312,12 @@ function PhotoAdjustmentDialog({
         <button className="secondary-button" type="button" onClick={onReplace}>
           {t('common.photoAdjustment.replace')}
         </button>
-        <button className="primary-cta" type="button" onClick={confirm}>
+        <button
+          className="primary-cta"
+          type="button"
+          disabled={!imageSize.width || !imageSize.height}
+          onClick={confirm}
+        >
           {t('common.photoAdjustment.usePhoto')}
         </button>
       </div>

@@ -1,5 +1,6 @@
 import {
   getSupabaseClient,
+  signedStorageUrl,
   unwrapSupabaseResult,
 } from '../../lib/supabase-error'
 import { enablePushNotifications } from '../../lib/push-notifications'
@@ -154,7 +155,7 @@ export async function fetchSignedPetPhoto(path: string) {
     client.storage.from('pet-photos').createSignedUrl(path, 60 * 60),
     'We could not load this photo.',
   )
-  return data?.signedUrl ?? ''
+  return signedStorageUrl(data) ?? ''
 }
 export async function fetchSignedFoundPetPhoto(path: string) {
   const client = getSupabaseClient()
@@ -162,7 +163,7 @@ export async function fetchSignedFoundPetPhoto(path: string) {
     client.storage.from('found-pet-photos').createSignedUrl(path, 10 * 60),
     'We could not load this photo.',
   )
-  return data?.signedUrl ?? ''
+  return signedStorageUrl(data) ?? ''
 }
 export async function enableOwnerPushNotifications(vapidKey: string) {
   await enablePushNotifications(getSupabaseClient(), vapidKey)

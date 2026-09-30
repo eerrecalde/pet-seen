@@ -52,3 +52,10 @@ export async function unwrapSupabaseResult<T>(
   if (error) throw normalizeSupabaseError(error, fallback)
   return data
 }
+
+/** Supports the local Storage API's legacy `signedURL` response field. */
+export function signedStorageUrl(
+  data: { signedUrl?: string | null; signedURL?: string | null } | null,
+) {
+  return data?.signedUrl ?? data?.signedURL ?? null
+}

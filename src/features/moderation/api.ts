@@ -1,5 +1,6 @@
 import {
   getSupabaseClient,
+  signedStorageUrl,
   unwrapSupabaseResult,
 } from '../../lib/supabase-error'
 
@@ -123,6 +124,6 @@ export const moderationApi = {
         .createSignedUrl(path, 60),
       'We could not load this photo.',
     )
-    return data?.signedUrl ?? null
+    return signedStorageUrl(data)
   },
 }
