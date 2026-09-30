@@ -65,11 +65,16 @@ export const moderationApi = {
       }),
       'We could not find candidates.',
     ),
-  foundCandidates: async (id: string) =>
+  foundCandidates: async (id: string, radiusM?: number) =>
     unwrapSupabaseResult(
-      getSupabaseClient().rpc('found_pet_case_candidates', {
-        target_report_id: id,
-      }),
+      radiusM
+        ? getSupabaseClient().rpc('staff_found_pet_case_candidates', {
+            target_report_id: id,
+            search_radius_m: radiusM,
+          })
+        : getSupabaseClient().rpc('found_pet_case_candidates', {
+            target_report_id: id,
+          }),
       'We could not find candidates.',
     ),
   linkSighting: async (sightingId: string, caseId: string) =>

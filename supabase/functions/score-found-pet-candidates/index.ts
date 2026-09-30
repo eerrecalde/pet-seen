@@ -164,9 +164,9 @@ Deno.serve(async (request) => {
   ).rpc('found_pet_case_candidates', { target_report_id: reportId })
   if (candidatesError)
     return response(request, 400, { error: candidatesError.message })
-  const shortlist = ((candidates ?? []) as Candidate[])
-    .filter((candidate) => candidate.match_score >= 70)
-    .slice(0, 3)
+  // The database policy has already bounded this eligible set. Deterministic
+  // scores rank candidates; they must not silently exclude one from AI review.
+  const shortlist = (candidates ?? []) as Candidate[]
   if (!shortlist.length)
     return response(request, 200, { scores: [], outcome: 'skipped_shortlist' })
   const { data: report } = await admin

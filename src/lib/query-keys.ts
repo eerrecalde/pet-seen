@@ -19,8 +19,13 @@ export const queryKeys = {
     contentReports: () => ['moderation', 'content-reports'] as const,
     foundPetReports: () => ['moderation', 'found-pet-reports'] as const,
     unlinkedSightings: () => ['moderation', 'unlinked-sightings'] as const,
-    foundPetCandidates: (reportId: string) =>
-      ['moderation', 'found-pet-candidates', reportId] as const,
+    foundPetCandidates: (reportId: string, radiusM?: number) =>
+      [
+        'moderation',
+        'found-pet-candidates',
+        reportId,
+        radiusM ?? 'automatic',
+      ] as const,
     sightingCandidates: (sightingId: string) =>
       ['moderation', 'sighting-candidates', sightingId] as const,
   },

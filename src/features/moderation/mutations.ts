@@ -8,7 +8,7 @@ export function useModerationMutations() {
     client.invalidateQueries({ queryKey: queryKeys.moderation.queue() })
   const invalidateFoundCandidates = (reportId: string) =>
     client.invalidateQueries({
-      queryKey: queryKeys.moderation.foundPetCandidates(reportId),
+      queryKey: ['moderation', 'found-pet-candidates', reportId],
     })
   const invalidateSightingCandidates = (sightingId: string) =>
     client.invalidateQueries({

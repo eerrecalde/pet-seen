@@ -15,10 +15,10 @@ export const moderationQueueQuery = () =>
     queryFn: moderationApi.load,
   })
 
-export const foundPetCandidatesQuery = (reportId: string) =>
+export const foundPetCandidatesQuery = (reportId: string, radiusM?: number) =>
   queryOptions({
-    queryKey: queryKeys.moderation.foundPetCandidates(reportId),
-    queryFn: () => moderationApi.foundCandidates(reportId),
+    queryKey: queryKeys.moderation.foundPetCandidates(reportId, radiusM),
+    queryFn: () => moderationApi.foundCandidates(reportId, radiusM),
   })
 
 export const sightingCandidatesQuery = (sightingId: string) =>
@@ -48,8 +48,8 @@ export function useModerationQueueQuery(enabled: boolean) {
 export function useModerationCandidateLoader() {
   const client = useQueryClient()
   return {
-    loadFound: (reportId: string) =>
-      client.fetchQuery(foundPetCandidatesQuery(reportId)),
+    loadFound: (reportId: string, radiusM?: number) =>
+      client.fetchQuery(foundPetCandidatesQuery(reportId, radiusM)),
     loadSighting: (sightingId: string) =>
       client.fetchQuery(sightingCandidatesQuery(sightingId)),
   }

@@ -544,6 +544,9 @@ function FoundPetMatches({
   const [candidates, setCandidates] = useState<
     Record<string, MatchCandidate[]>
   >({})
+  const [expandedSearches, setExpandedSearches] = useState<
+    Record<string, true>
+  >({})
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const [analysingId, setAnalysingId] = useState<string | null>(null)
@@ -560,15 +563,21 @@ function FoundPetMatches({
     useModerationPhotoLoader(),
   )
   const [error, setError] = useState('')
-  async function showCandidates(reportId: string) {
-    if (candidates[reportId]) return
+  async function showCandidates(reportId: string, expanded = false) {
+    if (candidates[reportId] && (!expanded || expandedSearches[reportId]))
+      return
     setLoadingId(reportId)
     try {
-      const result = await candidateLoader.loadFound(reportId)
+      const result = await candidateLoader.loadFound(
+        reportId,
+        expanded ? 50_000 : undefined,
+      )
       setCandidates((current) => ({
         ...current,
         [reportId]: (result ?? []) as MatchCandidate[],
       }))
+      if (expanded)
+        setExpandedSearches((current) => ({ ...current, [reportId]: true }))
     } catch (error) {
       setError(
         error instanceof Error
@@ -797,11 +806,29 @@ function FoundPetMatches({
                       : 'Run AI analysis'}
                   </button>
                   <p className="ai-review-note">
-                    An owner-review link is created automatically only when one
-                    candidate has deterministic and combined scores of at least
-                    80, with medium or high AI confidence. You can also link any
-                    listed candidate.
+                    The automatic list uses the current matching policy: same
+                    species, within 5 km and a 30-day window. Scores only order
+                    candidates. AI review can create an owner-review link when
+                    its combined evidence is strong enough.
                   </p>
+                  {!expandedSearches[report.id] && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={loadingId === report.id}
+                      onClick={() => void showCandidates(report.id, true)}
+                    >
+                      {loadingId === report.id
+                        ? t('moderation.findingMatches')
+                        : 'Search up to 50 km'}
+                    </button>
+                  )}
+                  {expandedSearches[report.id] && (
+                    <p className="ai-review-note">
+                      Expanded 50 km staff search recorded. You can deliberately
+                      link any eligible same-species case shown here.
+                    </p>
+                  )}
                   <CandidateList
                     candidates={candidates[report.id]}
                     scores={report.ai_scores}
