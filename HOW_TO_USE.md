@@ -46,6 +46,7 @@ An authenticated check is still required when the first attempt fails. Use this 
    ```
 
    This version of the Supabase CLI serves all functions with this command. Do not append `dev-auth-bypass` as a positional argument.
+
 3. Start Vite with `npm run dev`, verify `http://127.0.0.1:5173` loads, set the local-storage bypass value, and reload the protected route. For example, use `moderator@petseen.org:moderator` for `/moderation`.
 
 Never use this bypass with a hosted URL. Remove `bypass` from local storage after the check.
@@ -62,11 +63,36 @@ npx supabase functions serve --no-verify-jwt
 
 ```bash
 npm run test:unit
+npm run test:sql
+npm run test:verify
 npm run typecheck
 npm run lint
 npm run build
 npm run test:e2e
 ```
+
+`npm run test:verify` is the deterministic offline gate for matching and
+database logic. It runs the Vitest unit/property suite followed by every SQL
+contract in `tests/sql`. Start the local Supabase stack first; each SQL contract
+uses a transaction and rolls its fixture data back. Do not rerun a failing
+contract until its failure has been explained and fixed.
+
+The staging smoke suite runs automatically for the exact commit after a
+successful staging deployment. It has no automatic retries; its retained
+Playwright report, trace, screenshot and video are the evidence for a failure.
+Live AI-provider evaluation remains deliberately separate from these gates and
+must use synthetic inputs with an explicit paid-run opt-in.
+
+### Building an unfinished matching feature
+
+For PS-430 through PS-432, start each implementation slice by adding one
+failing fixture scenario against the production decision interface. Make the
+smallest change that makes it pass, then add the next branch. Do not commit a
+deliberately failing test or add it to a required CI check: the committed
+change must include both the acceptance test and its passing implementation.
+Start with the four central scenarios documented in `PROJECT_BREAKDOWN.md`:
+Jev incompatibility without a vision call or side effect; positive and negative
+vision outcomes after a Jev pass; and uncertain Jev evidence routed to vision.
 
 Visual regression tests are separate:
 
