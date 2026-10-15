@@ -18,6 +18,15 @@ begin
     extensions.st_setsrid(extensions.st_makepoint(-0.1278, 51.5074), 4326), now(),
     gen_random_uuid(), 'approved', now()
   );
+  update public.found_pet_reports
+  set lifecycle_status = 'resolved', lifecycle_reason = 'test'
+  where id = report_id;
+  if (select ai_scoring_version from public.found_pet_reports where id = report_id) <> 1 then
+    raise exception 'PS-426 lifecycle-only updates must not create a new AI scoring version';
+  end if;
+  update public.found_pet_reports
+  set lifecycle_status = 'active', lifecycle_reason = null
+  where id = report_id;
   perform set_config('request.jwt.claim.role', 'service_role', true);
 
   first_job := public.enqueue_found_pet_ai_scoring(report_id);

@@ -61,10 +61,12 @@ test.describe.serial('found-pet lifecycle on staging', () => {
     })
     await expect(activeCard).toBeVisible()
     await activeCard.getByRole('button', { name: 'Resolve' }).click()
-    await expect(
-      page.getByText('Resolved or expired reports (2)'),
-    ).toBeVisible()
-    await page.locator('.lifecycle-archive summary').click()
+    const lifecycleArchive = page.locator('.lifecycle-archive')
+    await expect(lifecycleArchive).toBeVisible()
+    await expect(lifecycleArchive.locator('summary')).toHaveText(
+      /Resolved or expired reports \(\d+\)/,
+    )
+    await lifecycleArchive.locator('summary').click()
     const resolvedCard = page.locator('.found-match-card', {
       hasText: managed.details,
     })

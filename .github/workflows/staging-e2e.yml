@@ -1,6 +1,13 @@
 name: Staging E2E regression
 
 on:
+  workflow_run:
+    workflows:
+      - Deploy staging
+    types:
+      - completed
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       suite:
@@ -22,12 +29,16 @@ concurrency:
 jobs:
   test:
     name: Run ${{ inputs.suite }} staging regression
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 20
     steps:
       - name: Check out source
         uses: actions/checkout@v6
+        with:
+          # Test the commit that was deployed, not a newer commit on main.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node
         uses: actions/setup-node@v6
@@ -42,7 +53,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run core beta regression
-        if: inputs.suite == 'core'
+        if: github.event_name == 'workflow_run' || inputs.suite == 'core'
         run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: https://petseen-staging.pages.dev
