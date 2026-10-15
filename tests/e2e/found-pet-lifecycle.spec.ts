@@ -79,7 +79,7 @@ test.describe.serial('found-pet lifecycle on staging', () => {
     await expect(page.locator('.lifecycle-archive')).toContainText(
       managed.details,
     )
-    await page.locator('.lifecycle-archive summary').click()
+    await expect(lifecycleArchive).toHaveAttribute('open', '')
     const expiredCard = page.locator('.found-match-card', {
       hasText: managed.details,
     })

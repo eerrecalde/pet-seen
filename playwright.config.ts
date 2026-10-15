@@ -9,6 +9,9 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   // A regression failure must be investigated, not retried until green.
   retries: 0,
+  // Staging tests create and manage shared remote records; keep their ordering
+  // deterministic instead of letting separate spec files race each other.
+  workers: 1,
   reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'list',
   use: {
     baseURL,
