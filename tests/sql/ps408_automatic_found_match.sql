@@ -33,7 +33,7 @@ begin
     (
       first_case_id, owner_id, first_pet_id, 'ps408auto01', 'published',
       extensions.st_setsrid(extensions.st_makepoint(-0.1276, 51.5072), 4326),
-      now() - interval '40 days', now()
+      now() - interval '10 days', now()
     ),
     (
       second_case_id, owner_id, second_pet_id, 'ps408auto02', 'published',
@@ -57,24 +57,28 @@ begin
     run_id, found_pet_report_id, case_id, deterministic_score, ai_similarity_score,
     combined_score, confidence, explanation
   ) values
-    (first_run_id, report_id, first_case_id, 75, 100, 84, 'high', 'Top combined score, but weak deterministic evidence.'),
+    (first_run_id, report_id, first_case_id, 75, 100, 84, 'low', 'Top combined score, but insufficient confidence.'),
     (first_run_id, report_id, second_case_id, 85, 77, 82, 'high', 'Strong deterministic evidence.');
 
   perform set_config('request.jwt.claim.sub', staff_id::text, true);
   perform set_config('request.jwt.claim.role', 'authenticated', true);
 
   if public.create_provisional_found_pet_match(report_id) then
-    raise exception 'PS-408 must not auto-link a lower-ranked qualifying candidate';
+    raise exception 'PS-408 must not auto-link a lower-ranked candidate when the overall top candidate fails a safety threshold';
   end if;
   if exists (select 1 from public.found_pet_case_links where found_pet_report_id = report_id) then
-    raise exception 'PS-408 created a link when the overall top candidate missed a threshold';
+    raise exception 'PS-408 created a link when the overall top candidate missed the confidence threshold';
   end if;
 
+  update public.found_pet_reports
+  set details = 'PS-408 automatic match test rerun'
+  where id = report_id;
+
   insert into public.ai_found_pet_match_runs (
-    id, found_pet_report_id, model, candidate_count, status, failure_reason, completed_at, created_at
+    id, found_pet_report_id, model, candidate_count, status, failure_reason, completed_at, created_at, report_version
   ) values (
     second_run_id, report_id, 'test', 2, 'completed', null,
-    now() + interval '1 second', now() + interval '1 second'
+    now() + interval '1 second', now() + interval '1 second', 2
   );
   insert into public.ai_found_pet_match_scores (
     run_id, found_pet_report_id, case_id, deterministic_score, ai_similarity_score,
