@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "description": "Synthetic, public-safe staged matching scenarios. No coordinates, contacts, storage paths, or personal data are included.",
+  "scenarios": [
+    {
+      "id": "high-confidence-incompatible",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-conflict", "eligible": true, "hasPhoto": true, "jev": { "route": "incompatible", "probability": 0.99, "confidence": "high" } }],
+      "expected": { "eligibility": { "case-conflict": true }, "routes": { "case-conflict": "stopped_incompatible" }, "visionCaseIds": [], "calls": { "jev": 1, "openai": 0 } }
+    },
+    {
+      "id": "positive-vision-review",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-positive", "eligible": true, "hasPhoto": true, "jev": { "route": "possible", "probability": 0.81, "confidence": "medium" }, "vision": { "route": "positive", "similarity": 91 } }],
+      "expected": { "eligibility": { "case-positive": true }, "routes": { "case-positive": "review_recommended" }, "visionCaseIds": ["case-positive"], "calls": { "jev": 1, "openai": 1 } }
+    },
+    {
+      "id": "negative-vision-no-side-effects",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "cat", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-negative", "eligible": true, "hasPhoto": true, "jev": { "route": "possible", "probability": 0.74, "confidence": "medium" }, "vision": { "route": "negative", "similarity": 12 } }],
+      "expected": { "eligibility": { "case-negative": true }, "routes": { "case-negative": "no_match" }, "visionCaseIds": ["case-negative"], "calls": { "jev": 1, "openai": 1 } }
+    },
+    {
+      "id": "uncertain-routes-to-vision",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-uncertain", "eligible": true, "hasPhoto": true, "jev": { "route": "uncertain", "probability": 0.5, "confidence": "low" }, "vision": { "route": "negative", "similarity": 38 } }],
+      "expected": { "eligibility": { "case-uncertain": true }, "routes": { "case-uncertain": "no_match" }, "visionCaseIds": ["case-uncertain"], "calls": { "jev": 1, "openai": 1 } }
+    },
+    {
+      "id": "eligibility-boundaries-and-cap",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-5km-temporal-boundary", "eligible": true, "hasPhoto": true, "jev": { "route": "possible", "probability": 0.66, "confidence": "medium" }, "vision": { "route": "positive", "similarity": 82 } }, { "caseId": "case-wrong-species", "eligible": false, "hasPhoto": true }],
+      "expected": { "eligibility": { "case-5km-temporal-boundary": true, "case-wrong-species": false }, "routes": { "case-5km-temporal-boundary": "review_recommended", "case-wrong-species": "ineligible" }, "visionCaseIds": ["case-5km-temporal-boundary"], "calls": { "jev": 1, "openai": 1 } }
+    },
+    {
+      "id": "missing-photo-staff-review",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "cat", "hasPhoto": false },
+      "candidates": [{ "caseId": "case-no-photo", "eligible": true, "hasPhoto": true, "jev": { "route": "possible", "probability": 0.6, "confidence": "low" } }],
+      "expected": { "eligibility": { "case-no-photo": true }, "routes": { "case-no-photo": "staff_review" }, "visionCaseIds": [], "calls": { "jev": 1, "openai": 0 } }
+    },
+    {
+      "id": "provider-error-safe-review",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [{ "caseId": "case-retry", "eligible": true, "hasPhoto": true, "jev": { "route": "possible", "probability": 0.67, "confidence": "medium" }, "vision": { "error": "fixture retry exhausted" } }],
+      "expected": { "eligibility": { "case-retry": true }, "routes": { "case-retry": "staff_review" }, "visionCaseIds": ["case-retry"], "calls": { "jev": 1, "openai": 1 } }
+    }
+  ]
+}

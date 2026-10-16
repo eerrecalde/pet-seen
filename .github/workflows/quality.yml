@@ -42,6 +42,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Offline matching harness
+        run: npm run test:matching-harness
+
   database-contracts:
     name: Database contracts
     runs-on: ubuntu-latest
