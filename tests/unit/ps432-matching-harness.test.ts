@@ -26,4 +26,21 @@ describe('PS-432 fixture matching harness', () => {
       )?.actualRecommendation,
     ).toBe('case-best')
   })
+
+  it('can isolate one named synthetic scenario', async () => {
+    const { results, preflight } = await runFixtureHarness({
+      scenarioFilter: 'high-confidence-incompatible',
+    })
+    expect(results).toHaveLength(1)
+    expect(results[0]).toMatchObject({
+      case: 'high-confidence-incompatible',
+      pass: true,
+    })
+    expect(preflight).toEqual({
+      scenarios: 1,
+      jevCalls: 1,
+      openaiCalls: 0,
+      imagePairs: 0,
+    })
+  })
 })

@@ -2,6 +2,8 @@
 
 `npm run test:matching-harness` is the required offline gate. It replays the versioned synthetic scenarios in `scripts/matching-harness-scenarios.v1.json`, uses only fixture adapters, prints a redacted results table, and writes `tmp/matching-harness-results.json`.
 
+Pass `-- --scenario=<id>` to run one named scenario. Live diagnostic runs also accept `--max-runs=<n>` (default: 10), which caps planned provider calls before execution.
+
 The scenarios contain no precise locations, contact details, storage paths, user data, or provider credentials. A decision is only a recommendation: this harness asserts that every result has no link or notification side effect.
 
 ## Adding or refreshing a scenario

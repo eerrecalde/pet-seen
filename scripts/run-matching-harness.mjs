@@ -6,6 +6,37 @@ const root = resolve(new URL('..', import.meta.url).pathname)
 const fixturePath = resolve(root, 'scripts/matching-harness-scenarios.v1.json')
 const outputPath = resolve(root, 'tmp/matching-harness-results.json')
 
+function option(name) {
+  const prefix = `--${name}=`
+  return process.argv
+    .find((argument) => argument.startsWith(prefix))
+    ?.slice(prefix.length)
+}
+
+function selectScenarios(scenarios, scenarioFilter) {
+  if (!scenarioFilter) return scenarios
+  const selectedIds = new Set(scenarioFilter.split(',').filter(Boolean))
+  const selected = scenarios.filter((scenario) => selectedIds.has(scenario.id))
+  if (selected.length !== selectedIds.size)
+    throw new Error('One or more requested scenarios do not exist.')
+  return selected
+}
+
+function preflight(scenarios) {
+  const candidates = scenarios.flatMap((scenario) => scenario.candidates)
+  const eligible = candidates.filter((candidate) => candidate.eligible)
+  const vision = eligible.filter(
+    (candidate) =>
+      candidate.hasPhoto && candidate.jev?.route !== 'incompatible',
+  )
+  return {
+    scenarios: scenarios.length,
+    jevCalls: eligible.length,
+    openaiCalls: vision.length,
+    imagePairs: vision.length,
+  }
+}
+
 function fixtureAdapters() {
   return {
     jev: {
@@ -64,10 +95,11 @@ function resultFor(scenario, decision) {
   }
 }
 
-export async function runFixtureHarness() {
+export async function runFixtureHarness({ scenarioFilter } = {}) {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
+  const scenarios = selectScenarios(fixture.scenarios, scenarioFilter)
   const results = []
-  for (const scenario of fixture.scenarios) {
+  for (const scenario of scenarios) {
     const decision = await decideFoundPetMatches({
       report: scenario.report,
       candidates: scenario.candidates,
@@ -80,11 +112,26 @@ export async function runFixtureHarness() {
     outputPath,
     `${JSON.stringify({ version: fixture.version, results }, null, 2)}\n`,
   )
-  return { results, outputPath }
+  return { results, outputPath, preflight: preflight(scenarios) }
 }
 
 if (process.argv[1] === new URL(import.meta.url).pathname) {
-  const requestedProvider = process.env.MATCHING_PROVIDER ?? 'fixture'
+  const requestedProvider =
+    option('provider') ?? process.env.MATCHING_PROVIDER ?? 'fixture'
+  const scenarioFilter = option('scenario')
+  const maxRuns = Number(option('max-runs') ?? '10')
+  if (!Number.isInteger(maxRuns) || maxRuns < 1)
+    throw new Error('--max-runs must be a positive integer.')
+  const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
+  const selected = selectScenarios(fixture.scenarios, scenarioFilter)
+  const planned = preflight(selected)
+  if (
+    requestedProvider !== 'fixture' &&
+    planned.jevCalls + planned.openaiCalls > maxRuns
+  )
+    throw new Error(
+      `Preflight exceeds the maximum of ${maxRuns} provider calls.`,
+    )
   if (
     requestedProvider !== 'fixture' &&
     process.env.MATCHING_PAID_RUN !== '1'
@@ -92,11 +139,14 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
     throw new Error('Live evaluation requires MATCHING_PAID_RUN=1.')
   }
   if (requestedProvider !== 'fixture') {
+    console.table([{ provider: requestedProvider, maxRuns, ...planned }])
     throw new Error(
       `Live ${requestedProvider} evaluation is unavailable until its pinned provider adapter is supplied by PS-430/PS-431. No provider call was made.`,
     )
   }
-  const { results, outputPath: saved } = await runFixtureHarness()
+  const { results, outputPath: saved } = await runFixtureHarness({
+    scenarioFilter,
+  })
   console.table(results)
   console.log(`Redacted results saved to ${saved}`)
   if (results.some((result) => !result.pass)) process.exitCode = 1
