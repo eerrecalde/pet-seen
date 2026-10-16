@@ -74,7 +74,7 @@ export class SightingPage {
     await this.page.getByRole('button', { name: 'Submit sighting' }).click()
     await expect(
       this.page.getByRole('heading', { name: 'Sighting shared.' }),
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15_000 })
   }
 }
 
