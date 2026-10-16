@@ -107,3 +107,24 @@ end $$;
 
 grant execute on function public.enqueue_jev_found_pet_assessment(uuid, uuid), public.claim_jev_found_pet_assessment_jobs(integer)
   to service_role, authenticated;
+
+-- Queue both providers from the same staff request, while preserving distinct
+-- jobs and retries. Jev's status is never read by the image-scoring worker.
+create or replace function public.enqueue_found_pet_ai_scoring(target_report_id uuid, actor_id uuid default null)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare version integer; job_id uuid;
+begin
+  if not (coalesce(auth.role(), '') = 'service_role' or public.is_authorized_staff()) then raise exception 'Only staff can queue AI candidate scoring'; end if;
+  select ai_scoring_version into version from public.found_pet_reports
+    where id = target_report_id and moderation_status = 'approved' and lifecycle_status = 'active';
+  if version is null then raise exception 'This active approved report is not available for scoring'; end if;
+  insert into public.ai_found_pet_scoring_queue(found_pet_report_id, report_version, requested_by)
+    values (target_report_id, version, actor_id)
+    on conflict (found_pet_report_id, report_version) do update set
+      available_at = least(public.ai_found_pet_scoring_queue.available_at, now()),
+      status = case when public.ai_found_pet_scoring_queue.status in ('failed', 'skipped') then 'pending' else public.ai_found_pet_scoring_queue.status end,
+      last_error = null
+    returning id into job_id;
+  perform public.enqueue_jev_found_pet_assessment(target_report_id, actor_id);
+  return job_id;
+end $$;

@@ -18,13 +18,18 @@ begin
   );
   perform set_config('request.jwt.claim.role', 'service_role', true);
 
-  first_job := public.enqueue_jev_found_pet_assessment(report_id);
+  perform public.enqueue_found_pet_ai_scoring(report_id);
+  select id into first_job from public.jev_found_pet_assessment_queue
+    where found_pet_report_id = report_id and report_version = 1;
+  if first_job is null then
+    raise exception 'PS-430 did not enqueue independent shadow work with image scoring';
+  end if;
   second_job := public.enqueue_jev_found_pet_assessment(report_id);
   if first_job <> second_job then
     raise exception 'PS-430 did not make the shadow queue idempotent per report version';
   end if;
-  if exists (select 1 from public.ai_found_pet_scoring_queue where found_pet_report_id = report_id) then
-    raise exception 'PS-430 shadow queue unexpectedly changed the image-scoring queue';
+  if not exists (select 1 from public.ai_found_pet_scoring_queue where found_pet_report_id = report_id) then
+    raise exception 'PS-430 did not preserve the existing image-scoring queue';
   end if;
 
   select * into claimed from public.claim_jev_found_pet_assessment_jobs(1);

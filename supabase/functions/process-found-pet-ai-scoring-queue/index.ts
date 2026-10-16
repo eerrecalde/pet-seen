@@ -88,5 +88,21 @@ Deno.serve(async (request) => {
         .eq('id', job.id)
     }
   }
+  // Jev shadow work is deliberately dispatched after and independently of the
+  // image queue. Its queue state is never allowed to change this response.
+  try {
+    await fetch(
+      `${url}/functions/v1/process-jev-found-pet-assessment-queue`,
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${serviceKey}`,
+          apikey: serviceKey,
+        },
+      },
+    )
+  } catch {
+    // The shadow worker has its own durable retry path and staff-review audit.
+  }
   return reply(200, { claimed: (jobs ?? []).length, completed })
 })
