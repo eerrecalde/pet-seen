@@ -46,7 +46,8 @@
         "eligibility": { "case-positive": true },
         "routes": { "case-positive": "review_recommended" },
         "visionCaseIds": ["case-positive"],
-        "calls": { "jev": 1, "openai": 1 }
+        "calls": { "jev": 1, "openai": 1 },
+        "recommendedCaseId": "case-positive"
       }
     },
     {
@@ -125,7 +126,8 @@
           "case-wrong-species": "ineligible"
         },
         "visionCaseIds": ["case-5km-temporal-boundary"],
-        "calls": { "jev": 1, "openai": 1 }
+        "calls": { "jev": 1, "openai": 1 },
+        "recommendedCaseId": "case-5km-temporal-boundary"
       }
     },
     {
@@ -197,6 +199,45 @@
         "routes": { "case-invalid-provider-output": "staff_review" },
         "visionCaseIds": ["case-invalid-provider-output"],
         "calls": { "jev": 1, "openai": 1 }
+      }
+    },
+    {
+      "id": "single-top-review-recommendation",
+      "providerMode": { "jev": "fixture", "openai": "fixture" },
+      "report": { "species": "dog", "hasPhoto": true },
+      "candidates": [
+        {
+          "caseId": "case-runner-up",
+          "eligible": true,
+          "hasPhoto": true,
+          "jev": {
+            "route": "possible",
+            "probability": 0.8,
+            "confidence": "medium"
+          },
+          "vision": { "route": "positive", "similarity": 88 }
+        },
+        {
+          "caseId": "case-best",
+          "eligible": true,
+          "hasPhoto": true,
+          "jev": {
+            "route": "possible",
+            "probability": 0.8,
+            "confidence": "medium"
+          },
+          "vision": { "route": "positive", "similarity": 93 }
+        }
+      ],
+      "expected": {
+        "eligibility": { "case-runner-up": true, "case-best": true },
+        "routes": {
+          "case-runner-up": "review_recommended",
+          "case-best": "review_recommended"
+        },
+        "visionCaseIds": ["case-runner-up", "case-best"],
+        "calls": { "jev": 2, "openai": 2 },
+        "recommendedCaseId": "case-best"
       }
     }
   ]

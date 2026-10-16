@@ -10,6 +10,8 @@ Add a public-safe scenario to the versioned JSON file. Give each candidate a sta
 
 Malformed and failed fixture responses must always route to `staff_review`; they must never create a link or notification.
 
+When multiple comparisons are positive, assert the one deterministic review recommendation as `recommendedCaseId`. This is still decision support only: the harness must continue to report no automatic link or notification.
+
 ## Live evaluation
 
 The separately named `test:matching-harness:jev`, `test:matching-harness:openai`, and `test:matching-harness:live` commands are intentionally paid-run opt-ins. The adapter implementation is deferred until PS-430 supplies the pinned Jev client and PS-431 supplies the pinned OpenAI vision client. Until then they stop before any provider call and say so plainly; they must not be considered a provider evaluation. They retain the explicit `MATCHING_PAID_RUN=1` guard so CI cannot accidentally incur provider usage.

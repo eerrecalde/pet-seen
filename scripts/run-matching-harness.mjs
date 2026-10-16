@@ -36,6 +36,7 @@ function resultFor(scenario, decision) {
   const safeEffects = decision.decisions.every(
     (item) => !item.effects.link && !item.effects.notify,
   )
+  const recommendedCaseId = decision.recommendation?.caseId ?? null
   const pass =
     JSON.stringify(eligibility) ===
       JSON.stringify(scenario.expected.eligibility) &&
@@ -44,6 +45,7 @@ function resultFor(scenario, decision) {
       JSON.stringify(scenario.expected.visionCaseIds) &&
     JSON.stringify(decision.calls) ===
       JSON.stringify(scenario.expected.calls) &&
+    recommendedCaseId === (scenario.expected.recommendedCaseId ?? null) &&
     safeEffects
   return {
     case: scenario.id,
@@ -52,6 +54,8 @@ function resultFor(scenario, decision) {
     actualEligibility: eligibility,
     expected: scenario.expected.routes,
     actual: routes,
+    expectedRecommendation: scenario.expected.recommendedCaseId ?? null,
+    actualRecommendation: recommendedCaseId,
     pass,
     latencyMs: 0,
     tokenUsage: 0,

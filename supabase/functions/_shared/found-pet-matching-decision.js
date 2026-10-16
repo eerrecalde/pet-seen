@@ -103,5 +103,23 @@ export async function decideFoundPetMatches({ report, candidates, adapters }) {
     }
   }
 
-  return { decisions, calls }
+  const recommendation = decisions
+    .filter((decision) => decision.route === 'review_recommended')
+    .sort(
+      (left, right) =>
+        right.vision.similarity - left.vision.similarity ||
+        left.caseId.localeCompare(right.caseId),
+    )[0]
+
+  return {
+    decisions,
+    calls,
+    recommendation: recommendation
+      ? {
+          caseId: recommendation.caseId,
+          route: 'review_recommended',
+          effects: { link: false, notify: false },
+        }
+      : null,
+  }
 }
