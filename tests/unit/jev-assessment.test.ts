@@ -82,6 +82,15 @@ describe('Jev found-pet assessment', () => {
     expect(request.state.found.details).toContain('[redacted]')
   })
 
+  it('represents an unknown elapsed time without inventing a date', () => {
+    const request = buildJevAssessmentRequest({
+      ...input,
+      elapsedHours: null,
+    })
+
+    expect(request.state.elapsed_hours).toBeNull()
+  })
+
   it('maps the typed response to three stored rubric outcomes', async () => {
     const fetcher = vi
       .fn()

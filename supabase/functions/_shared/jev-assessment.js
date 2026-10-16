@@ -47,11 +47,14 @@ export function buildJevAssessmentRequest({
     found: petAttributes(found),
     candidate: petAttributes(candidate),
     distance_km: Math.round(Number(distanceKm) * 10) / 10,
-    elapsed_hours: Math.round(Number(elapsedHours)),
+    elapsed_hours:
+      elapsedHours === null || elapsedHours === undefined
+        ? null
+        : Math.round(Number(elapsedHours)),
   }
   if (!Number.isFinite(state.distance_km) || state.distance_km < 0)
     throw new Error('Jev assessment requires a non-negative derived distance.')
-  if (!Number.isFinite(state.elapsed_hours))
+  if (state.elapsed_hours !== null && !Number.isFinite(state.elapsed_hours))
     throw new Error('Jev assessment requires a derived elapsed time.')
 
   return {
