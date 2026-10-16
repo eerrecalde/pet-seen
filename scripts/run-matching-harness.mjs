@@ -13,6 +13,30 @@ function option(name) {
     ?.slice(prefix.length)
 }
 
+const privateFixtureKeys = new Set([
+  'address',
+  'email',
+  'exactLocation',
+  'latitude',
+  'longitude',
+  'objectPath',
+  'phone',
+  'storagePath',
+])
+
+export function assertPublicSafeFixture(value) {
+  if (Array.isArray(value)) {
+    value.forEach(assertPublicSafeFixture)
+    return
+  }
+  if (!value || typeof value !== 'object') return
+  for (const [key, nested] of Object.entries(value)) {
+    if (privateFixtureKeys.has(key))
+      throw new Error(`Fixture field ${key} is not public-safe.`)
+    assertPublicSafeFixture(nested)
+  }
+}
+
 function selectScenarios(scenarios, scenarioFilter) {
   if (!scenarioFilter) return scenarios
   const selectedIds = new Set(scenarioFilter.split(',').filter(Boolean))
@@ -97,6 +121,7 @@ function resultFor(scenario, decision) {
 
 export async function runFixtureHarness({ scenarioFilter } = {}) {
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
+  assertPublicSafeFixture(fixture)
   const scenarios = selectScenarios(fixture.scenarios, scenarioFilter)
   const results = []
   for (const scenario of scenarios) {
@@ -123,6 +148,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   if (!Number.isInteger(maxRuns) || maxRuns < 1)
     throw new Error('--max-runs must be a positive integer.')
   const fixture = JSON.parse(await readFile(fixturePath, 'utf8'))
+  assertPublicSafeFixture(fixture)
   const selected = selectScenarios(fixture.scenarios, scenarioFilter)
   const planned = preflight(selected)
   if (

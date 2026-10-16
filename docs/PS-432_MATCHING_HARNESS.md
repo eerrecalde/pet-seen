@@ -6,6 +6,8 @@ Pass `-- --scenario=<id>` to run one named scenario. Live diagnostic runs also a
 
 The scenarios contain no precise locations, contact details, storage paths, user data, or provider credentials. A decision is only a recommendation: this harness asserts that every result has no link or notification side effect.
 
+The runner rejects fixtures containing exact-location, address, contact, or storage-path fields before an adapter can receive them.
+
 ## Adding or refreshing a scenario
 
 Add a public-safe scenario to the versioned JSON file. Give each candidate a stable synthetic `caseId`, its eligibility result, photo availability, fixture Jev result, optional fixture vision result, and expected route/call counts. Run the offline command and commit the scenario only after its expected result has been reviewed.

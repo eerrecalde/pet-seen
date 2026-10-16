@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { runFixtureHarness } from '../../scripts/run-matching-harness.mjs'
+import {
+  assertPublicSafeFixture,
+  runFixtureHarness,
+} from '../../scripts/run-matching-harness.mjs'
 
 describe('PS-432 fixture matching harness', () => {
   it('replays every synthetic scenario without provider calls or side effects', async () => {
@@ -42,5 +45,14 @@ describe('PS-432 fixture matching harness', () => {
       openaiCalls: 0,
       imagePairs: 0,
     })
+  })
+
+  it('rejects private fixture fields before providers can receive them', () => {
+    expect(() =>
+      assertPublicSafeFixture({
+        report: { exactLocation: 'not allowed' },
+        candidate: { storagePath: 'not allowed' },
+      }),
+    ).toThrow('Fixture field exactLocation is not public-safe.')
   })
 })
