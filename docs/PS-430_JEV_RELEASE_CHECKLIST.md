@@ -9,7 +9,8 @@ Jev must remain disabled for production reports until every item in this checkli
 - [ ] Procurement approves the applicable data-processing terms and confirms that provider training or secondary use is disabled for this integration.
 - [ ] A pinned provider model and the `found-pet-text-v1` rubric have been approved for the release.
 - [ ] The Jev shadow queue is enabled separately from image scoring, so Jev failures and retries cannot alter image calls, ranking, links or notifications.
-- [ ] The labelled, reviewed shadow set reports precision, recall, calibration and proposed high-recall vision-gating thresholds. No threshold enables a Jev decision without explicit approval.
+- [ ] The versioned synthetic gold set reports precision, recall, calibration and proposed high-recall vision-gating thresholds. It proves the pre-production evaluation path, but no threshold enables a Jev decision without explicit approval.
+- [ ] Before real reports can change routing, replace or supplement the synthetic labels with staff-reviewed outcomes from Pet Seen.
 
 ## Implementation guardrails
 

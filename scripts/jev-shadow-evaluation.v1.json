@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "purpose": "Synthetic gold set for pre-production Jev shadow evaluation. Labels are reviewed fixture outcomes, not real reports.",
+  "cases": [
+    { "id": "same-labrador", "label": "same_pet", "probability": 0.96, "route": "possible" },
+    { "id": "same-tabby", "label": "same_pet", "probability": 0.88, "route": "possible" },
+    { "id": "same-vague", "label": "same_pet", "probability": 0.58, "route": "uncertain" },
+    { "id": "same-marking", "label": "same_pet", "probability": 0.79, "route": "possible" },
+    { "id": "same-no-breed", "label": "same_pet", "probability": 0.63, "route": "uncertain" },
+    { "id": "different-species-text", "label": "different_pet", "probability": 0.03, "route": "incompatible" },
+    { "id": "different-colour", "label": "different_pet", "probability": 0.09, "route": "incompatible" },
+    { "id": "different-breed", "label": "different_pet", "probability": 0.12, "route": "incompatible" },
+    { "id": "different-vague", "label": "different_pet", "probability": 0.46, "route": "uncertain" },
+    { "id": "different-details", "label": "different_pet", "probability": 0.18, "route": "incompatible" }
+  ]
+}
